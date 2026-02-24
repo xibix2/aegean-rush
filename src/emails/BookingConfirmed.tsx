@@ -1,0 +1,303 @@
+import * as React from "react";
+
+export default function BookingConfirmed({
+  activity,
+  startISO,
+  endISO,
+  partySize,
+  totalCents,
+  clubName,
+  logoUrl,
+  brandPrimary,
+}: {
+  activity: string;
+  startISO: string;
+  endISO: string;
+  partySize: number;
+  totalCents: number;
+  clubName: string;
+  logoUrl?: string | null;
+  brandPrimary?: string | null;
+}) {
+  const start = new Date(startISO);
+  const end = new Date(endISO);
+
+  const color = brandPrimary || "#22c55e"; // accent
+
+  const formatterDate = new Intl.DateTimeFormat("en-GB", {
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+
+  const formatterTime = new Intl.DateTimeFormat("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  const sameDay =
+    start.getFullYear() === end.getFullYear() &&
+    start.getMonth() === end.getMonth() &&
+    start.getDate() === end.getDate();
+
+  const dateLabel = formatterDate.format(start);
+  const timeLabel = sameDay
+    ? `${formatterTime.format(start)} – ${formatterTime.format(end)}`
+    : `${formatterTime.format(start)} – ${formatterTime.format(
+        end,
+      )} (next day)`;
+
+  const totalEuros = (totalCents || 0) / 100;
+
+  return (
+    <div
+      style={{
+        fontFamily:
+          "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+        color: "#020617",
+        maxWidth: 520,
+        margin: "0 auto",
+        padding: "0 16px 24px",
+        backgroundColor: "#020617",
+      }}
+    >
+      {/* Outer card */}
+      <div
+        style={{
+          backgroundColor: "#0b1220",
+          borderRadius: 16,
+          padding: 20,
+          border: "1px solid rgba(148, 163, 184, 0.4)",
+          boxShadow: "0 18px 45px rgba(15,23,42,0.7)",
+        }}
+      >
+        {/* Top accent bar */}
+        <div
+          style={{
+            height: 4,
+            borderRadius: 999,
+            backgroundImage: `linear-gradient(90deg, transparent, ${color}, transparent)`,
+            marginBottom: 16,
+          }}
+        />
+
+        {/* Header: logo + title + status pill */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            marginBottom: 16,
+          }}
+        >
+          {/* Title + club name */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div
+              style={{
+                fontSize: 11,
+                textTransform: "uppercase",
+                letterSpacing: "0.16em",
+                color: "#e5e7eb",
+                marginBottom: 3,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              Booking confirmed
+            </div>
+            <h2
+              style={{
+                margin: 0,
+                fontSize: 18,
+                fontWeight: 600,
+                color: "#f9fafb",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              Your court is locked in 🎉
+            </h2>
+            <p
+              style={{
+                margin: "4px 0 0",
+                fontSize: 12,
+                color: "#9ca3af",
+              }}
+            >
+              {clubName}
+            </p>
+          </div>
+        </div>
+
+        {/* Main booking summary card */}
+        <div
+          style={{
+            marginTop: 8,
+            borderRadius: 14,
+            background:
+              "radial-gradient(circle at 0% 0%, rgba(34,197,94,0.18), transparent 55%), radial-gradient(circle at 100% 100%, rgba(56,189,248,0.18), transparent 55%)",
+            border: "1px solid rgba(148,163,184,0.5)",
+            padding: 14,
+          }}
+        >
+          {/* Activity */}
+          <div style={{ marginBottom: 10 }}>
+            <div
+              style={{
+                fontSize: 11,
+                textTransform: "uppercase",
+                letterSpacing: "0.15em",
+                color: "#9ca3af",
+                marginBottom: 2,
+              }}
+            >
+              Activity
+            </div>
+            <div
+              style={{
+                fontSize: 14,
+                fontWeight: 500,
+                color: "#f9fafb",
+              }}
+            >
+              {activity}
+            </div>
+          </div>
+
+          {/* Date & time + party size + price */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "minmax(0, 1.7fr) minmax(0, 1fr)",
+              gap: 12,
+              alignItems: "flex-start",
+            }}
+          >
+            <div>
+              <div
+                style={{
+                  fontSize: 11,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.15em",
+                  color: "#9ca3af",
+                  marginBottom: 2,
+                }}
+              >
+                When
+              </div>
+              <div
+                style={{
+                  fontSize: 13,
+                  color: "#e5e7eb",
+                }}
+              >
+                {dateLabel}
+                <span style={{ opacity: 0.75 }}> · </span>
+                {timeLabel}
+              </div>
+            </div>
+
+            <div>
+              <div
+                style={{
+                  fontSize: 11,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.15em",
+                  color: "#9ca3af",
+                  marginBottom: 2,
+                }}
+              >
+                Details
+              </div>
+              <div
+                style={{
+                  fontSize: 13,
+                  color: "#e5e7eb",
+                  marginBottom: 2,
+                }}
+              >
+                Party size:{" "}
+                <span style={{ fontWeight: 500 }}>{partySize}</span>
+              </div>
+              <div
+                style={{
+                  fontSize: 13,
+                  color: "#e5e7eb",
+                }}
+              >
+                Total:{" "}
+                <span
+                  style={{
+                    fontWeight: 600,
+                    color: color,
+                  }}
+                >
+                  €{totalEuros.toFixed(2)}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Info / instructions */}
+        <div
+          style={{
+            marginTop: 16,
+            fontSize: 13,
+            color: "#e5e7eb",
+            lineHeight: 1.5,
+          }}
+        >
+          <p style={{ margin: "0 0 8px" }}>
+            Please arrive{" "}
+            <span style={{ fontWeight: 500 }}>10 minutes early</span> to warm up
+            and check in at{" "}
+            <span style={{ fontWeight: 500 }}>{clubName}</span>.
+          </p>
+          <p style={{ margin: 0 }}>
+            Bring your own racket and water, and show this email at reception if
+            asked for your booking.
+          </p>
+        </div>
+
+        {/* Divider */}
+        <hr
+          style={{
+            marginTop: 20,
+            marginBottom: 10,
+            border: "none",
+            borderTop: "1px solid rgba(55,65,81,0.9)",
+          }}
+        />
+
+        {/* Footer / help text */}
+        <p
+          style={{
+            fontSize: 11,
+            color: "#9ca3af",
+            margin: 0,
+            lineHeight: 1.5,
+          }}
+        >
+          If you have any questions or need to make a change, simply reply to
+          this email and{" "}
+          <span style={{ fontWeight: 500 }}>{clubName}</span> will get back to
+          you.
+        </p>
+
+        <p
+          style={{
+            fontSize: 10,
+            color: "#6b7280",
+            marginTop: 10,
+          }}
+        >
+          Thank you for booking with {clubName}. See you on court. 🎾
+        </p>
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,14 @@
+version: "3.9"
+services:
+  db:
+    image: postgres:16
+    container_name: watersports_db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ws
+      POSTGRES_PASSWORD: ws
+      POSTGRES_DB: watersports
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data

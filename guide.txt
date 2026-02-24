@@ -1,0 +1,14 @@
+commands:
+
+npx prisma studio
+
+npm run dev
+
+stripe listen --forward-to http://localhost:3000/api/stripe/webhook
+
+git add .
+
+git commit -m "Describe what you changed"
+
+git push origin main
+

@@ -1,0 +1,340 @@
+/* ======================================================================
+   Tailwind + Base Design Tokens
+====================================================================== */
+@import "tailwindcss";
+
+/* ---------- Default (light) tokens ---------- */
+:root {
+  --background: #ffffff;
+  --foreground: #0f172a; /* slate-900-ish for contrast */
+  --card: #ffffff;
+  --muted: #f8fafc;      /* slate-50/100 */
+  --border: #e5e7eb;     /* slate-200 */
+  --brand: #2563eb;      /* primary fallback */
+
+  /* Accent (fallback = pink). Overridden by [data-accent] below */
+  --accent-400: #f472b6;
+  --accent-500: #ec4899;
+  --accent-600: #db2777;
+  /* ✅ added */
+  --accent-700: #be185d;
+  --accent-800: #9d174d;
+
+  /* Accent glow RGB (used in rgb(var(--accent-glow) / a)) */
+  --accent-glow: 255 99 189;
+
+  /* Surfaces for subtle panels */
+  --surface-1: rgba(0,0,0,0.04);
+  --surface-2: rgba(0,0,0,0.025);
+
+  /* Radius / shadows / fonts */
+  --radius: 14px;
+}
+
+/* ---------- Tailwind design tokens (inline theme) ---------- */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--foreground);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --radius-lg: var(--radius);
+  --shadow-soft: 0 6px 24px rgba(2,6,23,0.06);
+  --shadow-card: 0 10px 30px rgba(2,6,23,0.08);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* ======================================================================
+   THEME CONTROL (Settings → data-theme on <html>)
+   - dark / light / auto (auto respects prefers-color-scheme)
+====================================================================== */
+/* Dark */
+html[data-theme="dark"] {
+  --background: #0a0a0a;
+  --foreground: #e5e7eb;   /* gray-200 */
+  --card: #0b0b0b;
+  --muted: #0f1115;
+  --border: #1f2937;       /* gray-800 */
+  --surface-1: rgba(255,255,255,0.06);
+  --surface-2: rgba(255,255,255,0.03);
+
+  /* fallback accent stays pink unless [data-accent] overrides */
+  --accent-400: #f472b6;
+  --accent-500: #ec4899;
+  --accent-600: #db2777;
+  /* ✅ added */
+  --accent-700: #be185d;
+  --accent-800: #9d174d;
+
+  --accent-glow: 255 99 189;
+}
+
+/* Auto */
+html[data-theme="auto"] { /* start from light */ }
+@media (prefers-color-scheme: dark) {
+  html[data-theme="auto"] {
+    --background: #0a0a0a;
+    --foreground: #e5e7eb;
+    --card: #0b0b0b;
+    --muted: #0f1115;
+    --border: #1f2937;
+    --surface-1: rgba(255,255,255,0.06);
+    --surface-2: rgba(255,255,255,0.03);
+  }
+}
+
+/* Make native widgets (inputs, date picker) match theme */
+html[data-theme="dark"],
+html[data-theme="auto"] { color-scheme: dark; }
+@media (prefers-color-scheme: light) {
+  html[data-theme="auto"] { color-scheme: light; }
+}
+
+/* ======================================================================
+   ACCENT CONTROL (Settings → data-accent on <html>)
+   Exposes --accent-400/500/600 + --accent-glow used in gradients & glow
+====================================================================== */
+html[data-accent="pink"] {
+  --accent-400:#f472b6;
+  --accent-500:#ec4899;
+  --accent-600:#db2777;
+  /* ✅ added */
+  --accent-700:#be185d;
+  --accent-800:#9d174d;
+
+  --accent-glow: 255 99 189;
+}
+html[data-accent="blue"] {
+  --accent-400:#60a5fa;
+  --accent-500:#3b82f6;
+  --accent-600:#2563eb;
+  /* ✅ added */
+  --accent-700:#1d4ed8;
+  --accent-800:#1e40af;
+
+  --accent-glow: 59 130 246; /* rgb */
+}
+html[data-accent="emerald"] {
+  --accent-400:#34d399;
+  --accent-500:#10b981;
+  --accent-600:#059669;
+  /* ✅ added */
+  --accent-700:#047857;
+  --accent-800:#065f46;
+
+  --accent-glow: 16 185 129; /* rgb */
+}
+
+/* ======================================================================
+   COMPACT DENSITY (Settings → data-compact="1" on <html>)
+====================================================================== */
+html[data-compact="1"] .compact\:tight > * { margin-block: .35rem; }
+html[data-compact="1"] .compact\:p       { padding: .5rem; }
+html[data-compact="1"] .compact\:py      { padding-block: .4rem; }
+html[data-compact="1"] .compact\:h-10    { height: 2.5rem; }
+
+/* ======================================================================
+   Base resets & scaffolding
+====================================================================== */
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+
+body {
+  overflow-x: clip; /* ✅ prevents horizontal scroll but avoids nasty layout clipping issues */
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* a11y focus ring */
+:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--accent-500), white 25%);
+  outline-offset: 2px;
+}
+
+
+/* page container */
+.container-page {
+  max-width: 1100px;
+  margin-inline: auto;
+  padding-inline: clamp(12px, 3vw, 24px);
+}
+
+/* Card look */
+.card {
+  background: var(--card);
+  color: var(--color-card-foreground);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+/* ======================================================================
+   THEME-AWARE UTILITIES (use these instead of hard-coded white/10 etc.)
+====================================================================== */
+/* Surfaces & borders */
+.u-border    { border: 1px solid var(--border) !important; }
+.u-bordert   { border-top: 1px solid var(--border) !important; }
+.u-surface   { background-color: var(--surface-1) !important; }
+.u-surface-2 { background-color: var(--surface-2) !important; }
+
+/* Accent helpers */
+.text-accent         { color: var(--accent-500) !important; }
+.bg-accent           { background-color: var(--accent-500) !important; }
+.border-accent       { border-color: var(--accent-400) !important; }
+.text-accent-gradient{
+  background-image: linear-gradient(90deg, var(--accent-400), var(--accent-500), var(--accent-600));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.accent-line {
+  background: linear-gradient(
+    90deg,
+    rgba(0,0,0,0),
+    var(--accent-600),
+    var(--accent-500),
+    var(--accent-600),
+    rgba(0,0,0,0)
+  ) !important;
+}
+
+/* Buttons / chips */
+.btn-accent {
+  background-image: linear-gradient(90deg, var(--accent-500), var(--accent-600));
+  color:#fff; border-radius: 0.75rem;
+  box-shadow: 0 0 25px -8px color-mix(in oklab, var(--accent-500), transparent 40%);
+}
+.btn-accent:hover { transform: scale(1.02); }
+
+.pill-active {
+  border: 1px solid color-mix(in oklab, var(--accent-400), transparent 40%);
+  background-color: color-mix(in oklab, var(--accent-500), transparent 85%);
+  box-shadow: 0 0 20px -10px color-mix(in oklab, var(--accent-500), transparent 30%);
+}
+.pill-default {
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+}
+.pill-default:hover { background: var(--surface-1); }
+
+/* Tables */
+thead.sticky-head {
+  background: color-mix(in oklab, var(--card), var(--foreground) 6%);
+  backdrop-filter: blur(6px);
+}
+
+/* ======================================================================
+   Small animation utilities
+====================================================================== */
+@keyframes pulseSoftSubtle { 0%,95%,100%{transform:scale(1)} 40%{transform:scale(1.02)} }
+@keyframes haloSoft        { 0%,95%,100%{box-shadow:0 0 0 0 rgba(255,255,255,0)} 40%{box-shadow:0 0 0 8px rgba(255,255,255,0.07)} }
+.motion-safe\:animate-pulseSoftSubtle { animation: pulseSoftSubtle 10s ease-in-out infinite; }
+.motion-safe\:animate-haloSoft        { animation: haloSoft 10s ease-in-out infinite; }
+
+/* Premium accent button */
+.btn-accent{
+  background-image:linear-gradient(
+    90deg,
+    color-mix(in oklab, var(--accent-800) 76%, black 24%),
+    var(--accent-600),
+    color-mix(in oklab, var(--accent-800) 76%, black 24%)
+  );
+  background-size:220% 100%;
+  animation:accentFlow 12s ease-in-out infinite;
+  filter:brightness(1.06) contrast(1.03);
+  /* ✅ safe fallback so text never goes dark-on-dark */
+  color:var(--color-brand-foreground, #fff);
+  border-radius:12px;
+  box-shadow:0 8px 26px -12px color-mix(in oklab, var(--accent-700), transparent 70%);
+  transition:transform .2s ease;
+}
+.btn-accent:hover{ transform:scale(1.02); }
+.btn-accent:active{ transform:scale(0.985); }
+
+@keyframes accentFlow{
+  0%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+  100%{background-position:0% 50%}
+}
+@media (prefers-reduced-motion: reduce){
+  .btn-accent{ animation:none !important; }
+}
+
+/* ======================================================================
+   Inputs – minor polish for date picker in dark mode
+====================================================================== */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.8) sepia(1) saturate(5) hue-rotate(250deg);
+}
+
+/* ======================================================================
+   Glow (OPT-IN only) — balanced elegant intensity
+   Use .glow-soft (subtle default) or .glow-neon (stronger) on OUTER cards
+====================================================================== */
+
+/* Strong Tailwind-like neon that follows the current accent */
+.glow-neon { transition: box-shadow .18s ease, transform .18s ease; }
+html[data-theme="dark"] .glow-neon {
+  box-shadow:
+    0 0 70px -18px rgb(var(--accent-glow) / 0.48),
+    0 0 120px -28px rgb(var(--accent-glow) / 0.32);
+}
+html[data-theme="dark"] .glow-neon:hover {
+  box-shadow:
+    0 0 80px -16px rgb(var(--accent-glow) / 0.54),
+    0 0 140px -24px rgb(var(--accent-glow) / 0.38);
+  transform: translateY(-1px);
+}
+
+/* Soft ambient halo (standard card glow) */
+.glow-soft { transition: box-shadow .18s ease; }
+html[data-theme="dark"] .glow-soft {
+  box-shadow:
+    0 7px 24px -12px rgba(0,0,0,.6),
+    0 0 35px -16px rgb(var(--accent-glow) / 0.35),
+    0 0 65px -22px rgb(var(--accent-glow) / 0.22);
+}
+html[data-theme="dark"] .glow-soft:hover {
+  box-shadow:
+    0 8px 28px -10px rgba(0,0,0,.65),
+    0 0 45px -14px rgb(var(--accent-glow) / 0.42),
+    0 0 80px -20px rgb(var(--accent-glow) / 0.28);
+}
+
+/* Light theme — gentle elevation only */
+html[data-theme="light"] .glow-neon,
+html[data-theme="light"] .glow-soft {
+  box-shadow:
+    0 10px 24px rgba(2, 6, 23, 0.06),
+    0 2px 6px rgba(2, 6, 23, 0.04);
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .glow-neon, .glow-soft { transition: none; }
+}
+
+/* ======================================================================
+   Dark-mode gradient headers (replicate Tailwind "from-white via-pink-200 to-violet-200")
+   Light mode keeps your normal accent gradient.
+====================================================================== */
+
+html[data-theme="dark"] .text-accent-gradient {
+  background-image: linear-gradient(
+    90deg,
+    #ffffff,
+    #fbcfe8,  /* pink-200 */
+    #c4b5fd   /* violet-200 */
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@keyframes goldenPulse {
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.05); opacity: 1; }
+}

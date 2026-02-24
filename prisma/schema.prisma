@@ -1,0 +1,228 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SubscriptionPlan {
+  BASIC
+  PRO
+  ENTERPRISE
+}
+
+enum SubscriptionStatus {
+  INACTIVE   // no active subscription yet
+  TRIALING   // optional: free trial period
+  ACTIVE     // paid & current
+  PAST_DUE   // payment issues
+  CANCELED
+}
+
+
+model Club {
+  id         String       @id @default(cuid())
+  slug       String       @unique
+  name       String
+  currency   String
+  location   String?
+
+  // BRANDING
+  primaryHex      String?
+  logoKey         String?   
+  emailFromName   String?
+  emailFromEmail  String?
+
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  activities  Activity[]
+  setting     AppSetting?  @relation("ClubSetting")
+  customers   Customer[]   @relation("ClubCustomers")
+  users       User[]
+  staffInvites StaffInvite[]
+
+  // BILLING FIELDS
+  subscriptionPlan    SubscriptionPlan   @default(BASIC)
+  subscriptionStatus  SubscriptionStatus @default(INACTIVE)
+
+  stripeCustomerId     String? @unique
+  stripeSubscriptionId String? @unique
+  stripePriceId        String?
+  trialEndsAt          DateTime?
+
+  // Stripe Connect Express account for payouts
+  stripeConnectAccountId String? @unique
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String
+  password  String
+  role      UserRole @default(ADMIN)
+  clubId    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  club      Club?    @relation(fields: [clubId], references: [id])
+
+  resetTokens PasswordResetToken[]
+
+  @@unique([email, clubId]) // unique per club (multiple NULLs for superadmin are allowed)
+  @@index([clubId]) // speeds up lookups by club
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  token     String    @unique
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId]) // speeds up token→user lookups
+}
+
+model Customer {
+  id        String    @id @default(cuid())
+  clubId    String
+  name      String
+  email     String
+  phone     String?
+  createdAt DateTime  @default(now())
+  bookings  Booking[]
+  club      Club      @relation("ClubCustomers", fields: [clubId], references: [id])
+
+  @@unique([clubId, email])
+  @@index([clubId])
+}
+
+model Activity {
+  id                 String     @id @default(cuid())
+  clubId             String
+  name               String
+  slug               String
+  description        String?
+  durationMin        Int
+  minParty           Int
+  maxParty           Int
+  basePrice          Int?
+  requiresInstructor Boolean
+  locationId         String
+  active             Boolean    @default(true)
+  sport              String     @default("tennis")
+  coverImageUrl      String?
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @default(now()) @updatedAt
+  club               Club       @relation(fields: [clubId], references: [id])
+  bookings           Booking[]
+  timeSlots          TimeSlot[]
+
+  @@unique([clubId, slug])
+  @@index([clubId])
+}
+
+model TimeSlot {
+  id         String    @id @default(cuid())
+  activityId String
+  startAt    DateTime
+  endAt      DateTime?
+  capacity   Int
+  priceCents Int
+  bookings   Booking[]
+  activity   Activity  @relation(fields: [activityId], references: [id])
+
+  @@unique([activityId, startAt])
+  @@index([activityId, startAt])
+}
+
+model Booking {
+  id         String        @id @default(cuid())
+  customerId String
+  activityId String
+  timeSlotId String
+  partySize  Int
+  totalPrice Int
+  status     BookingStatus @default(pending)
+  notes      String?
+  createdAt  DateTime      @default(now())
+  activity   Activity      @relation(fields: [activityId], references: [id])
+  customer   Customer      @relation(fields: [customerId], references: [id])
+  timeSlot   TimeSlot      @relation(fields: [timeSlotId], references: [id])
+  payment    Payment?
+
+  @@index([timeSlotId])
+}
+
+model Payment {
+  id               String          @id @default(cuid())
+  bookingId        String          @unique
+  provider         PaymentProvider
+  providerIntentId String          @unique
+  amount           Int
+  currency         String          @default("EUR")
+  status           PaymentStatus
+  createdAt        DateTime        @default(now())
+  booking          Booking         @relation(fields: [bookingId], references: [id])
+}
+
+model AppSetting {
+  id        String   @id @default(cuid())
+  clubId    String   @unique
+  tz        String
+  lang      String?
+  currency  String?
+  theme     String?
+  accent    String?
+  updatedAt DateTime @updatedAt
+  club      Club     @relation("ClubSetting", fields: [clubId], references: [id])
+}
+
+enum UserRole {
+  SUPERADMIN
+  ADMIN
+  MANAGER
+  COACH
+  STAFF
+}
+
+enum SlotStatus {
+  open
+  closed
+}
+
+enum BookingStatus {
+  pending
+  paid
+  cancelled
+  refunded
+}
+
+enum PaymentProvider {
+  stripe
+}
+
+enum PaymentStatus {
+  requires_action
+  succeeded
+  refunded
+  failed
+}
+
+
+model StaffInvite {
+  id        String   @id @default(cuid())
+  clubId    String
+  email     String
+  role      UserRole @default(STAFF)
+  token     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  club      Club     @relation(fields: [clubId], references: [id])
+
+  @@index([clubId])
+  @@unique([clubId, email, usedAt])
+}
