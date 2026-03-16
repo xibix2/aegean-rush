@@ -112,8 +112,8 @@ export default function SignupPage() {
     backMain: "Back to main site",
     title: "Create your business",
     subtitle:
-      "Set up your business and your first admin account. You’ll choose a plan on the next step.",
-    badge: "Setup & billing next",
+      "Set up your business and your first admin account. On the next step, you’ll connect Stripe to receive payouts from bookings.",
+    badge: "Stripe payout setup next",
     sectionClub: "Business details",
     sectionAdmin: "Admin account",
     clubName: "Business name",
@@ -124,7 +124,7 @@ export default function SignupPage() {
     adminEmail: "Admin email",
     adminPassword: "Admin password",
     pwHint: "Minimum 8 characters.",
-    primaryBtn: "Create my business & continue to billing",
+    primaryBtn: "Create my business & continue",
     cancel: "Cancel",
   };
 
@@ -312,7 +312,7 @@ export default function SignupPage() {
 
               <div className="pt-2 flex items-center justify-between text-[11px] opacity-60">
                 <span>Powered by Aegean Rush</span>
-                <span className="opacity-70">You’ll choose a plan next</span>
+                <span className="opacity-70">You’ll connect Stripe payouts next</span>
               </div>
             </form>
           </div>

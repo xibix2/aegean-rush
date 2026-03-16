@@ -22,13 +22,15 @@ const Body = z.object({
     .optional(),
 });
 
+const PLATFORM_FEE_PERCENT = 0.2;
+
 function env(name: string) {
   const v = process.env[name];
   if (!v) throw new Error(`Missing env: ${name}`);
   return v;
 }
 
-// ✅ Resolve base URL from env OR request (works in dev + prod)
+// Resolve base URL from env OR request (works in dev + prod)
 function getBaseUrl(req: NextRequest) {
   const requestOrigin = req.nextUrl?.origin;
 
@@ -44,14 +46,14 @@ function getBaseUrl(req: NextRequest) {
   return requestOrigin?.replace(/\/+$/, "") ?? "http://localhost:3000";
 }
 
-// 🧩 Helper to build "/{slug}" (or "" on the root)
+// Helper to build "/{slug}" (or "" on the root)
 function getTenantBase(req: NextRequest, tenantSlug?: string | null) {
   const headerSlug = (req.headers.get("x-tenant-slug") || "").trim();
   const slug = headerSlug || (tenantSlug ?? "");
   return slug ? `/${slug}` : "";
 }
 
-// ⚠️ construct at module scope (envs must be set)
+// Construct at module scope (envs must be set)
 const stripe = new Stripe(env("STRIPE_SECRET_KEY"));
 
 async function createSessionAndMaybeRedirect(
@@ -69,14 +71,14 @@ async function createSessionAndMaybeRedirect(
     );
   }
 
-  // 🔒 Tenant (header -> cookie)
+  // Tenant (header -> cookie)
   const tenant = await requireTenant();
   const currency = (tenant.currency || "EUR").toLowerCase();
 
   // Build "/{slug}" once and reuse below
   const tenantBase = getTenantBase(req, (tenant as any)?.slug);
 
-  // 🔒 Activity must belong to tenant
+  // Activity must belong to tenant
   const activity = await prisma.activity.findFirst({
     where: { id: activityId, clubId: tenant.id, active: true },
     select: { id: true, name: true, clubId: true },
@@ -131,7 +133,6 @@ async function createSessionAndMaybeRedirect(
   let dbCustomerId: string;
   if (customer?.email) {
     const c = await prisma.customer.upsert({
-      // matches @@unique([clubId, email])
       where: { clubId_email: { clubId: tenant.id, email: customer.email } },
       update: {
         name: customer.name ?? undefined,
@@ -180,7 +181,7 @@ async function createSessionAndMaybeRedirect(
     },
   });
 
-  // 🔁 load club payout account (for Stripe Connect)
+  // Load club payout account (for Stripe Connect)
   const clubForPayout = await prisma.club.findUnique({
     where: { id: tenant.id },
     select: { stripeConnectAccountId: true },
@@ -199,12 +200,15 @@ async function createSessionAndMaybeRedirect(
       },
     };
 
-  // If the club has connected Stripe, send 100% of the payment to them
+  // If the club has connected Stripe, send 80% to them and keep 20% on the platform
   if (clubForPayout?.stripeConnectAccountId) {
+    const applicationFeeAmount = Math.round(total * PLATFORM_FEE_PERCENT);
+
     paymentIntentData.transfer_data = {
       destination: clubForPayout.stripeConnectAccountId,
     };
-    // ❗ No application_fee_amount here = no platform cut
+
+    paymentIntentData.application_fee_amount = applicationFeeAmount;
   }
 
   // Stripe Checkout Session (expire in 30 minutes)
