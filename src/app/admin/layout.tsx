@@ -8,7 +8,7 @@ export const revalidate = 0;
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Superadmin — Tennis Booking",
+  title: "Superadmin — Aegean Rush Admin",
 };
 
 export default async function SuperAdminLayout({
@@ -26,6 +26,7 @@ export default async function SuperAdminLayout({
     if (role === "ADMIN" && tenant) {
       redirect(`/${tenant}/admin`);
     }
+
     redirect("/login");
   }
 }

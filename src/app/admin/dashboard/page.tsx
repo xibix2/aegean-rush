@@ -85,14 +85,14 @@ export default async function SuperadminDashboardPage() {
             href="/admin/clubs"
             className="inline-flex items-center rounded-lg u-border u-surface px-3 py-1.5 text-sm hover:u-surface-2"
           >
-            View Clubs →
+            View Businesses →
           </Link>
         </div>
       </header>
 
       {/* KPI Cards */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Kpi title="Total Clubs" value={clubsCount} />
+        <Kpi title="Total Businesses" value={clubsCount} />
         <Kpi title="Admins" value={adminsCount} />
         <Kpi title="Bookings (all time)" value={bookingsCount} />
         <Kpi title="Revenue (all time)" value={revenueDisplay} />
@@ -101,11 +101,17 @@ export default async function SuperadminDashboardPage() {
       {/* Activity + sparkline */}
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="rounded-2xl u-border u-surface p-5 lg:col-span-2 glow-soft">
-          <h3 className="text-lg font-semibold mb-1">Bookings last 12 months</h3>
+          <h3 className="text-lg font-semibold mb-1">Bookings in the last 12 months</h3>
           <div className="text-xs opacity-70 mb-4">
             {monthKeys[0]} → {monthKeys[monthKeys.length - 1]}
           </div>
-          <Sparkline data={series} height={140} strokeWidth={2} dotEvery={3} ariaLabel="Bookings trend chart" />
+          <Sparkline
+            data={series}
+            height={140}
+            strokeWidth={2}
+            dotEvery={3}
+            ariaLabel="Bookings trend chart"
+          />
           <div className="mt-4 flex flex-wrap gap-2 text-xs opacity-80">
             {monthKeys.map((m, i) => (
               <span key={m} className="inline-flex items-center gap-1">
@@ -117,21 +123,21 @@ export default async function SuperadminDashboardPage() {
         </div>
 
         <div className="rounded-2xl u-border u-surface p-5 glow-soft">
-          <h3 className="text-lg font-semibold mb-3">Active customers (last 7d)</h3>
+          <h3 className="text-lg font-semibold mb-3">Active guests (last 7d)</h3>
           <div className="text-4xl font-bold">{activeCustomers7d}</div>
           <p className="mt-2 text-sm opacity-75">
-            Unique customers who created a booking during the last 7 days.
+            Unique guests who created a booking during the last 7 days.
           </p>
         </div>
       </section>
 
-      {/* Latest clubs */}
+      {/* Latest businesses */}
       <section className="rounded-2xl u-border u-surface p-5 glow-soft">
-        <h3 className="text-lg font-semibold mb-3">Latest clubs</h3>
+        <h3 className="text-lg font-semibold mb-3">Latest businesses</h3>
         <table className="w-full text-sm">
           <thead className="sticky-head">
             <tr>
-              <th className="px-3 py-2 text-left">Name</th>
+              <th className="px-3 py-2 text-left">Business</th>
               <th className="px-3 py-2 text-left">Slug</th>
               <th className="px-3 py-2 text-left">Created</th>
               <th className="px-3 py-2 text-right">Actions</th>
@@ -165,7 +171,7 @@ export default async function SuperadminDashboardPage() {
             {latestClubs.length === 0 && (
               <tr>
                 <td className="px-3 py-8 text-center opacity-70" colSpan={4}>
-                  No clubs found.
+                  No businesses found.
                 </td>
               </tr>
             )}

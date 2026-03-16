@@ -11,7 +11,7 @@ export const revalidate = 0;
 // ✅ Make sure this page (and the server action) run in Node.js, not edge
 export const runtime = "nodejs";
 
-/** 🔥 HARD DELETE everything for a club (server action) */
+/** 🔥 HARD DELETE everything for a business/operator (server action) */
 async function deleteClub(formData: FormData) {
   "use server";
 
@@ -161,10 +161,10 @@ export default async function AdminClubsPage({
       <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">
-            <span className="text-accent-gradient">Clubs</span>
+            <span className="text-accent-gradient">Businesses</span>
           </h1>
           <p className="mt-1 text-sm opacity-70">
-            Search clubs, open their admin dashboards, or hard-delete them.
+            Search operators, open their admin dashboards, or permanently remove them.
           </p>
         </div>
 
@@ -173,7 +173,7 @@ export default async function AdminClubsPage({
             <input
               name="q"
               defaultValue={q}
-              placeholder="Search name or slug..."
+              placeholder="Search business name or slug..."
               className="h-10 w-64 sm:w-72 rounded-lg u-border u-surface px-3 focus:outline-none focus:ring-1 focus:ring-[var(--accent-400)]"
             />
           </form>
@@ -181,7 +181,7 @@ export default async function AdminClubsPage({
             href="/admin/clubs/new"
             className="inline-flex items-center justify-center rounded-xl h-10 px-4 text-sm font-medium btn-accent"
           >
-            + New club
+            + New business
           </Link>
         </div>
       </header>
@@ -191,7 +191,7 @@ export default async function AdminClubsPage({
         <table className="w-full text-sm">
           <thead className="sticky-head">
             <tr>
-              <th className="px-4 py-3 text-left">Name</th>
+              <th className="px-4 py-3 text-left">Business</th>
               <th className="px-4 py-3 text-left">Slug</th>
               <th className="px-4 py-3 text-left">Plan</th>
               <th className="px-4 py-3 text-left">Status</th>
@@ -225,7 +225,7 @@ export default async function AdminClubsPage({
                       <input type="hidden" name="clubId" value={c.id} />
                       <ConfirmDeleteButton
                         label="Delete"
-                        confirmText={`Delete club “${c.name}”? This is permanent.`}
+                        confirmText={`Delete business “${c.name}”? This is permanent.`}
                       />
                     </form>
                   </div>
@@ -235,7 +235,7 @@ export default async function AdminClubsPage({
             {clubs.length === 0 && (
               <tr>
                 <td className="px-4 py-8 text-center opacity-70" colSpan={6}>
-                  No clubs yet.
+                  No businesses yet.
                 </td>
               </tr>
             )}

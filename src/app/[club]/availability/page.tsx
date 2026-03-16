@@ -7,17 +7,15 @@ import { requireTenant } from "@/lib/tenant";
 export const revalidate = 0;
 export const dynamic = "force-dynamic";
 
-export default async function TimetablePage({
+export default async function AvailabilityPage({
   params,
   searchParams,
 }: {
   params: { club: string };
   searchParams?: Record<string, string | string[] | undefined>;
 }) {
-  // Resolve & validate tenant from the URL
   const tenant = await requireTenant(params.club);
 
-  // UI prefs
   const jar = await cookies();
   const lang = jar.get("ui_lang")?.value ?? "en";
   const currency = jar.get("ui_currency")?.value ?? "€";
@@ -25,7 +23,7 @@ export default async function TimetablePage({
 
   return (
     <TimetableClient
-      tenantSlug={tenant.slug}   // 👈 pass the slug down
+      tenantSlug={tenant.slug}
       searchParams={searchParams}
       t={t}
       currency={currency}

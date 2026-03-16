@@ -80,22 +80,23 @@ export default async function NewClubPage() {
     <main className="max-w-lg mx-auto p-6 space-y-6">
       <header>
         <h1 className="text-3xl font-semibold tracking-tight">
-          <span className="text-accent-gradient">Create club</span>
+          <span className="text-accent-gradient">Create business</span>
         </h1>
         <p className="opacity-70 mt-1 text-sm">
-          Pick a name, slug and currency. Optionally, create the first admin user.
+          Set up a new operator with a name, slug and currency. Optionally, create the
+          first admin user.
         </p>
       </header>
 
       <form action={createClub} className="space-y-4 rounded-2xl u-border u-surface p-5">
-        {/* Club fields */}
+        {/* Business fields */}
         <label className="block text-sm">
-          <span className="opacity-80">Name</span>
+          <span className="opacity-80">Business name</span>
           <input
             name="name"
             type="text"
             required
-            placeholder="Harbor Tennis"
+            placeholder="Aegean Rush Watersports"
             className="mt-1 w-full h-11 rounded-lg u-border u-surface px-3 focus:outline-none focus:ring-1 focus:ring-[var(--accent-400)]"
           />
         </label>
@@ -106,7 +107,7 @@ export default async function NewClubPage() {
             name="slug"
             type="text"
             pattern="[a-z0-9-]+"
-            placeholder="harbor-tennis"
+            placeholder="aegean-rush"
             className="mt-1 w-full h-11 rounded-lg u-border u-surface px-3 focus:outline-none focus:ring-1 focus:ring-[var(--accent-400)]"
           />
           <small className="opacity-60">Lowercase, numbers and dashes only.</small>
@@ -128,14 +129,14 @@ export default async function NewClubPage() {
         <div className="h-px bg-[--color-border] my-4" />
 
         {/* Optional initial admin */}
-        <h3 className="text-sm font-medium opacity-85">Initial admin (optional)</h3>
+        <h3 className="text-sm font-medium opacity-85">Initial business admin (optional)</h3>
 
         <label className="block text-sm">
           <span className="opacity-80">Admin email</span>
           <input
             name="adminEmail"
             type="email"
-            placeholder="owner@harbor-tennis.com"
+            placeholder="owner@aegeanrush.com"
             className="mt-1 w-full h-11 rounded-lg u-border u-surface px-3 focus:outline-none focus:ring-1 focus:ring-[var(--accent-400)]"
           />
         </label>
@@ -149,13 +150,14 @@ export default async function NewClubPage() {
             className="mt-1 w-full h-11 rounded-lg u-border u-surface px-3 focus:outline-none focus:ring-1 focus:ring-[var(--accent-400)]"
           />
           <small className="opacity-60">
-            If you fill both email & password, an ADMIN user will be created for this club.
+            If you fill both email & password, an ADMIN user will be created for this
+            business.
           </small>
         </label>
 
         <div className="flex items-center gap-3 pt-2">
           <button className="inline-flex items-center justify-center rounded-xl px-5 h-11 text-sm font-medium btn-accent">
-            Create club
+            Create business
           </button>
           <a href="/admin/clubs" className="text-sm opacity-80 hover:opacity-100">
             Cancel

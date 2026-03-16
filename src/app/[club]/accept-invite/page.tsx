@@ -14,7 +14,6 @@ export default async function AcceptInvitePage({
   params: MaybePromise<{ club: string }>;
   searchParams?: MaybePromise<Record<string, string | string[] | undefined>>;
 }) {
-  // ✅ Support Next 14 (plain objects) + Next 15 (Promises)
   const resolvedParams = await Promise.resolve(params);
   const resolvedSearchParams = searchParams
     ? await Promise.resolve(searchParams)
@@ -27,9 +26,9 @@ export default async function AcceptInvitePage({
 
   if (!token) {
     return (
-      <main className="max-w-xl mx-auto p-6">
-        <div className="rounded-2xl u-border u-surface p-6 text-center">
-          <h1 className="text-xl font-semibold">Accept invite</h1>
+      <main className="mx-auto max-w-xl p-6">
+        <div className="u-border u-surface rounded-2xl p-6 text-center">
+          <h1 className="text-xl font-semibold">Accept staff invite</h1>
           <p className="mt-2 text-sm opacity-70">
             Missing invite token. Please use the link from your email.
           </p>
@@ -38,7 +37,6 @@ export default async function AcceptInvitePage({
     );
   }
 
-  // ✅ Verify invite exists + belongs to the club in the URL
   const invite = await prisma.staffInvite.findFirst({
     where: {
       token,
@@ -60,17 +58,19 @@ export default async function AcceptInvitePage({
   }
 
   return (
-    <main className="max-w-xl mx-auto p-6">
-      <div className="rounded-2xl u-border u-surface p-6 text-center">
-        <h1 className="text-xl font-semibold">Accept invite</h1>
+    <main className="mx-auto max-w-xl p-6">
+      <div className="u-border u-surface rounded-2xl p-6 text-center">
+        <h1 className="text-xl font-semibold">Accept staff invite</h1>
+
         <p className="mt-2 text-sm opacity-70">
-          Invite found for <span className="font-medium">{invite.email}</span>{" "}
-          to join <span className="font-medium">{invite.club.name}</span> as{" "}
+          Invite found for <span className="font-medium">{invite.email}</span> to
+          join <span className="font-medium">{invite.club.name}</span> as{" "}
           <span className="font-medium">{invite.role}</span>.
         </p>
 
         <p className="mt-4 text-xs opacity-60">
-          Next step: create account / set password / mark invite used.
+          Next step: create your account, set your password, and activate your
+          access for this business.
         </p>
       </div>
     </main>

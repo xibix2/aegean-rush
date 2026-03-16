@@ -3,7 +3,6 @@
 
 import React, { createContext, useContext, useMemo } from "react";
 
-
 /** Full dictionaries (EN + EL) */
 const DICTS = {
   en: {
@@ -25,39 +24,44 @@ const DICTS = {
     "bookings.summary.none": "No bookings found.",
     "bookings.table.created": "Created",
     "bookings.table.status": "Status",
-    "bookings.table.activity": "Activity / Court",
+    "bookings.table.activity": "Activity",
     "bookings.table.time": "Time",
     "bookings.table.name": "Name",
     "bookings.table.email": "Email",
-    "bookings.table.players": "Pl.",
+    "bookings.table.players": "Guests",
+
     "nav.aria": "Admin navigation",
     "nav.dashboard": "Dashboard",
     "nav.activities": "Activities",
     "nav.slots": "Time Slots",
     "nav.bookings": "Bookings",
-    "nav.stats": "Stats",
+    "nav.stats": "Analytics",
     "nav.exportCsv": "Export CSV",
     "nav.settings": "Settings",
-    "home.hero.title": "Choose your court. Book in seconds.",
+
+    "home.hero.title": "Book unforgettable activities in seconds.",
     "home.hero.subtitle":
-      "Real-time tennis court availability. Pick a court, pick a time, and you're set.",
-    "home.hero.cta": "View courts",
+      "Real-time availability for watersports, excursions, and experiences. Pick an activity, choose a time, and you're set.",
+    "home.hero.cta": "View activities",
     "home.trust.realTime": "Real-time availability",
     "home.trust.secureCheckout": "Secure checkout with Stripe",
-    "home.courts.label": "Available courts",
-    "home.courts.title": "Available courts",
+    "home.courts.label": "Available activities",
+    "home.courts.title": "Available activities",
+
     "admin.dashboard.title": "Control Center",
     "admin.dashboard.subtitle":
       "Manage all your activities, bookings, and performance insights.",
+
     "admin.activities.title": "Activities Editor",
-    "admin.activities.subtitle": "Quickly scan your courts and jump into editing.",
+    "admin.activities.subtitle": "Quickly review your activities and jump into editing.",
     "admin.activities.stats.total": "Total Activities",
-    "admin.activities.stats.active": "Active Courts",
+    "admin.activities.stats.active": "Active Activities",
     "admin.activities.stats.inactive": "Inactive",
     "admin.activities.stats.avgDuration": "Avg. Duration",
     "admin.activities.stats.avgCapacity": "Avg. Capacity",
     "admin.activities.stats.min": "min",
     "admin.activities.back": "Back",
+
     "admin.activities.form.name": "Name",
     "admin.activities.form.duration": "Duration (min)",
     "admin.activities.form.price": "Standard price (€)",
@@ -67,27 +71,28 @@ const DICTS = {
     "admin.activities.form.cover": "Cover image",
     "admin.activities.form.description": "Description",
     "admin.activities.form.descriptionPlaceholder":
-      "Surface, lighting, indoor/outdoor...",
+      "Short description, meeting point, highlights...",
     "admin.activities.form.save": "Save",
     "admin.activities.form.delete": "Delete",
     "admin.activities.new.title": "New Activity",
     "admin.activities.new.create": "Create",
+
     "calendar.title": "Calendar & Slot Manager",
     "calendar.sport.switch": "Switch to",
     "calendar.controls.month": "Select month",
     "calendar.controls.hint": "Pick a day to view or generate slots.",
     "calendar.monthOverview": "Month overview",
-    "calendar.freeSlots": "free slots",
+    "calendar.freeSlots": "available slots",
     "calendar.slotsOn": "Slots on",
     "calendar.loading": "Loading…",
     "calendar.empty": "No slots for this day.",
-    "calendar.free": "Free",
+    "calendar.free": "Available",
     "calendar.full": "Full",
     "calendar.msg.created": "Created",
     "calendar.msg.failed": "Failed to create slots. Check inputs.",
     "calendar.generator.title": "Generate slots",
-    "calendar.generator.courts": "Courts",
-    "calendar.generator.noCourts": "No courts found. Add some first.",
+    "calendar.generator.courts": "Activities",
+    "calendar.generator.noCourts": "No activities found. Add some first.",
     "calendar.generator.from": "From",
     "calendar.generator.to": "To",
     "calendar.generator.startHour": "Start hour",
@@ -98,9 +103,8 @@ const DICTS = {
     "calendar.generator.dows": "Days of week",
     "calendar.generator.generate": "Generate",
 
-    /* --- Admin Login --- */
     "admin.login.title": "Admin Login",
-    "admin.login.subtitle": "Access your management dashboard securely.",
+    "admin.login.subtitle": "Access your business dashboard securely.",
     "admin.login.username": "Username",
     "admin.login.password": "Password",
     "admin.login.show": "Show",
@@ -114,9 +118,8 @@ const DICTS = {
     "admin.login.error.invalid": "Invalid username or password.",
     "admin.login.error.network": "Network error. Please try again.",
 
-    /* --- Settings --- */
     "settings.title": "Settings",
-    "settings.subtitle": "Configure the app and interface.",
+    "settings.subtitle": "Configure your business and interface.",
     "settings.saved": "Preferences saved.",
     "settings.app": "App Settings",
     "settings.timezone": "Timezone",
@@ -138,8 +141,6 @@ const DICTS = {
     "settings.back": "Back",
     "settings.save": "Save settings",
 
-    
-    /* --- Slot Generator --- */
     "slots.generator.title": "Bulk Slot Generator",
     "slots.generator.created": "Generated",
     "slots.generator.slots": "slots",
@@ -163,7 +164,6 @@ const DICTS = {
     "slots.generator.button": "Generate",
     "slots.generator.back": "Back to slots",
 
-    /* --- Slot Admin Page --- */
     "admin.slot.title": "Manage Slot",
     "admin.slot.back": "← Back to dashboard",
     "admin.slot.notFound": "Slot not found",
@@ -172,8 +172,8 @@ const DICTS = {
     "admin.slot.statsPendingFresh": "Pending (fresh)",
     "admin.slot.statsRemaining": "Remaining",
     "admin.slot.addTitle": "Add booking (admin)",
-    "admin.slot.customerName": "Customer name",
-    "admin.slot.customerEmail": "Customer email",
+    "admin.slot.customerName": "Guest name",
+    "admin.slot.customerEmail": "Guest email",
     "admin.slot.namePlaceholder": "e.g. Maria Papadopoulou",
     "admin.slot.emailPlaceholder": "email@example.com",
     "admin.slot.partySize": "Party size",
@@ -198,14 +198,12 @@ const DICTS = {
     "admin.slot.meta.bookingId": "Booking",
     "admin.slot.meta.pi": "PI",
 
-    // Stats page
     "stats.title": "Analytics",
     "stats.range.7d": "Last 7d",
     "stats.range.30d": "Last 30d",
     "stats.range.90d": "Last 90d",
     "stats.range.lastNDays": "Last {n} days",
 
-    // Summary cards
     "stats.cards.revenue": "Revenue",
     "stats.cards.refunds": "Refunds",
     "stats.cards.netRevenue": "Net revenue",
@@ -215,14 +213,12 @@ const DICTS = {
     "stats.cards.utilization": "Utilization",
     "stats.cards.conversion": "Conversion",
 
-    // Activities table
     "stats.activities.title": "Top activities",
     "stats.activities.activity": "Activity",
     "stats.activities.revenue": "Revenue",
     "stats.activities.bookings": "Bookings",
     "stats.activities.seats": "Seats",
 
-    // Daily chart
     "stats.daily.title": "Daily performance",
     "stats.daily.axisLeft": "Revenue (€)",
     "stats.daily.axisRight": "Bookings",
@@ -234,15 +230,13 @@ const DICTS = {
     "stats.daily.tooltip.revenue": "Revenue",
     "stats.daily.tooltip.refunds": "Refunds",
     "stats.daily.tooltip.net": "Net revenue",
-
-    // Empty / misc
     "stats.empty": "No data in this range.",
 
     "admin.slot.aria.addBooking": "Add booking",
     "admin.slot.aria.markPaid": "Mark as paid",
     "admin.slot.aria.partySize": "Party size",
-    "admin.slot.aria.customerName": "Customer name",
-    "admin.slot.aria.customerEmail": "Customer email",
+    "admin.slot.aria.customerName": "Guest name",
+    "admin.slot.aria.customerEmail": "Guest email",
     "admin.slot.aria.openInBookings": "Open in Bookings",
     "admin.slot.aria.cancel": "Cancel booking",
     "admin.slot.aria.refund": "Refund booking",
@@ -262,19 +256,19 @@ const DICTS = {
     "admin.dashboard.edit": "Edit",
     "admin.dashboard.aria.datePicker": "Pick a date",
 
-    "activities.title": "Choose your court",
-    "activities.subtitle": "Real-time tennis court availability.",
+    "activities.title": "Choose your activity",
+    "activities.subtitle": "Real-time activity availability.",
     "activities.backTitle": "Back to home",
     "activities.back": "Back",
     "activities.empty": "No activities yet. Create one in",
-    "activities.preview": "Court preview",
+    "activities.preview": "Activity preview",
     "activities.minutes": "min",
     "activities.spots": "Spots",
-    "activities.club": "Club",
-    "activities.select": "Select court",
+    "activities.club": "Location",
+    "activities.select": "Select activity",
 
     "timetable.subtitle": "Choose a time slot for your booking.",
-    "timetable.players": "Players",
+    "timetable.players": "Guests",
     "timetable.loading": "Loading available time slots…",
     "timetable.empty": "No available time slots for this date.",
     "timetable.full": "Full",
@@ -284,8 +278,8 @@ const DICTS = {
     "timetable.error.invalidDate": "Please select a valid date.",
     "timetable.error.fromTomorrow": "Bookings are available from tomorrow onward.",
     "timetable.error.loadFailed": "Failed to load availability.",
-    "timetable.aria.decrease": "Decrease players",
-    "timetable.aria.increase": "Increase players",
+    "timetable.aria.decrease": "Decrease guests",
+    "timetable.aria.increase": "Increase guests",
 
     "booking.notFoundTitle": "Booking not found",
     "booking.notFoundText": "This booking may have been cancelled or doesn’t exist.",
@@ -293,7 +287,7 @@ const DICTS = {
     "booking.thankYou": "Thank you for your booking!",
     "booking.processing": "Your booking is being processed",
     "booking.success1": "Your payment was received successfully.",
-    "booking.success2": "Your court is now",
+    "booking.success2": "Your booking is now",
     "booking.confirmed": "confirmed",
     "booking.success3": "We’ll email you a receipt and confirmation shortly.",
     "booking.pending1": "We’re finalizing your booking with our payment provider.",
@@ -308,7 +302,7 @@ const DICTS = {
 
     "carousel.aria": "Activities carousel",
     "carousel.new": "New activity",
-    "carousel.new.desc": "Add a court with cover, capacity & details.",
+    "carousel.new.desc": "Add an activity with cover, capacity & details.",
     "carousel.preview": "Activity preview",
     "carousel.min": "min",
     "carousel.spots": "spots",
@@ -316,12 +310,10 @@ const DICTS = {
     "carousel.prev": "Previous",
     "carousel.next": "Next",
 
-    "courts.preview": "Court preview",
-    "courts.selectBtn": "Select courts",
-
+    "courts.preview": "Activity preview",
+    "courts.selectBtn": "Select activity",
     "courts.descriptionFallback": "Smooth booking experience",
-    "courts.locationFallback": "Club facility",
-
+    "courts.locationFallback": "Business location",
     "courts.aria.prev": "Previous",
     "courts.aria.next": "Next",
     "courts.aria.slide": "Go to slide {{n}}",
@@ -395,8 +387,7 @@ const DICTS = {
     "calendar.legend.some": "some left",
     "calendar.legend.low": "low",
     "calendar.legend.full": "full",
-    "calendar.legend.left": "left"
-
+    "calendar.legend.left": "left",
   },
 
   el: {
@@ -418,11 +409,12 @@ const DICTS = {
     "bookings.summary.none": "Δεν βρέθηκαν κρατήσεις.",
     "bookings.table.created": "Δημιουργήθηκε",
     "bookings.table.status": "Κατάσταση",
-    "bookings.table.activity": "Δραστηριότητα / Γήπεδο",
+    "bookings.table.activity": "Δραστηριότητα",
     "bookings.table.time": "Ώρα",
     "bookings.table.name": "Όνομα",
     "bookings.table.email": "Email",
-    "bookings.table.players": "Παίξ.",
+    "bookings.table.players": "Άτομα",
+
     "nav.aria": "Πλοήγηση διαχειριστή",
     "nav.dashboard": "Πίνακας",
     "nav.activities": "Δραστηριότητες",
@@ -431,26 +423,30 @@ const DICTS = {
     "nav.stats": "Στατιστικά",
     "nav.exportCsv": "Εξαγωγή CSV",
     "nav.settings": "Ρυθμίσεις",
-    "home.hero.title": "Επίλεξε γήπεδο. Κάνε κράτηση σε δευτερόλεπτα.",
+
+    "home.hero.title": "Κλείστε αξέχαστες δραστηριότητες σε δευτερόλεπτα.",
     "home.hero.subtitle":
-      "Δες τη διαθεσιμότητα σε πραγματικό χρόνο. Επίλεξε γήπεδο και ώρα εύκολα.",
-    "home.hero.cta": "Δες τα γήπεδα",
+      "Διαθεσιμότητα δραστηριοτήτων σε πραγματικό χρόνο για watersports, εκδρομές και εμπειρίες.",
+    "home.hero.cta": "Δείτε δραστηριότητες",
     "home.trust.realTime": "Διαθεσιμότητα σε πραγματικό χρόνο",
     "home.trust.secureCheckout": "Ασφαλής πληρωμή μέσω Stripe",
-    "home.courts.label": "Διαθέσιμα γήπεδα",
-    "home.courts.title": "Διαθέσιμα γήπεδα",
+    "home.courts.label": "Διαθέσιμες δραστηριότητες",
+    "home.courts.title": "Διαθέσιμες δραστηριότητες",
+
     "admin.dashboard.title": "Πίνακας Ελέγχου",
     "admin.dashboard.subtitle":
       "Διαχειριστείτε όλες τις δραστηριότητες, κρατήσεις και στατιστικά σας.",
+
     "admin.activities.title": "Επεξεργασία Δραστηριοτήτων",
-    "admin.activities.subtitle": "Δείτε γρήγορα τα γήπεδα και προχωρήστε σε επεξεργασία.",
+    "admin.activities.subtitle": "Δείτε γρήγορα τις δραστηριότητές σας και προχωρήστε σε επεξεργασία.",
     "admin.activities.stats.total": "Σύνολο Δραστηριοτήτων",
-    "admin.activities.stats.active": "Ενεργά Γήπεδα",
-    "admin.activities.stats.inactive": "Ανενεργά",
+    "admin.activities.stats.active": "Ενεργές Δραστηριότητες",
+    "admin.activities.stats.inactive": "Ανενεργές",
     "admin.activities.stats.avgDuration": "Μέση Διάρκεια",
     "admin.activities.stats.avgCapacity": "Μέση Χωρητικότητα",
     "admin.activities.stats.min": "λεπτά",
     "admin.activities.back": "Πίσω",
+
     "admin.activities.form.name": "Όνομα",
     "admin.activities.form.duration": "Διάρκεια (λεπτά)",
     "admin.activities.form.price": "Τυπική τιμή (€)",
@@ -460,11 +456,12 @@ const DICTS = {
     "admin.activities.form.cover": "Εικόνα εξωφύλλου",
     "admin.activities.form.description": "Περιγραφή",
     "admin.activities.form.descriptionPlaceholder":
-      "Επιφάνεια, φωτισμός, εσωτερικό/εξωτερικό...",
+      "Σύντομη περιγραφή, σημείο συνάντησης, λεπτομέρειες...",
     "admin.activities.form.save": "Αποθήκευση",
     "admin.activities.form.delete": "Διαγραφή",
     "admin.activities.new.title": "Νέα Δραστηριότητα",
     "admin.activities.new.create": "Δημιουργία",
+
     "calendar.title": "Ημερολόγιο & Διαχείριση Slots",
     "calendar.sport.switch": "Μετάβαση σε",
     "calendar.controls.month": "Επιλογή μήνα",
@@ -477,12 +474,10 @@ const DICTS = {
     "calendar.free": "Διαθέσιμο",
     "calendar.full": "Πλήρες",
     "calendar.msg.created": "Δημιουργήθηκαν",
-    "calendar.msg.failed":
-      "Αποτυχία δημιουργίας slots. Έλεγξε τα στοιχεία.",
+    "calendar.msg.failed": "Αποτυχία δημιουργίας slots. Έλεγξε τα στοιχεία.",
     "calendar.generator.title": "Δημιουργία slots",
-    "calendar.generator.courts": "Γήπεδα",
-    "calendar.generator.noCourts":
-      "Δεν βρέθηκαν γήπεδα. Πρόσθεσε πρώτα.",
+    "calendar.generator.courts": "Δραστηριότητες",
+    "calendar.generator.noCourts": "Δεν βρέθηκαν δραστηριότητες. Πρόσθεσε πρώτα.",
     "calendar.generator.from": "Από",
     "calendar.generator.to": "Έως",
     "calendar.generator.startHour": "Ώρα έναρξης",
@@ -493,9 +488,8 @@ const DICTS = {
     "calendar.generator.dows": "Ημέρες εβδομάδας",
     "calendar.generator.generate": "Δημιουργία",
 
-    /* --- Σύνδεση Διαχειριστή --- */
     "admin.login.title": "Σύνδεση Διαχειριστή",
-    "admin.login.subtitle": "Συνδεθείτε με ασφάλεια στον πίνακα ελέγχου.",
+    "admin.login.subtitle": "Συνδεθείτε με ασφάλεια στον πίνακα διαχείρισης.",
     "admin.login.username": "Όνομα χρήστη",
     "admin.login.password": "Κωδικός πρόσβασης",
     "admin.login.show": "Εμφάνιση",
@@ -506,14 +500,11 @@ const DICTS = {
     "admin.login.forgot": "Ξεχάσατε τον κωδικό;",
     "admin.login.signIn": "Σύνδεση",
     "admin.login.signingIn": "Σύνδεση…",
-    "admin.login.error.invalid":
-      "Μη έγκυρο όνομα χρήστη ή κωδικός.",
-    "admin.login.error.network":
-      "Σφάλμα δικτύου. Δοκιμάστε ξανά.",
+    "admin.login.error.invalid": "Μη έγκυρο όνομα χρήστη ή κωδικός.",
+    "admin.login.error.network": "Σφάλμα δικτύου. Δοκιμάστε ξανά.",
 
-    /* --- Ρυθμίσεις --- */
     "settings.title": "Ρυθμίσεις",
-    "settings.subtitle": "Παραμετροποιήστε την εφαρμογή και το περιβάλλον.",
+    "settings.subtitle": "Παραμετροποιήστε την επιχείρηση και το περιβάλλον.",
     "settings.saved": "Οι προτιμήσεις αποθηκεύτηκαν.",
     "settings.app": "Ρυθμίσεις εφαρμογής",
     "settings.timezone": "Ζώνη ώρας",
@@ -535,12 +526,10 @@ const DICTS = {
     "settings.back": "Πίσω",
     "settings.save": "Αποθήκευση ρυθμίσεων",
 
-    /* --- Μαζική Δημιουργία Slots --- */
     "slots.generator.title": "Μαζική Δημιουργία Slots",
     "slots.generator.created": "Δημιουργήθηκαν",
     "slots.generator.slots": "slots",
-    "slots.generator.none":
-      "Δεν δημιουργήθηκαν slots για τις επιλεγμένες ρυθμίσεις.",
+    "slots.generator.none": "Δεν δημιουργήθηκαν slots για τις επιλεγμένες ρυθμίσεις.",
     "slots.generator.activity": "Δραστηριότητα",
     "slots.generator.select": "Επιλογή",
     "slots.generator.time": "Ώρα",
@@ -560,7 +549,6 @@ const DICTS = {
     "slots.generator.button": "Δημιουργία",
     "slots.generator.back": "Πίσω στα slots",
 
-    /* --- Σελίδα Διαχείρισης Slot --- */
     "admin.slot.title": "Διαχείριση Slot",
     "admin.slot.back": "← Πίσω στον πίνακα",
     "admin.slot.notFound": "Το slot δεν βρέθηκε",
@@ -577,7 +565,7 @@ const DICTS = {
     "admin.slot.markPaid": "Σήμανση ως πληρωμένο",
     "admin.slot.addBookingBtn": "Προσθήκη κράτησης",
     "admin.slot.capNote":
-      "Ο έλεγχος χωρητικότητας υπολογίζει πληρωμένες + εκκρεμείς (τελευταίων 30’).",
+      "Ο έλεγχος χωρητικότητας υπολογίζει πληρωμένες + εκκρεμείς κρατήσεις των τελευταίων 30’.",
     "admin.slot.listTitle": "Κρατήσεις για αυτό το slot",
     "admin.slot.openInBookings": "Άνοιγμα στις Κρατήσεις",
     "admin.slot.cancel": "Ακύρωση",
@@ -595,14 +583,12 @@ const DICTS = {
     "admin.slot.meta.bookingId": "Κράτηση",
     "admin.slot.meta.pi": "PI",
 
-    // Stats page
     "stats.title": "Στατιστικά",
     "stats.range.7d": "Τελευταίες 7η",
     "stats.range.30d": "Τελευταίες 30η",
     "stats.range.90d": "Τελευταίες 90η",
     "stats.range.lastNDays": "Τελευταίες {n} ημέρες",
 
-    // Summary cards
     "stats.cards.revenue": "Έσοδα",
     "stats.cards.refunds": "Επιστροφές",
     "stats.cards.netRevenue": "Καθαρά έσοδα",
@@ -612,14 +598,12 @@ const DICTS = {
     "stats.cards.utilization": "Πληρότητα",
     "stats.cards.conversion": "Μετατροπή",
 
-    // Activities table
     "stats.activities.title": "Κορυφαίες δραστηριότητες",
     "stats.activities.activity": "Δραστηριότητα",
     "stats.activities.revenue": "Έσοδα",
     "stats.activities.bookings": "Κρατήσεις",
     "stats.activities.seats": "Θέσεις",
 
-    // Daily chart
     "stats.daily.title": "Ημερήσια απόδοση",
     "stats.daily.axisLeft": "Έσοδα (€)",
     "stats.daily.axisRight": "Κρατήσεις",
@@ -631,8 +615,6 @@ const DICTS = {
     "stats.daily.tooltip.revenue": "Έσοδα",
     "stats.daily.tooltip.refunds": "Επιστροφές",
     "stats.daily.tooltip.net": "Καθαρά έσοδα",
-
-    // Empty / misc
     "stats.empty": "Δεν υπάρχουν δεδομένα για αυτό το εύρος.",
 
     "admin.slot.aria.addBooking": "Προσθήκη κράτησης",
@@ -659,19 +641,19 @@ const DICTS = {
     "admin.dashboard.edit": "Επεξεργασία",
     "admin.dashboard.aria.datePicker": "Επιλέξτε ημερομηνία",
 
-    "activities.title": "Επιλέξτε γήπεδο",
-    "activities.subtitle": "Διαθεσιμότητα γηπέδων σε πραγματικό χρόνο.",
+    "activities.title": "Επιλέξτε δραστηριότητα",
+    "activities.subtitle": "Διαθεσιμότητα δραστηριοτήτων σε πραγματικό χρόνο.",
     "activities.backTitle": "Επιστροφή στην αρχική",
     "activities.back": "Πίσω",
     "activities.empty": "Δεν υπάρχουν δραστηριότητες ακόμα. Δημιουργήστε μία στο",
-    "activities.preview": "Προεπισκόπηση γηπέδου",
+    "activities.preview": "Προεπισκόπηση δραστηριότητας",
     "activities.minutes": "λεπτά",
     "activities.spots": "Θέσεις",
-    "activities.club": "Όμιλος",
-    "activities.select": "Επιλογή γηπέδου",
+    "activities.club": "Τοποθεσία",
+    "activities.select": "Επιλογή δραστηριότητας",
 
     "timetable.subtitle": "Επιλέξτε ώρα για την κράτησή σας.",
-    "timetable.players": "Παίκτες",
+    "timetable.players": "Άτομα",
     "timetable.loading": "Φόρτωση διαθέσιμων ωρών…",
     "timetable.empty": "Δεν υπάρχουν διαθέσιμες ώρες για αυτήν την ημερομηνία.",
     "timetable.full": "Πλήρες",
@@ -681,8 +663,8 @@ const DICTS = {
     "timetable.error.invalidDate": "Επιλέξτε έγκυρη ημερομηνία.",
     "timetable.error.fromTomorrow": "Οι κρατήσεις είναι διαθέσιμες από αύριο και μετά.",
     "timetable.error.loadFailed": "Αποτυχία φόρτωσης διαθεσιμότητας.",
-    "timetable.aria.decrease": "Μείωση παικτών",
-    "timetable.aria.increase": "Αύξηση παικτών",
+    "timetable.aria.decrease": "Μείωση ατόμων",
+    "timetable.aria.increase": "Αύξηση ατόμων",
 
     "booking.notFoundTitle": "Η κράτηση δεν βρέθηκε",
     "booking.notFoundText": "Αυτή η κράτηση ενδέχεται να έχει ακυρωθεί ή να μην υπάρχει.",
@@ -690,8 +672,8 @@ const DICTS = {
     "booking.thankYou": "Σας ευχαριστούμε για την κράτηση!",
     "booking.processing": "Η κράτησή σας βρίσκεται σε επεξεργασία",
     "booking.success1": "Η πληρωμή σας ολοκληρώθηκε με επιτυχία.",
-    "booking.success2": "Το γήπεδό σας είναι πλέον",
-    "booking.confirmed": "επιβεβαιωμένο",
+    "booking.success2": "Η κράτησή σας είναι πλέον",
+    "booking.confirmed": "επιβεβαιωμένη",
     "booking.success3": "Θα σας στείλουμε απόδειξη και επιβεβαίωση σύντομα.",
     "booking.pending1": "Ολοκληρώνουμε την κράτησή σας με τον πάροχο πληρωμών.",
     "booking.pending2": "Παρακαλώ αφήστε τη σελίδα ανοιχτή μέχρι να ενημερωθεί η κατάσταση.",
@@ -700,12 +682,12 @@ const DICTS = {
     "booking.summary": "Περίληψη Κράτησης",
     "booking.activity": "Δραστηριότητα",
     "booking.date": "Ημερομηνία",
-    "booking.partySize": "Αριθμός παικτών",
+    "booking.partySize": "Αριθμός ατόμων",
     "booking.total": "Σύνολο",
 
     "carousel.aria": "Καρουζέλ δραστηριοτήτων",
     "carousel.new": "Νέα δραστηριότητα",
-    "carousel.new.desc": "Προσθέστε γήπεδο με φωτογραφία, χωρητικότητα & λεπτομέρειες.",
+    "carousel.new.desc": "Προσθέστε δραστηριότητα με φωτογραφία, χωρητικότητα και λεπτομέρειες.",
     "carousel.preview": "Προεπισκόπηση δραστηριότητας",
     "carousel.min": "λεπτά",
     "carousel.spots": "θέσεις",
@@ -713,12 +695,10 @@ const DICTS = {
     "carousel.prev": "Προηγούμενο",
     "carousel.next": "Επόμενο",
 
-    "courts.preview": "Προεπισκόπηση γηπέδου",
-    "courts.selectBtn": "Επιλογή γηπέδου",
-
+    "courts.preview": "Προεπισκόπηση δραστηριότητας",
+    "courts.selectBtn": "Επιλογή δραστηριότητας",
     "courts.descriptionFallback": "Ομαλή εμπειρία κράτησης",
-    "courts.locationFallback": "Εγκαταστάσεις συλλόγου",
-
+    "courts.locationFallback": "Τοποθεσία επιχείρησης",
     "courts.aria.prev": "Προηγούμενο",
     "courts.aria.next": "Επόμενο",
     "courts.aria.slide": "Μετάβαση στη διαφάνεια {{n}}",
@@ -792,15 +772,12 @@ const DICTS = {
     "calendar.legend.some": "μερικά διαθέσιμα",
     "calendar.legend.low": "λίγα",
     "calendar.legend.full": "πλήρες",
-    "calendar.legend.left": "διαθέσιμα"
+    "calendar.legend.left": "διαθέσιμα",
   },
 } as const;
 
 export type Lang = keyof typeof DICTS;
 
-/** ===========================
- *  CLIENT CONTEXT + PROVIDER
- *  =========================== */
 const I18nCtx = createContext<(key: string) => string>(() => "");
 
 export function I18nProvider({
@@ -818,16 +795,10 @@ export function I18nProvider({
   return <I18nCtx.Provider value={t}>{children}</I18nCtx.Provider>;
 }
 
-/** ===========================
- *  CLIENT HOOK
- *  =========================== */
 export function useT() {
   return useContext(I18nCtx);
 }
 
-/** ===========================
- *  SERVER HELPER (for async pages)
- *  =========================== */
 export async function getT(lang: string = "en") {
   const dict = (DICTS as any)[lang] ?? DICTS.en;
   return (key: string) => (dict as any)[key] ?? key;

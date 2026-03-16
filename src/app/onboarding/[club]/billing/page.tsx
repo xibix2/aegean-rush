@@ -47,7 +47,7 @@ export default async function OnboardingBillingPage({ params, searchParams }: Pa
         </h1>
         <p className="text-sm opacity-75">
           {fromSignup
-            ? `Welcome, ${club.name}. Pick a subscription to activate your club. You can change plans later.`
+            ? `Welcome, ${club.name}. Pick a subscription to activate your business. You can change plans later.`
             : `Manage the subscription for ${club.name}.`}
         </p>
       </header>

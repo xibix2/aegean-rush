@@ -8,7 +8,7 @@ import Link from "next/link";
 export default function AdminLoginPage() {
   const TXT = {
     title: "Admin Sign In",
-    subtitle: "Log in to manage your club.",
+    subtitle: "Log in to manage your business.",
     username: "Email",
     password: "Password",
     showPw: "Show password",
@@ -22,7 +22,7 @@ export default function AdminLoginPage() {
     errInvalid: "Invalid username or password",
     errNetwork: "Network error",
     backMain: "Back to main site",
-    backClub: "Back to club page",
+    backClub: "Back to business page",
     secure: "Secure admin access",
   };
 
@@ -221,7 +221,7 @@ export default function AdminLoginPage() {
 
               {tenantParam && (
                 <p className="mt-2 text-xs opacity-70">
-                  Club: <span className="opacity-100 font-medium">{tenantParam}</span>
+                  Business: <span className="opacity-100 font-medium">{tenantParam}</span>
                 </p>
               )}
 
@@ -238,7 +238,7 @@ export default function AdminLoginPage() {
 
             {/* Helper row */}
             <div className="mt-6 flex items-center justify-between text-xs opacity-70">
-              <span>Use your club admin email & password.</span>
+              <span>Use your business admin email & password.</span>
               <a href="/forgot-password" className="hover:opacity-100">
                 {TXT.forgot}
               </a>
@@ -320,7 +320,7 @@ export default function AdminLoginPage() {
               </button>
 
               <div className="pt-2 flex items-center justify-between text-[11px] opacity-60">
-                <span>Powered by TennisPro</span>
+                <span>Powered by Aegean Rush</span>
                 <span className="opacity-70">Admin portal</span>
               </div>
             </form>

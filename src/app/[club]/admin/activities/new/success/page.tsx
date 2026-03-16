@@ -12,12 +12,14 @@ export default function ActivityCreatedSuccessPage({
         <div className="inline-flex items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400 size-12 mb-2">
           <span className="text-2xl">✓</span>
         </div>
+
         <h1 className="text-2xl font-semibold tracking-tight">
-          Activity created
+          Experience created
         </h1>
+
         <p className="text-sm opacity-75">
-          Your new court/activity has been created successfully. You can now
-          add time slots and start taking bookings.
+          Your new experience has been created successfully. You can now add
+          time slots and start accepting bookings.
         </p>
 
         <div className="pt-4 flex flex-col sm:flex-row gap-3 justify-center">
@@ -25,8 +27,9 @@ export default function ActivityCreatedSuccessPage({
             href={base}
             className="inline-flex items-center justify-center rounded-xl h-11 px-5 text-sm font-medium btn-accent"
           >
-            Go to activities
+            Go to experiences
           </Link>
+
           <Link
             href={`/${params.club}/admin/activities/new`}
             className="inline-flex items-center justify-center rounded-xl h-11 px-5 text-sm font-medium u-border u-surface hover:u-surface-2"

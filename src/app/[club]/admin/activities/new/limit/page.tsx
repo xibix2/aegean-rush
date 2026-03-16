@@ -13,12 +13,14 @@ export default function ActivityLimitPage({
         <div className="inline-flex items-center justify-center rounded-full bg-amber-500/10 text-amber-400 size-12 mb-2">
           <span className="text-2xl">!</span>
         </div>
+
         <h1 className="text-2xl font-semibold tracking-tight">
           Plan limit reached
         </h1>
+
         <p className="text-sm opacity-75">
-          You&apos;ve reached the maximum number of activities allowed on your
-          current plan. To add more courts or activities, upgrade your
+          You&apos;ve reached the maximum number of experiences allowed on your
+          current plan. To add more experiences, please upgrade your
           subscription.
         </p>
 
@@ -29,11 +31,12 @@ export default function ActivityLimitPage({
           >
             Upgrade plan
           </Link>
+
           <Link
             href={baseActivities}
             className="inline-flex items-center justify-center rounded-xl h-11 px-5 text-sm font-medium u-border u-surface hover:u-surface-2"
           >
-            Back to activities
+            Back to experiences
           </Link>
         </div>
       </div>

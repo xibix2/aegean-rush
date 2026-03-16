@@ -46,12 +46,12 @@ export default function StripeConnectCard({ tenantSlug, isConnected }: Props) {
         {isConnected ? (
           <>
             Your Stripe account is connected. You can update payout details or
-            business info from your Stripe dashboard. If you need to reconnect,
+            business information from your Stripe dashboard. If you need to reconnect,
             you can restart onboarding below.
           </>
         ) : (
           <>
-            To receive money from bookings, you must complete Stripe&apos;s
+            To receive payments from bookings, you must complete Stripe&apos;s
             onboarding flow and connect a payout account.
           </>
         )}

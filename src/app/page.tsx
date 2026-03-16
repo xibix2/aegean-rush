@@ -26,7 +26,7 @@ export default async function Home() {
       {/* 1. Hero / main header */}
       <HeroSectionClient />
 
-      {/* 2. Segment section: players vs club managers */}
+      {/* 2. Segment section: guests vs business operators */}
       <section className="relative mx-auto max-w-6xl py-4">
         {/* Big ambient glow behind both cards */}
         <div
@@ -44,21 +44,21 @@ export default async function Home() {
           {/* Section heading */}
           <div className="text-center space-y-2">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[--color-accent]">
-              Who is TennisPro for?
+              Who is Aegean Rush for?
             </p>
             <h2 className="text-lg sm:text-xl font-semibold tracking-tight">
-              One platform for players and club managers
+              One platform for guests and activity operators
             </h2>
             <p className="mx-auto max-w-3xl text-sm text-white/75">
-              Players can discover clubs and book courts in seconds. Club
-              managers get a complete booking and payment system with no
-              technical headaches.
+              Guests can discover experiences and book activities in seconds.
+              Business operators get a complete booking and payment system
+              without technical headaches.
             </p>
           </div>
 
           {/* Two-column cards */}
           <div className="grid gap-6 md:grid-cols-2 items-stretch">
-            {/* Players card */}
+            {/* Guests card */}
             <div className="relative overflow-hidden rounded-[26px] border border-white/10 bg-[--color-card]/85 shadow-[0_22px_65px_rgba(0,0,0,0.65)] backdrop-blur-sm transition-transform hover:-translate-y-1">
               {/* top accent strip */}
               <div
@@ -83,22 +83,22 @@ export default async function Home() {
                             "0 0 0 3px color-mix(in oklab, var(--color-accent) 16%, transparent)",
                         }}
                       />
-                      <span className="leading-none text-center">Players</span>
+                      <span className="leading-none text-center">Guests</span>
                     </div>
 
                     {/* icon badge */}
                     <div className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-lg">
-                      🎾
+                      🌊
                     </div>
                   </div>
 
                   <h3 className="text-base font-semibold">
-                    For players & social groups
+                    For guests & groups
                   </h3>
                   <p className="text-sm text-white/78">
-                    Browse partner clubs, see live court availability, and book
-                    your next session in seconds. No phone calls, no
-                    spreadsheets.
+                    Browse activity providers, see live availability, and book
+                    your next experience in seconds. No phone calls, no manual
+                    back-and-forth.
                   </p>
                 </div>
 
@@ -119,13 +119,13 @@ export default async function Home() {
                         animation: "goldenPulse 6s ease-in-out infinite",
                       }}
                     />
-                    <span className="relative z-10">View clubs</span>
+                    <span className="relative z-10">View businesses</span>
                   </Link>
                 </div>
               </div>
             </div>
 
-            {/* Club managers card */}
+            {/* Business operators card */}
             <div className="relative overflow-hidden rounded-[26px] border border-white/10 bg-[--color-card]/85 shadow-[0_22px_65px_rgba(0,0,0,0.65)] backdrop-blur-sm transition-transform hover:-translate-y-1">
               {/* top accent strip */}
               <div
@@ -151,7 +151,7 @@ export default async function Home() {
                         }}
                       />
                       <span className="leading-none text-center">
-                        Club owners
+                        Business owners
                       </span>
                     </div>
 
@@ -162,18 +162,18 @@ export default async function Home() {
                   </div>
 
                   <h3 className="text-base font-semibold">
-                    For club owners & managers
+                    For business owners & operators
                   </h3>
                   <p className="text-sm text-white/78">
                     Accept online bookings, manage schedules, and get paid
-                    automatically. Branded pages for your club with full control
-                    over pricing and capacity.
+                    automatically. Branded pages for your business with full
+                    control over pricing and capacity.
                   </p>
                 </div>
 
                 {/* CTA BUTTONS */}
                 <div className="mt-16 flex flex-wrap gap-4">
-                  {/* CLUB SIGN UP — glowing */}
+                  {/* BUSINESS SIGN UP — glowing */}
                   <Link
                     href="/signup"
                     className="relative inline-flex h-11 items-center gap-2 px-6 rounded-xl font-semibold text-black btn-accent overflow-hidden"
@@ -190,15 +190,15 @@ export default async function Home() {
                         animation: "goldenPulse 6s ease-in-out infinite",
                       }}
                     />
-                    <span className="relative z-10">Club sign up</span>
+                    <span className="relative z-10">Business sign up</span>
                   </Link>
 
-                  {/* CLUB LOGIN — outlined but elegant */}
+                  {/* BUSINESS LOGIN — outlined but elegant */}
                   <a
                     href="/login"
                     className="relative inline-flex h-11 items-center px-6 rounded-xl border border-[--color-border] bg-black/20 text-white/90 font-medium hover:border-[--color-accent] hover:text-white transition"
                   >
-                    Club login
+                    Business login
                   </a>
                 </div>
               </div>
@@ -207,24 +207,24 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* 3. Clubs list */}
+      {/* 3. Businesses list */}
       <section id="clubs" className="relative space-y-8">
         <div className="text-center space-y-3">
           <CourtsHeaderClient />
           <p className="mx-auto max-w-3xl text-sm text-white/75">
-            These are the clubs currently live on TennisPro. Pick one to view
-            courts, pricing and book your next session.
+            These are the businesses currently live on Aegean Rush. Pick one to view
+            activities, pricing and availability.
           </p>
         </div>
 
         {clubs.length === 0 ? (
           <div className="mx-auto max-w-5xl rounded-2xl border border-[--color-border] bg-[--color-card]/60 p-6 text-sm text-center opacity-85">
-            No clubs are live yet. Check back soon, or{" "}
+            No businesses are live yet. Check back soon, or{" "}
             <Link
-              href="/admin/signup"
+              href="/signup"
               className="text-[--color-accent] underline-offset-2 hover:underline"
             >
-              add your club to TennisPro
+              add your business to Aegean Rush
             </Link>
             .
           </div>

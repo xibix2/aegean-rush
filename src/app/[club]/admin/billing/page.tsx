@@ -13,7 +13,6 @@ export default async function BillingPage({
 }: {
   searchParams?: Record<string, string | string[] | undefined>;
 }) {
-  // 🔒 Resolve tenant, then enforce ADMIN / SUPERADMIN only
   const tenant = await requireTenant();
   await requireClubAdminStrict(tenant.id);
 
@@ -29,7 +28,7 @@ export default async function BillingPage({
   });
 
   if (!club) {
-    throw new Error("Club not found");
+    throw new Error("Business not found");
   }
 
   const justConnected = searchParams?.connected === "1";
@@ -49,8 +48,7 @@ export default async function BillingPage({
             <span className="text-accent-gradient">Billing</span>
           </h1>
           <p className="mt-1 text-sm opacity-70">
-            Manage your subscription and payouts for{" "}
-            <strong>{club.name}</strong>.
+            Manage your subscription and payouts for <strong>{club.name}</strong>.
           </p>
         </div>
 
@@ -62,11 +60,10 @@ export default async function BillingPage({
         </a>
       </header>
 
-      {/* Stripe Connect feedback banners */}
       {justConnected && (
         <div className="rounded-xl border border-emerald-500/50 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100 flex items-center justify-between gap-3">
           <span>
-            ✅ <strong>Stripe payouts connected.</strong> Your future payments
+            ✅ <strong>Stripe payouts connected.</strong> Future booking payments
             will be routed to your Stripe account.
           </span>
         </div>
@@ -84,14 +81,12 @@ export default async function BillingPage({
         </div>
       )}
 
-      {/* Subscription plan selector */}
       <BillingClient
         currentPlan={club.subscriptionPlan}
         status={club.subscriptionStatus}
         tenantSlug={club.slug}
       />
 
-      {/* Stripe Connect / payouts card */}
       <section className="rounded-2xl u-border u-surface p-5 glow-soft space-y-3">
         <div className="flex items-center justify-between gap-3">
           <div>
@@ -99,10 +94,11 @@ export default async function BillingPage({
               Payouts via Stripe
             </h2>
             <p className="mt-1 text-xs sm:text-sm opacity-70 max-w-md">
-              Connect your own Stripe account so that all booking payments are
-              paid out directly to you. We never touch your money.
+              Connect your own Stripe account so booking payments can be paid
+              out directly to your business.
             </p>
           </div>
+
           <div
             className={
               "inline-flex items-center rounded-full px-3 py-1 text-xs font-medium " +

@@ -1,6 +1,6 @@
-// src/app/_sections/CourtsSection.tsx
+// src/app/_sections/ExperiencesSection.tsx
 import prisma from "@/lib/prisma";
-import CourtsCarousel from "@/components/ui/CourtsCarousel";
+import ExperiencesCarousel from "@/components/ui/ExperiencesCarousel";
 import EmptyState from "@/components/ui/EmptyState";
 import { requireTenant } from "@/lib/tenant";
 import { headers, cookies } from "next/headers";
@@ -12,11 +12,10 @@ export const dynamic = "force-dynamic";
 const RESERVED = new Set([
   "api",
   "admin",
-  "login",     // 👈 important for /login
+  "login",
   "privacy",
   "terms",
   "contact",
-  // global customer pages
   "activities",
   "timetable",
   "pricing",
@@ -47,17 +46,13 @@ async function resolveTenantSlug(explicit?: string) {
   return slug;
 }
 
-export default async function CourtsSection(props?: { tenantSlug?: string }) {
-  // ✅ Only proceed when we have a real tenant slug
+export default async function ExperiencesSection(props?: { tenantSlug?: string }) {
   const slug = await resolveTenantSlug(props?.tenantSlug);
-  if (!slug) {
-    // On non-tenant pages (e.g. /login, /terms), render nothing (or show a soft EmptyState if you prefer)
-    return null;
-  }
+  if (!slug) return null;
 
   const tenant = await requireTenant(slug);
 
-  const courts = await prisma.activity.findMany({
+  const experiences = await prisma.activity.findMany({
     where: { active: true, clubId: tenant.id },
     orderBy: { name: "asc" },
     select: {
@@ -70,12 +65,12 @@ export default async function CourtsSection(props?: { tenantSlug?: string }) {
     },
   });
 
-  if (!courts.length) return <EmptyState />;
+  if (!experiences.length) return <EmptyState />;
 
   return (
     <section className="space-y-3">
-      <CourtsCarousel
-        courts={courts}
+      <ExperiencesCarousel
+        courts={experiences}
         tomorrow={tomorrowYMD()}
         tenantSlug={tenant.slug}
       />

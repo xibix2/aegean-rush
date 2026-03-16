@@ -9,9 +9,9 @@ export const revalidate = 0;
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "All Clubs — TennisPro",
+  title: "All Businesses — Aegean Rush",
   description:
-    "Browse all tennis clubs available on TennisPro, see live court availability and book your next session.",
+    "Browse all activity providers available on the platform, see live availability and book your next experience.",
 };
 
 export default async function ClubsPage() {
@@ -28,23 +28,23 @@ export default async function ClubsPage() {
     <div className="space-y-12 md:space-y-16">
 
       {/* BACK BUTTON */}
-        <div className="mb-4">
+      <div className="mb-4">
         <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-sm text-white/70 hover:text-white 
-                    px-3 py-1.5 rounded-lg border border-white/10 hover:border-white/20 
-                    transition bg-black/20"
+          href="/"
+          className="inline-flex items-center gap-2 text-sm text-white/70 hover:text-white 
+                     px-3 py-1.5 rounded-lg border border-white/10 hover:border-white/20 
+                     transition bg-black/20"
         >
-            ← Back
+          ← Back
         </Link>
-        </div>
+      </div>
 
       {/* HEADER */}
       <section className="relative space-y-7">
         <div className="text-center space-y-3">
           <CourtsHeaderClient />
           <p className="mx-auto max-w-3xl text-sm text-white/75">
-            Explore all clubs available on TennisPro. Search by name or browse the full list.
+            Explore all activity providers available on the platform. Search by name or browse the full list.
           </p>
         </div>
 
@@ -54,5 +54,3 @@ export default async function ClubsPage() {
     </div>
   );
 }
-
-

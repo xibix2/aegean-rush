@@ -110,22 +110,21 @@ async function createClubAndAdmin(formData: FormData) {
 export default function SignupPage() {
   const TXT = {
     backMain: "Back to main site",
-    title: "Create your club",
+    title: "Create your business",
     subtitle:
-      "Set up your club and your first admin. You’ll choose a plan on the next step.",
+      "Set up your business and your first admin account. You’ll choose a plan on the next step.",
     badge: "Setup & billing next",
-    sectionClub: "Club details",
+    sectionClub: "Business details",
     sectionAdmin: "Admin account",
-    clubName: "Club name",
+    clubName: "Business name",
     clubSlug: "Slug (optional)",
-    // ✅ NEW
     clubLocation: "Location (optional)",
     locationHint: "City, area, or full address.",
     slugHint: "Lowercase, numbers and dashes only.",
     adminEmail: "Admin email",
     adminPassword: "Admin password",
     pwHint: "Minimum 8 characters.",
-    primaryBtn: "Create my club & continue to billing",
+    primaryBtn: "Create my business & continue to billing",
     cancel: "Cancel",
   };
 
@@ -233,7 +232,7 @@ export default function SignupPage() {
             </header>
 
             <form action={createClubAndAdmin} className="mt-7 space-y-5">
-              {/* Club details */}
+              {/* Business details */}
               <div className="text-xs font-medium opacity-80">{TXT.sectionClub}</div>
 
               <label className="block text-sm">
@@ -242,7 +241,7 @@ export default function SignupPage() {
                   name="name"
                   type="text"
                   required
-                  placeholder="Harbor Tennis"
+                  placeholder="Aegean Rush Watersports"
                   className="mt-1 w-full h-11 rounded-xl border border-white/10 bg-black/25 px-3 focus:outline-none focus:ring-1 focus:ring-[var(--accent-400)]"
                 />
               </label>
@@ -253,19 +252,18 @@ export default function SignupPage() {
                   name="slug"
                   type="text"
                   pattern="[a-z0-9-]+"
-                  placeholder="harbor-tennis"
+                  placeholder="aegean-rush"
                   className="mt-1 w-full h-11 rounded-xl border border-white/10 bg-black/25 px-3 focus:outline-none focus:ring-1 focus:ring-[var(--accent-400)]"
                 />
                 <small className="opacity-60">{TXT.slugHint}</small>
               </label>
 
-              {/* ✅ NEW: location input */}
               <label className="block text-sm">
                 <span className="opacity-80">{TXT.clubLocation}</span>
                 <input
                   name="location"
                   type="text"
-                  placeholder="Athens, Greece"
+                  placeholder="Hersonissos, Crete"
                   className="mt-1 w-full h-11 rounded-xl border border-white/10 bg-black/25 px-3 focus:outline-none focus:ring-1 focus:ring-[var(--accent-400)]"
                 />
                 <small className="opacity-60">{TXT.locationHint}</small>
@@ -282,7 +280,7 @@ export default function SignupPage() {
                   name="adminEmail"
                   type="email"
                   required
-                  placeholder="owner@yourclub.com"
+                  placeholder="owner@aegeanrush.com"
                   className="mt-1 w-full h-11 rounded-xl border border-white/10 bg-black/25 px-3 focus:outline-none focus:ring-1 focus:ring-[var(--accent-400)]"
                 />
               </label>
@@ -313,7 +311,7 @@ export default function SignupPage() {
               </div>
 
               <div className="pt-2 flex items-center justify-between text-[11px] opacity-60">
-                <span>Powered by TennisPro</span>
+                <span>Powered by Aegean Rush</span>
                 <span className="opacity-70">You’ll choose a plan next</span>
               </div>
             </form>

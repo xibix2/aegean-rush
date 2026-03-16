@@ -47,7 +47,6 @@ export default function AdminStatsClient({
 }: Props) {
   const t = useT();
 
-  // Localized label for dynamic range (e.g. “Last 7 days” / “Τελευταίες 7 ημέρες”)
   const rangeLabel = t("stats.range.lastNDays").replace("{n}", String(days));
 
   return (
@@ -66,11 +65,11 @@ export default function AdminStatsClient({
       {/* Header */}
       <header className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight ml-4">
+          <h1 className="text-2xl font-semibold tracking-tight">
             <span className="text-accent-gradient">{t("stats.title")}</span>
           </h1>
           <div
-            className="mt-2 h-[3px] w-30 ml-2 rounded-full accent-line"
+            className="mt-2 h-[3px] w-30 rounded-full accent-line"
             style={{ animation: "adminGlowLine 3.2s ease-in-out infinite" } as any}
           />
         </div>
@@ -81,6 +80,7 @@ export default function AdminStatsClient({
             const active = String(days) === key;
             const qs = new URLSearchParams({ range: key }).toString();
             const label = t(`stats.range.${key}d`);
+
             return (
               <a
                 key={key}

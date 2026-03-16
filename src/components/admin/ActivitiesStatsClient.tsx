@@ -21,9 +21,7 @@ export function ActivitiesStatsClient({
     { label: t("admin.activities.stats.total"), value: total },
     { label: t("admin.activities.stats.active"), value: active },
     { label: t("admin.activities.stats.inactive"), value: inactive },
-    // You can swap which one to show:
     { label: t("admin.activities.stats.avgDuration"), value: `${avgDuration} ${t("admin.activities.stats.min")}` },
-    // or: { label: t("admin.activities.stats.avgCapacity"), value: `${avgCapacity}` },
   ];
 
   return (
@@ -34,7 +32,6 @@ export function ActivitiesStatsClient({
             key={stat.label}
             className="relative overflow-hidden rounded-2xl u-border u-surface p-5 transition"
           >
-            {/* soft accent-aware gradient wash inside (very subtle) */}
             <div
               aria-hidden
               className="pointer-events-none absolute inset-0 rounded-2xl opacity-30 blur-2xl"
@@ -43,12 +40,13 @@ export function ActivitiesStatsClient({
                   "radial-gradient(circle at 50% 120%, rgb(var(--accent-glow) / 0.45), color-mix(in oklab, var(--accent-600), transparent 55%) 40%, transparent 70%)",
               }}
             />
-            {/* subtle inner hairline */}
+
             <div
               aria-hidden
               className="pointer-events-none absolute inset-0 rounded-2xl"
               style={{ boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.04)" }}
             />
+
             <div className="relative z-10">
               <div className="text-2xl font-semibold tracking-tight">{stat.value}</div>
               <div className="text-[11px] uppercase opacity-70 mt-1">{stat.label}</div>
@@ -57,7 +55,6 @@ export function ActivitiesStatsClient({
         ))}
       </div>
 
-      {/* Ambient stage glow (accent-aware, soft) */}
       <div
         aria-hidden
         className="pointer-events-none absolute -bottom-2 left-1/2 h-64 w-[70%] -translate-x-1/2 rounded-full blur-3xl opacity-20"

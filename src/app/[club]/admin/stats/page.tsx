@@ -10,9 +10,13 @@ export const dynamic = "force-dynamic";
 
 type RangeKey = "7" | "30" | "90";
 
-function getRangeDays(searchParams: Record<string, string | string[] | undefined> = {}): number {
+function getRangeDays(
+  searchParams: Record<string, string | string[] | undefined> = {}
+): number {
   const r = (searchParams.range as string) || "30";
-  return (["7", "30", "90"] as RangeKey[]).includes(r as RangeKey) ? Number(r) : 30;
+  return (["7", "30", "90"] as RangeKey[]).includes(r as RangeKey)
+    ? Number(r)
+    : 30;
 }
 
 export default async function AdminStatsPage({
@@ -20,20 +24,18 @@ export default async function AdminStatsPage({
 }: {
   searchParams?: Record<string, string | string[] | undefined>;
 }) {
-  // 🔒 tenant + role guard
   const tenant = await requireTenant();
   await requireClubAdminStrict(tenant.id);
 
   const days = getRangeDays(searchParams);
   const to = new Date();
-  const from = addDays(to, -days + 1); // inclusive range
+  const from = addDays(to, -days + 1);
 
-  // Only this club's data
   const bookings = await prisma.booking.findMany({
     where: {
       timeSlot: {
         startAt: { gte: from, lte: to },
-        activity: { clubId: tenant.id }, // 🔒 scope to tenant
+        activity: { clubId: tenant.id },
       },
       status: { in: ["paid", "refunded", "cancelled", "pending"] },
     },
@@ -46,6 +48,7 @@ export default async function AdminStatsPage({
   });
 
   const daysList = eachDayOfInterval({ start: from, end: to });
+
   const byDay = Object.fromEntries(
     daysList.map((d) => [
       format(d, "yyyy-MM-dd"),
@@ -62,9 +65,16 @@ export default async function AdminStatsPage({
   );
 
   const capacityByDay = new Map<string, Set<string>>();
+
   const byActivity: Record<
     string,
-    { activityId: string; name: string; seats: number; revenueCents: number; bookings: number }
+    {
+      activityId: string;
+      name: string;
+      seats: number;
+      revenueCents: number;
+      bookings: number;
+    }
   > = {};
 
   for (const b of bookings) {
@@ -82,6 +92,7 @@ export default async function AdminStatsPage({
 
     if (!capacityByDay.has(key)) capacityByDay.set(key, new Set());
     const seen = capacityByDay.get(key)!;
+
     if (!seen.has(b.timeSlotId)) {
       bucket.capacity += b.timeSlot.capacity || 0;
       seen.add(b.timeSlotId);
@@ -101,6 +112,7 @@ export default async function AdminStatsPage({
         bookings: 0,
       };
     }
+
     byActivity[akey].seats += party;
     if (isPaid || isRefunded) byActivity[akey].revenueCents += price;
     byActivity[akey].bookings += 1;
@@ -116,7 +128,14 @@ export default async function AdminStatsPage({
       acc.bookings += d.bookings;
       return acc;
     },
-    { revenueCents: 0, refundsCents: 0, seats: 0, capacity: 0, paidBookings: 0, bookings: 0 }
+    {
+      revenueCents: 0,
+      refundsCents: 0,
+      seats: 0,
+      capacity: 0,
+      paidBookings: 0,
+      bookings: 0,
+    }
   );
 
   const utilization = totals.capacity ? totals.seats / totals.capacity : 0;

@@ -15,8 +15,8 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Tennis Booking — Pick a court, book in seconds",
-  description: "Real-time tennis court availability with fast, secure checkout.",
+  title: "Aegean Rush — Book activities in seconds",
+  description: "Real-time activity availability with fast, secure checkout.",
 };
 
 function isValidTenantSlug(slug: string | null) {
@@ -66,7 +66,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     brandName = tenant.name;
   }
 
-  const effectiveBrandName = brandName ?? "Tennis Courts";
+  const effectiveBrandName = brandName ?? "Aegean Rush";
 
   const accentOverrides =
     plan === "ENTERPRISE"
@@ -135,11 +135,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                         "linear-gradient(135deg, color-mix(in oklab, var(--brand-primary) 80%, #1e293b), #020617)",
                     }}
                   >
-                    <span className="text-base leading-none">🎾</span>
+                    <span className="text-base leading-none">🌊</span>
                   </span>
                 )}
 
-                {/* ✅ truncate so mobile nav doesn’t get pushed out */}
                 <span className="min-w-0 truncate tracking-tight group-hover:opacity-100 opacity-90 transition">
                   {effectiveBrandName}
                 </span>
@@ -148,7 +147,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               {/* ✅ Always show nav; compact on mobile; never shrink away */}
               <nav className="shrink-0 flex items-center gap-3 sm:gap-6 text-xs sm:text-sm opacity-85">
                 <Link href={tHref("/")} className="hover:opacity-100 transition whitespace-nowrap">
-                  Courts
+                  Activities
                 </Link>
                 <Link
                   href={tHref("/contact")}

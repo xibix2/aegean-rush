@@ -1,4 +1,3 @@
-// src/components/customer/TimetableClient.tsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -111,7 +110,7 @@ export default function TimetableClient({
       .then(async (r) => {
         if (!r.ok) {
           const body = await r.json().catch(() => ({}));
-          throw new Error(body?.error ?? `Failed to load slots (${r.status})`);
+          throw new Error(body?.error ?? `Failed to load availability (${r.status})`);
         }
         return r.json();
       })

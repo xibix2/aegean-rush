@@ -271,7 +271,7 @@ export default function AdminSettingsClient({
         <section className="space-y-4">
           <h2 className="text-lg font-medium opacity-90">Branding</h2>
           <p className="text-xs opacity-70 max-w-md">
-            Set your club’s brand color, logo and email identity. These will be
+            Set your business brand color, logo and email identity. These will be
             used across your public site and outgoing emails.
           </p>
 
@@ -301,7 +301,7 @@ export default function AdminSettingsClient({
               <div className="text-xs opacity-75">
                 <div className="font-medium opacity-90">Brand color</div>
                 <div className="opacity-60">
-                  Used in navbar glow, logo badge and other accents.
+                  Used in the navbar glow, logo badge and other accents.
                 </div>
               </div>
             </div>
@@ -353,7 +353,7 @@ export default function AdminSettingsClient({
               <input
                 name="emailFromName"
                 defaultValue={emailFromName}
-                placeholder="e.g., Athens Marina Tennis Club"
+                placeholder="e.g., Aegean Rush Watersports"
                 disabled={!canUseEnterpriseBranding}
                 className="mt-1 w-full h-10 rounded-lg u-border u-surface px-3 focus:outline-none focus:ring-1 focus:ring-[var(--accent-400)] disabled:opacity-60 disabled:cursor-not-allowed"
               />
@@ -372,7 +372,7 @@ export default function AdminSettingsClient({
                 name="emailFromEmail"
                 type="email"
                 defaultValue={emailFromEmail}
-                placeholder="bookings@yourclub.com"
+                placeholder="bookings@yourbusiness.com"
                 disabled={!canUseEnterpriseBranding}
                 className="mt-1 w-full h-10 rounded-lg u-border u-surface px-3 focus:outline-none focus:ring-1 focus:ring-[var(--accent-400)] disabled:opacity-60 disabled:cursor-not-allowed"
               />
@@ -386,10 +386,10 @@ export default function AdminSettingsClient({
             </p>
           )}
 
-          {/* Club logo upload (Enterprise only now) */}
+          {/* Business logo upload (Enterprise only now) */}
           <div className="mt-2">
             <span className="block text-sm opacity-80 mb-2">
-              Club logo{" "}
+              Business logo{" "}
               {!canUseEnterpriseBranding && (
                 <span className="text-[10px] ml-1 opacity-60">
                   (Enterprise only)

@@ -23,14 +23,14 @@ export default function ClubsSearchClient({
       <div className="flex justify-center">
         <input
           type="text"
-          placeholder="Search clubs..."
+          placeholder="Search businesses..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className="w-full max-w-md rounded-xl border border-white/10 bg-black/30 px-4 py-2 text-sm placeholder-white/40 focus:outline-none focus:border-[--color-accent]"
         />
       </div>
 
-      {/* CLUBS GRID */}
+      {/* BUSINESSES GRID */}
       <ClubsGrid clubs={filtered} />
     </div>
   );

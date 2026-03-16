@@ -1,6 +1,6 @@
 // src/app/[club]/page.tsx
 import { Suspense } from "react";
-import CourtsSection from "@/app/_sections/CourtsSection";
+import CourtsSection from "@/app/_sections/ExperiencesSection";
 import CourtsSkeleton from "@/components/ui/CourtsSkeleton";
 import { HeroSectionClient } from "@/components/home/HeroSectionClient";
 import { CourtsHeaderClient } from "@/components/home/CourtsHeaderClient";

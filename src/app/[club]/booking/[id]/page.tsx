@@ -1,7 +1,7 @@
 import prisma from "@/lib/prisma";
 import { cookies } from "next/headers";
 import { requireTenant } from "@/lib/tenant";
-import BookingClient from "./BookingClient"; // ⬅️ new client wrapper
+import BookingClient from "./BookingClient";
 
 export default async function BookingPage({
   params,
@@ -11,14 +11,26 @@ export default async function BookingPage({
   const tenant = await requireTenant(params.club);
 
   const booking = await prisma.booking.findFirst({
-    where: { id: params.id, timeSlot: { activity: { clubId: tenant.id } } },
-    include: { timeSlot: { include: { activity: true } } },
+    where: {
+      id: params.id,
+      timeSlot: {
+        activity: {
+          clubId: tenant.id,
+        },
+      },
+    },
+    include: {
+      timeSlot: {
+        include: {
+          activity: true,
+        },
+      },
+    },
   });
 
   const jar = await cookies();
   const currencyGlyph = jar.get("ui_currency")?.value ?? "€";
 
-  // Pass only serializable data to the client component
   const payload =
     booking && {
       id: booking.id,
@@ -27,7 +39,9 @@ export default async function BookingPage({
       totalPrice: booking.totalPrice,
       timeSlot: {
         startAt: booking.timeSlot.startAt.toISOString(),
-        endAt: booking.timeSlot.endAt ? booking.timeSlot.endAt.toISOString() : null,
+        endAt: booking.timeSlot.endAt
+          ? booking.timeSlot.endAt.toISOString()
+          : null,
         activity: {
           name: booking.timeSlot.activity.name,
         },

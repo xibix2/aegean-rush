@@ -13,17 +13,16 @@ export default async function ClubAdminPage({
 }: {
   params: { club: string };
 }) {
-  // Resolve tenant from the dynamic segment and guard
   const tenant = await requireTenant(params.club);
 
-  // pull the club's tz once on the server
   const setting = await prisma.appSetting.findUnique({
     where: { clubId: tenant.id },
     select: { tz: true },
   });
+
   const tz = setting?.tz || DEFAULT_TZ;
 
-  const todayIso = formatYMDInTz(new Date(), tz); // YYYY-MM-DD in club TZ
+  const todayIso = formatYMDInTz(new Date(), tz);
 
   return (
     <main className="p-6 space-y-8 text-center">

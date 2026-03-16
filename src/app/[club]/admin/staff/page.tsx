@@ -15,11 +15,10 @@ const ROLE_LABEL: Record<string, string> = {
   SUPERADMIN: "Super admin",
   ADMIN: "Admin",
   MANAGER: "Manager",
-  COACH: "Coach",
+  COACH: "Instructor",
   STAFF: "Staff",
 };
 
-// Small helper: base URL for links inside emails
 function getBaseUrl() {
   return (
     process.env.NEXT_PUBLIC_BASE_URL ||
@@ -40,7 +39,6 @@ async function inviteStaffAction(tenantSlug: string, formData: FormData) {
 
   if (!email) return;
 
-  // only club-scoped roles (no SUPERADMIN from here)
   const role: UserRole =
     roleValue === "MANAGER" ||
     roleValue === "COACH" ||
@@ -49,14 +47,12 @@ async function inviteStaffAction(tenantSlug: string, formData: FormData) {
       ? roleValue
       : "STAFF";
 
-  // generate random token
   const token = `invite_${Math.random().toString(36).slice(2)}${Date.now().toString(
-    36,
+    36
   )}`;
 
-  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-  // Prevent duplicate active invite for same email+club
   await prisma.staffInvite.deleteMany({
     where: {
       clubId: tenant.id,
@@ -75,26 +71,18 @@ async function inviteStaffAction(tenantSlug: string, formData: FormData) {
     },
   });
 
-  /**
-   * ✅ FIX:
-   * Accept invite link must be tenant-scoped, otherwise /accept-invite
-   * is not reliably resolved in a multi-tenant app.
-   *
-   * Old:  `${baseUrl}/accept-invite?token=...`
-   * New:  `${baseUrl}/${tenant.slug}/accept-invite?token=...`
-   */
   const baseUrl = getBaseUrl();
   const acceptUrl = `${baseUrl}/${tenant.slug}/accept-invite?token=${encodeURIComponent(
-    invite.token,
+    invite.token
   )}`;
 
-  // Send invite email (best-effort, don't break UI if Resend fails)
   try {
     const roleLabel = ROLE_LABEL[role] ?? role;
+
     await resend.emails.send({
       from: FROM,
       to: email,
-      subject: `You’ve been invited to ${tenant.name} (${roleLabel})`,
+      subject: `You’ve been invited to join ${tenant.name} (${roleLabel})`,
       react: StaffInviteEmail({
         clubName: tenant.name,
         roleLabel,
@@ -104,7 +92,7 @@ async function inviteStaffAction(tenantSlug: string, formData: FormData) {
       }),
     });
   } catch (e: any) {
-    console.error("❌ Failed to send staff invite email:", e?.message || e);
+    console.error("Failed to send team invite email:", e?.message || e);
   }
 
   revalidatePath(`/${tenantSlug}/admin/staff`);
@@ -126,14 +114,12 @@ async function removeStaffAction(tenantSlug: string, formData: FormData) {
   });
 
   if (!user) return;
-  if (user.clubId !== tenant.id) return; // safety
+  if (user.clubId !== tenant.id) return;
 
-  // never delete a SUPERADMIN from here
   if (user.role === "SUPERADMIN") {
     throw new Error("You cannot remove a super admin from this page.");
   }
 
-  // avoid letting someone delete their own account via this screen
   if (user.email === session.email) {
     throw new Error("You cannot remove your own admin account here.");
   }
@@ -147,7 +133,6 @@ async function removeStaffAction(tenantSlug: string, formData: FormData) {
 
 // ---------- page ----------
 export default async function StaffPage() {
-  // 🔒 tenant + auth
   const tenant = await requireTenant();
   const session = await requireClubAdminStrict(tenant.id);
 
@@ -182,11 +167,10 @@ export default async function StaffPage() {
 
   return (
     <main className="max-w-4xl mx-auto p-6 space-y-6">
-      {/* Header */}
       <header className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">
-            <span className="text-accent-gradient">Staff & access</span>
+            <span className="text-accent-gradient">Team & access</span>
           </h1>
           <p className="mt-1 text-sm opacity-70">
             Manage who can log into the{" "}
@@ -202,26 +186,23 @@ export default async function StaffPage() {
         </Link>
       </header>
 
-      {/* Info callout */}
       <section className="rounded-2xl u-border u-surface px-4 py-3 text-sm flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
         <p className="opacity-80">
-          Admins can invite and remove staff. Roles control what people can see
-          and edit. Invite emails now include a link and token for future
-          onboarding.
+          Admins can invite and remove team members. Roles control what each
+          person can see and manage in the business dashboard.
         </p>
         <span className="text-[11px] uppercase tracking-wide font-semibold opacity-60">
-          Staff roles
+          Team roles
         </span>
       </section>
 
-      {/* Invite form */}
       <section className="rounded-2xl u-border u-surface p-4 space-y-3">
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-sm font-semibold tracking-wide uppercase opacity-80">
-            Invite staff member
+            Invite team member
           </h2>
           <span className="text-[11px] opacity-60">
-            They’ll get an email with their invite link.
+            They’ll receive an email with their invite link.
           </span>
         </div>
 
@@ -233,7 +214,7 @@ export default async function StaffPage() {
             name="email"
             type="email"
             required
-            placeholder="coach@yourclub.com"
+            placeholder="team@yourbusiness.com"
             className="flex-1 h-10 rounded-lg u-border u-surface px-3 text-sm focus:outline-none focus:ring-1 focus:ring-[var(--accent-400)]"
           />
           <select
@@ -242,7 +223,7 @@ export default async function StaffPage() {
             defaultValue="STAFF"
           >
             <option value="MANAGER">Manager</option>
-            <option value="COACH">Coach</option>
+            <option value="COACH">Instructor</option>
             <option value="STAFF">Staff</option>
             <option value="ADMIN">Admin</option>
           </select>
@@ -256,18 +237,16 @@ export default async function StaffPage() {
 
         {invites.length > 0 && (
           <p className="text-xs opacity-60">
-            Each invite has a unique token and link. The full “accept invite”
-            workflow can be wired to this later.
+            Each invite includes a unique access link and token.
           </p>
         )}
       </section>
 
-      {/* Staff table */}
       <section className="rounded-2xl u-border u-surface overflow-hidden">
         {users.length === 0 ? (
           <div className="p-6 text-sm opacity-75">
-            No staff yet. Your own admin account is created automatically when
-            you create a club.
+            No team members yet. Your own admin account is created automatically
+            when you create a business.
           </div>
         ) : (
           <table className="w-full text-sm border-collapse">
@@ -332,7 +311,6 @@ export default async function StaffPage() {
         )}
       </section>
 
-      {/* Pending invites list */}
       {invites.length > 0 && (
         <section className="rounded-2xl u-border u-surface p-4 space-y-3">
           <h2 className="text-sm font-semibold tracking-wide uppercase opacity-80">

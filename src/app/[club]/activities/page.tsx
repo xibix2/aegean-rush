@@ -10,7 +10,7 @@ export default async function ActivitiesPage({
 }: {
   params: Promise<{ club: string }>;
 }) {
-  const { club } = await params; // ✅ IMPORTANT
+  const { club } = await params;
   const jar = await cookies();
   const lang = jar.get("ui_lang")?.value ?? "en";
   const currency = jar.get("ui_currency")?.value ?? "€";

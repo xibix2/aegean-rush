@@ -12,7 +12,7 @@ type APIRow = {
   id: string;
   status: string;
   partySize: number;
-  totalPrice: number; // cents
+  totalPrice: number;
   customerName: string;
   customerEmail: string;
   startAt: string;
@@ -20,6 +20,7 @@ type APIRow = {
   activityName: string;
   createdAt: string;
 };
+
 type APIResponse = { tz: string; bookings: APIRow[] };
 
 type Row = {
@@ -30,7 +31,6 @@ type Row = {
   customerName: string;
   customerEmail: string;
   activityName: string;
-  sport: string;
   startAt: string;
   endAt: string;
   createdAt: string;
@@ -48,6 +48,7 @@ function normalizeStatus(s: string | undefined): Row["status"] {
   if (up === "REFUNDED") return "REFUNDED";
   return "PENDING";
 }
+
 function fmtHM(iso: string) {
   return new Date(iso).toLocaleTimeString("en-GB", {
     hour: "2-digit",
@@ -55,6 +56,7 @@ function fmtHM(iso: string) {
     hour12: false,
   });
 }
+
 const statusKeyToI18n = {
   PENDING: "bookings.filters.pending",
   CONFIRMED: "bookings.filters.confirmed",
@@ -67,10 +69,8 @@ export default function AdminBookingsPage() {
   const t = useT();
   const { club } = useParams<{ club: string }>();
 
-  // client-only prefs (currency from cookie)
   const { currency: currencySymbol } = readUiPrefsFromDocument();
 
-  // avoid hydration drift for currency symbol/formatting
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
@@ -81,23 +81,30 @@ export default function AdminBookingsPage() {
   const [search, setSearch] = useState("");
   const [sortDir, setSortDir] = useState<"desc" | "asc">("desc");
 
-  // ---- tenant-aware api path ----
   const apiPath = (p: string) => `/${club}${p}`;
 
-  // Fetch /[club]/api/bookings?date=YYYY-MM-DD
   useEffect(() => {
-    if (!club) return; // guard while params resolve
+    if (!club) return;
+
     let alive = true;
+
     (async () => {
       setLoading(true);
+
       try {
-        const res = await fetch(apiPath(`/api/bookings?date=${date}`), { cache: "no-store" });
+        const res = await fetch(apiPath(`/api/bookings?date=${date}`), {
+          cache: "no-store",
+        });
+
         if (!alive) return;
+
         if (!res.ok) {
           setRows([]);
           return;
         }
+
         const data: APIResponse = await res.json();
+
         const mapped: Row[] = (data.bookings || []).map((b) => ({
           id: b.id,
           status: normalizeStatus(b.status),
@@ -106,11 +113,11 @@ export default function AdminBookingsPage() {
           customerName: b.customerName ?? "",
           customerEmail: b.customerEmail ?? "",
           activityName: b.activityName ?? "",
-          sport: "",
           startAt: b.startAt,
           endAt: b.endAt,
           createdAt: b.createdAt,
         }));
+
         setRows(mapped);
       } catch {
         if (alive) setRows([]);
@@ -118,12 +125,12 @@ export default function AdminBookingsPage() {
         if (alive) setLoading(false);
       }
     })();
+
     return () => {
       alive = false;
     };
   }, [date, club]);
 
-  // counts per status (all rows)
   const counts = useMemo(() => {
     const c: Record<StatusFilter, number> = {
       ALL: rows.length,
@@ -132,14 +139,18 @@ export default function AdminBookingsPage() {
       CANCELLED: 0,
       REFUNDED: 0,
     };
+
     for (const r of rows) c[r.status]++;
     return c;
   }, [rows]);
 
-  // filtered list
   const filtered = useMemo(() => {
     let list = rows.slice();
-    if (statusFilter !== "ALL") list = list.filter((r) => r.status === statusFilter);
+
+    if (statusFilter !== "ALL") {
+      list = list.filter((r) => r.status === statusFilter);
+    }
+
     if (search.trim()) {
       const q = search.trim().toLowerCase();
       list = list.filter(
@@ -149,15 +160,16 @@ export default function AdminBookingsPage() {
           r.activityName.toLowerCase().includes(q)
       );
     }
+
     list.sort((a, b) => {
       const da = +new Date(a.createdAt);
       const db = +new Date(b.createdAt);
       return sortDir === "desc" ? db - da : da - db;
     });
+
     return list;
   }, [rows, statusFilter, search, sortDir]);
 
-  // summary (based on CURRENT FILTERS)
   const summary = useMemo(() => {
     const total = filtered.length;
     const confirmed = filtered.filter((r) => r.status === "CONFIRMED").length;
@@ -165,6 +177,7 @@ export default function AdminBookingsPage() {
     const revenueCents = filtered
       .filter((r) => r.status === "CONFIRMED")
       .reduce((acc, r) => acc + r.amountCents, 0);
+
     return { total, confirmed, cancelled, revenueCents };
   }, [filtered]);
 
@@ -178,12 +191,9 @@ export default function AdminBookingsPage() {
         }}
       />
 
-      {/* Title */}
       <header className="text-center">
         <h1 className="text-3xl font-semibold tracking-tight">
-          <span className="text-accent-gradient">
-            {t("bookings.title")}
-          </span>
+          <span className="text-accent-gradient">{t("bookings.title")}</span>
         </h1>
         <div
           className="mx-auto mt-2 h-[3px] w-66 ml-86 rounded-full accent-line"
@@ -191,7 +201,6 @@ export default function AdminBookingsPage() {
         />
       </header>
 
-      {/* Controls */}
       <section className="rounded-2xl u-border u-surface backdrop-blur-md p-4 sm:p-5 glow-soft">
         <div className="flex flex-wrap items-center gap-3">
           <label className="text-sm opacity-85 flex items-center gap-2">
@@ -228,11 +237,11 @@ export default function AdminBookingsPage() {
           </button>
         </div>
 
-        {/* Status filter pills */}
         <div className="mt-4 flex flex-wrap gap-2 text-sm">
           <Pill active={statusFilter === "ALL"} onClick={() => setStatusFilter("ALL")}>
             {t("bookings.filters.all")} <Badge>{counts.ALL}</Badge>
           </Pill>
+
           {STATUS_ORDER.map((s) => (
             <Pill key={s} active={statusFilter === s} onClick={() => setStatusFilter(s)}>
               {t(statusKeyToI18n[s])} <Badge>{counts[s]}</Badge>
@@ -241,12 +250,7 @@ export default function AdminBookingsPage() {
         </div>
       </section>
 
-      {/* SUMMARY BAR */}
-      <section
-        className="relative rounded-2xl u-border u-surface backdrop-blur-md px-6 py-5
-        flex flex-wrap items-center justify-between overflow-hidden glow-soft"
-      >
-        {/* Left side: stats */}
+      <section className="relative rounded-2xl u-border u-surface backdrop-blur-md px-6 py-5 flex flex-wrap items-center justify-between overflow-hidden glow-soft">
         <div className="flex flex-wrap items-center gap-5 text-[0.95rem] font-medium">
           <div className="flex items-baseline gap-2">
             <span className="text-sm opacity-70">{t("bookings.summary.bookings")}</span>
@@ -272,20 +276,21 @@ export default function AdminBookingsPage() {
           </div>
         </div>
 
-        {/* Right side: revenue */}
         <div className="flex items-center gap-2 text-[1.05rem] font-semibold tracking-tight">
           <span className="opacity-75">{t("bookings.summary.revenue")}</span>
           <span className="text-accent-gradient">
-            {mounted ? formatMoneyCentsClient(summary.revenueCents, { currency: currencySymbol }) : ""}
+            {mounted
+              ? formatMoneyCentsClient(summary.revenueCents, {
+                  currency: currencySymbol,
+                })
+              : ""}
           </span>
         </div>
       </section>
 
-      {/* Table card */}
       <section className="overflow-hidden rounded-2xl u-border u-surface backdrop-blur-md glow-soft">
         <div className="overflow-x-auto">
           <table className="w-full table-auto text-sm">
-            {/* Column width tweak */}
             <colgroup>
               <col />
               <col style={{ width: "10%" }} />
@@ -352,7 +357,11 @@ export default function AdminBookingsPage() {
 
                   <Td className="text-center">{r.players}</Td>
                   <Td className="text-right pr-3">
-                    {mounted ? formatMoneyCentsClient(r.amountCents, { currency: currencySymbol }) : ""}
+                    {mounted
+                      ? formatMoneyCentsClient(r.amountCents, {
+                          currency: currencySymbol,
+                        })
+                      : ""}
                   </Td>
                 </tr>
               ))}
@@ -412,6 +421,7 @@ function StatusPill({ status, label }: { status: Row["status"]; label: string })
       : status === "CANCELLED"
       ? "border-zinc-400/30 bg-zinc-400/10 text-zinc-200"
       : "border-rose-400/30 bg-rose-400/10 text-rose-200";
+
   return (
     <span className={`inline-block rounded-full border px-2 py-0.5 text-xs font-medium ${cls}`}>
       {label}
@@ -419,10 +429,11 @@ function StatusPill({ status, label }: { status: Row["status"]; label: string })
   );
 }
 
-/* Accept all native props so things like suppressHydrationWarning work */
-function Th(
-  { children, className = "", ...rest }: React.ThHTMLAttributes<HTMLTableCellElement>
-) {
+function Th({
+  children,
+  className = "",
+  ...rest
+}: React.ThHTMLAttributes<HTMLTableCellElement>) {
   return (
     <th
       {...rest}
@@ -433,9 +444,11 @@ function Th(
   );
 }
 
-function Td(
-  { children, className = "", ...rest }: React.TdHTMLAttributes<HTMLTableCellElement>
-) {
+function Td({
+  children,
+  className = "",
+  ...rest
+}: React.TdHTMLAttributes<HTMLTableCellElement>) {
   return (
     <td
       {...rest}

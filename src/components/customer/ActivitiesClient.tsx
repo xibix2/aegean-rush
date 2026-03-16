@@ -261,7 +261,7 @@ export default function ActivitiesClient({
                             "0 8px 22px -12px color-mix(in oklab, var(--accent-500), transparent 55%), inset 0 0 0 1px rgba(255,255,255,.04)",
                         }}
                       >
-                        {price}/hr
+                        {price}
                       </span>
                     )}
                   </div>

@@ -1,4 +1,3 @@
-// src/components/admin/SlotGeneratorClient.tsx
 "use client";
 
 import { useState, useMemo, useCallback } from "react";

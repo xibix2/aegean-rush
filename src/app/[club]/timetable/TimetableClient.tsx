@@ -135,7 +135,7 @@ export default function TimetableClient() {
         );
       }
       if (!res.ok) {
-        setHeat({ });
+        setHeat({});
         return;
       }
       const json = await res.json();
@@ -147,7 +147,7 @@ export default function TimetableClient() {
       setHeat(normalizeDays(daysBlock));
     } catch (err) {
       if (process.env.NODE_ENV !== "production") console.warn("[month] error", err);
-      setHeat({ });
+      setHeat({});
     }
   };
 

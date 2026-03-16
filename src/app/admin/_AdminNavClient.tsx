@@ -15,7 +15,7 @@ import {
 import { useT } from "@/components/I18nProvider";
 
 type NavItem = {
-  href: string; // canonical under /admin
+  href: string; // canonical admin path
   i18nKey: string;
   Icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
 };
@@ -77,11 +77,15 @@ export default function AdminNavClient({
                 "radial-gradient(60% 100% at 50% 50%, rgba(255,120,200,.26), rgba(176,136,248,.22) 45%, transparent 70%)",
             }}
           />
-          <nav className="admin-nav flex flex-wrap justify-center gap-2 overflow-x-auto max-w-4xl" aria-label={t("nav.aria")}>
+          <nav
+            className="admin-nav flex flex-wrap justify-center gap-2 overflow-x-auto max-w-4xl"
+            aria-label={t("nav.aria")}
+          >
             {NAV_ITEMS.map(({ href, i18nKey, Icon }) => {
               const active = isActive(href);
               const label = t(i18nKey);
               const finalHref = linkHref(href);
+
               return (
                 <Link
                   key={href}

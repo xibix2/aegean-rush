@@ -43,6 +43,7 @@ type RefundPayload = FormData | { bookingId: string; slotId?: string | null };
 
 export async function createAdminBooking(formData: FormData) {
   "use server";
+
   const tenant = await requireTenant();
   await requireClubAdmin(tenant.id);
   const base = `/${tenant.slug}`;
@@ -51,11 +52,10 @@ export async function createAdminBooking(formData: FormData) {
   if (!slotId) throw new Error("Missing slotId");
 
   const email = String(formData.get("email") || "");
-  const name = String(formData.get("name") || "Customer");
+  const name = String(formData.get("name") || "Guest");
   const partySize = Number(formData.get("partySize") || 1);
   const markPaid = String(formData.get("markPaid") || "no") === "yes";
 
-  // 🔒 slot must belong to this tenant
   const slot = await prisma.timeSlot.findFirst({
     where: { id: slotId, activity: { clubId: tenant.id } },
     include: {
@@ -63,14 +63,15 @@ export async function createAdminBooking(formData: FormData) {
       bookings: { select: { status: true, partySize: true, createdAt: true } },
     },
   });
+
   if (!slot) throw new Error("Time slot not found");
 
-  // Capacity check: paid + fresh pending (<30min)
   const now = new Date();
   const held = slot.bookings.reduce((sum, b) => {
     const freshPending =
       b.status === DB.PENDING &&
       (now.getTime() - new Date(b.createdAt).getTime()) / 60000 < 30;
+
     const isPaid = b.status === DB.CONFIRMED;
     return sum + (isPaid || freshPending ? b.partySize : 0);
   }, 0);
@@ -78,12 +79,11 @@ export async function createAdminBooking(formData: FormData) {
   const remaining = Math.max(0, slot.capacity - held);
   if (remaining < partySize) throw new Error("Not enough seats left");
 
-  // Customer upsert per-tenant
-  // ❗ FIX: do NOT change the name for an existing email
   const customerEmail = email || `walkin+${Date.now()}@example.com`;
+
   const customer = await prisma.customer.upsert({
     where: { clubId_email: { clubId: tenant.id, email: customerEmail } },
-    update: {}, // keep existing name stable
+    update: {},
     create: { clubId: tenant.id, email: customerEmail, name },
   });
 
@@ -114,7 +114,6 @@ export async function createAdminBooking(formData: FormData) {
     });
   }
 
-  // Send confirmation email (admin-created booking)
   if (markPaid && email) {
     try {
       const club = await prisma.club.findUnique({
@@ -131,7 +130,7 @@ export async function createAdminBooking(formData: FormData) {
       await resend.emails.send({
         from: FROM,
         to: email,
-        subject: `Your booking at ${tenant.name} is confirmed`,
+        subject: `Your booking with ${tenant.name} is confirmed`,
         react: BookingConfirmed({
           activity: slot.activity.name,
           startISO,
@@ -145,8 +144,8 @@ export async function createAdminBooking(formData: FormData) {
       });
     } catch (err: any) {
       console.error(
-        "❌ Failed to send admin-created booking email:",
-        err?.message || err,
+        "Failed to send admin-created booking email:",
+        err?.message || err
       );
     }
   }
@@ -156,6 +155,7 @@ export async function createAdminBooking(formData: FormData) {
 
 export async function cancelBookingAction(input: CancelPayload) {
   "use server";
+
   const tenant = await requireTenant();
   await requireClubAdmin(tenant.id);
   const base = `/${tenant.slug}`;
@@ -177,6 +177,7 @@ export async function cancelBookingAction(input: CancelPayload) {
     where: { id: bookingId, timeSlot: { activity: { clubId: tenant.id } } },
     select: { id: true, status: true },
   });
+
   if (!booking) throw new Error("Booking not found");
 
   if (booking.status !== DB.REFUNDED) {
@@ -191,6 +192,7 @@ export async function cancelBookingAction(input: CancelPayload) {
 
 export async function refundBookingAction(input: RefundPayload) {
   "use server";
+
   const tenant = await requireTenant();
   await requireClubAdmin(tenant.id);
   const base = `/${tenant.slug}`;
@@ -212,14 +214,15 @@ export async function refundBookingAction(input: RefundPayload) {
     where: { id: bookingId, timeSlot: { activity: { clubId: tenant.id } } },
     include: { payment: true },
   });
+
   if (!booking) throw new Error("Booking not found");
 
-  // Not paid → just cancel
   if (booking.status !== DB.CONFIRMED) {
     await prisma.booking.update({
       where: { id: bookingId },
       data: { status: DB.CANCELLED },
     });
+
     if (slotId) revalidatePath(`${base}/admin/slots/${slotId}`);
     return;
   }
@@ -241,10 +244,12 @@ export async function refundBookingAction(input: RefundPayload) {
         data: { status: "refunded" },
       });
     }
+
     await prisma.booking.update({
       where: { id: bookingId },
       data: { status: DB.REFUNDED },
     });
+
     if (slotId) revalidatePath(`${base}/admin/slots/${slotId}`);
     return;
   }
@@ -274,7 +279,6 @@ export async function refundBookingAction(input: RefundPayload) {
 export default async function SlotAdminPage({
   params,
 }: {
-  // Next can pass params as a Promise in some builds
   params:
     | { club?: string; slotId?: string; id?: string }
     | Promise<{ club?: string; slotId?: string; id?: string }>;
@@ -283,8 +287,6 @@ export default async function SlotAdminPage({
   await requireClubAdmin(tenant.id);
 
   const p = await Promise.resolve(params);
-
-  // ✅ Support both folder names: /slots/[slotId] OR /slots/[id]
   const slotId = (p?.slotId || p?.id || "").trim();
 
   if (!slotId) {
@@ -292,14 +294,12 @@ export default async function SlotAdminPage({
     throw new Error("Missing slotId route parameter");
   }
 
-  // Prefer club currency, fallback to UI cookie glyph
   const jar = await cookies();
   const currency =
     (tenant.currency || "").toUpperCase() === "EUR"
       ? jar.get("ui_currency")?.value ?? "€"
       : jar.get("ui_currency")?.value ?? tenant.currency ?? "€";
 
-  // 🔒 Load slot scoped to tenant
   const slot = await prisma.timeSlot.findFirst({
     where: { id: slotId, activity: { clubId: tenant.id } },
     include: {

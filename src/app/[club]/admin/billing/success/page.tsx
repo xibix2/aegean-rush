@@ -7,11 +7,9 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function BillingSuccessPage() {
-  // 🔒 Make sure this is a real club admin
   const tenant = await requireTenant();
   await requireClubAdmin(tenant.id);
 
-  // Pull latest subscription info to show what they now have
   const club = await prisma.club.findUnique({
     where: { id: tenant.id },
     select: {
@@ -38,9 +36,9 @@ export default async function BillingSuccessPage() {
         </h1>
 
         <p className="text-sm md:text-base opacity-75 max-w-md mx-auto">
-          Your subscription for <strong>{club?.name ?? "your club"}</strong>{" "}
-          is now active. You can start managing bookings and courts right away
-          from your admin dashboard.
+          Your subscription for <strong>{club?.name ?? "your business"}</strong>{" "}
+          is now active. You can start managing bookings and experiences right
+          away from your admin dashboard.
         </p>
 
         <div className="mt-4 inline-flex flex-col items-center gap-1 text-xs opacity-70">
@@ -57,11 +55,12 @@ export default async function BillingSuccessPage() {
 
         <div className="mt-6 flex flex-col sm:flex-row justify-center gap-3">
           <Link
-            href={`${baseAdmin}`}
+            href={baseAdmin}
             className="inline-flex items-center justify-center rounded-xl h-11 px-5 text-sm font-medium btn-accent"
           >
             Go to dashboard
           </Link>
+
           <Link
             href={`${baseAdmin}/billing`}
             className="inline-flex items-center justify-center rounded-xl h-11 px-4 text-sm opacity-80 hover:opacity-100 u-border u-surface"

@@ -34,7 +34,6 @@ export default function BookingClient({
   const searchParams = useSearchParams();
   const urlStatus = (searchParams.get("status") || "").toLowerCase();
 
-  /* ----------------------- Missing / invalid booking ----------------------- */
   if (!booking) {
     return (
       <main className="py-24 text-center">
@@ -61,12 +60,10 @@ export default function BookingClient({
     );
   }
 
-  /* ----------------------------- Basic derived ----------------------------- */
   const start = new Date(booking.timeSlot.startAt);
-  const end =
-    booking.timeSlot.endAt
-      ? new Date(booking.timeSlot.endAt)
-      : new Date(start.getTime() + 90 * 60 * 1000);
+  const end = booking.timeSlot.endAt
+    ? new Date(booking.timeSlot.endAt)
+    : new Date(start.getTime() + 90 * 60 * 1000);
 
   const rawStatus = booking.status.toLowerCase();
   const isPaidFromDb =
@@ -77,15 +74,13 @@ export default function BookingClient({
   const isCancelled = rawStatus === "cancelled" || urlStatus === "cancelled";
   const isPaid = !isCancelled && (isPaidFromDb || isPaidFromUrl);
 
-  // 🔤 Human-readable status label (no translation keys!)
   const statusLabel = (() => {
-    if (isPaid) return "Paid";
-    if (isCancelled) return "Cancelled";
-    if (rawStatus === "pending") return "Pending";
-    return booking.status; // fallback
+    if (isPaid) return t("booking.paid") ?? "Paid";
+    if (isCancelled) return t("booking.cancelled") ?? "Cancelled";
+    if (rawStatus === "pending") return t("booking.pending") ?? "Pending";
+    return booking.status;
   })();
 
-  /* ------------------------- Heading & copy blocks ------------------------- */
   let title: string;
   let descriptionLines: string[];
 
@@ -101,7 +96,7 @@ export default function BookingClient({
     descriptionLines = [
       t("booking.cancelled1") ?? "Your booking was cancelled.",
       t("booking.cancelled2") ??
-        "If you think this is a mistake, please try again or contact the club.",
+        "If you think this is a mistake, please try again or contact the business.",
     ];
   } else {
     title = t("booking.processing");
@@ -112,12 +107,10 @@ export default function BookingClient({
     ];
   }
 
-  /* --------------------------------- UI ----------------------------------- */
   return (
     <main className="mx-auto max-w-3xl px-6 py-28 flex flex-col items-center text-center relative">
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,color-mix(in_oklab,var(--accent-500),transparent_88%),transparent_70%)]" />
 
-      {/* Icon bubble */}
       <div
         className={`relative mb-8 flex items-center justify-center rounded-full size-28 ${
           isPaid
@@ -138,21 +131,18 @@ export default function BookingClient({
           }`}
         >
           {isPaid ? (
-            // check
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
               d="M4.5 12.75l6 6 9-13.5"
             />
           ) : isCancelled ? (
-            // cross
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
               d="M6.75 6.75l10.5 10.5M17.25 6.75l-10.5 10.5"
             />
           ) : (
-            // clock
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -162,7 +152,6 @@ export default function BookingClient({
         </svg>
       </div>
 
-      {/* Title */}
       <div className="relative mb-2">
         <h1 className="text-4xl font-semibold">{title}</h1>
         <div
@@ -172,14 +161,12 @@ export default function BookingClient({
         />
       </div>
 
-      {/* Description */}
       <div className="text-base opacity-85 mt-5 mb-8 max-w-lg leading-relaxed space-y-1.5">
         {descriptionLines.map((line, i) => (
           <p key={i}>{line}</p>
         ))}
       </div>
 
-      {/* Status line – ALWAYS human text */}
       <div className="mb-10 text-lg font-medium opacity-75">
         {t("booking.status")}:{" "}
         <span
@@ -195,7 +182,6 @@ export default function BookingClient({
         </span>
       </div>
 
-      {/* Summary card */}
       <Card
         className="
           relative w-full max-w-2xl text-left space-y-4 p-8 shadow-lg rounded-2xl overflow-hidden
@@ -211,6 +197,7 @@ export default function BookingClient({
         "
       >
         <CardTitle className="text-2xl">{t("booking.summary")}</CardTitle>
+
         <CardSubtle className="text-lg">
           <b>{t("booking.activity")}:</b>{" "}
           <span
@@ -224,13 +211,16 @@ export default function BookingClient({
             {booking.timeSlot.activity.name}
           </span>
         </CardSubtle>
+
         <CardSubtle className="text-lg">
           <b>{t("booking.date")}:</b>{" "}
           {format(start, "PPPP p")} – {format(end, "p")}
         </CardSubtle>
+
         <CardSubtle className="text-lg">
-          <b>{t("booking.partySize")}:</b> {booking.partySize}
+          <b>{t("booking.guests") ?? "Guests"}:</b> {booking.partySize}
         </CardSubtle>
+
         <CardSubtle className="text-lg">
           <b>{t("booking.total")}:</b>{" "}
           <span className="font-semibold">
@@ -240,7 +230,6 @@ export default function BookingClient({
         </CardSubtle>
       </Card>
 
-      {/* Return button */}
       <div className="mt-10">
         <Link href={`/${tenantSlug}`}>
           <Button

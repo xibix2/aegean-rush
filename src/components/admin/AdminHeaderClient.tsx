@@ -6,7 +6,7 @@ export function AdminHeaderClient() {
   const t = useT();
 
   return (
-    <header className="relative inline-flex flex-col items-center">
+    <header className="relative flex flex-col items-center text-center">
       <h1
         className="text-3xl md:text-[32px] font-semibold tracking-tight t-anim"
         style={{ animation: "adminTitlePulse 6s ease-in-out infinite" }}
@@ -18,7 +18,7 @@ export function AdminHeaderClient() {
 
       {/* animated accent underline */}
       <div
-        className="mt-2 h-[3px] ml-50 w-50 rounded-full accent-line"
+        className="mt-2 h-[3px] w-40 rounded-full accent-line"
         style={{ animation: "adminGlowLine 4s ease-in-out infinite" }}
       />
 

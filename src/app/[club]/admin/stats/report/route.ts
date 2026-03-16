@@ -76,6 +76,7 @@ export async function GET() {
         bookings: 0,
       };
     }
+
     byActivity[aid].revenueCents += price;
     byActivity[aid].seats += b.partySize || 0;
     byActivity[aid].bookings++;
@@ -131,7 +132,7 @@ export async function GET() {
   return new NextResponse(Buffer.from(pdfBytes), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="club-report-${tenant.slug}.pdf"`,
+      "Content-Disposition": `attachment; filename="business-report-${tenant.slug}.pdf"`,
     },
   });
 }

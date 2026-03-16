@@ -18,9 +18,9 @@ const PLANS: {
     key: "BASIC",
     label: "Basic",
     priceLabel: "€39 / month",
-    description: "Perfect for a single small club getting started.",
+    description: "Perfect for a single small business getting started.",
     features: [
-      "Up to 2 courts",
+      "Up to 2 activities",
       "Online bookings",
       "Email confirmations",
       "Basic admin dashboard",
@@ -30,9 +30,9 @@ const PLANS: {
     key: "PRO",
     label: "Pro",
     priceLabel: "€79 / month",
-    description: "For serious clubs that live in their schedule.",
+    description: "For growing businesses that rely on bookings every day.",
     features: [
-      "Up to 5 courts",
+      "Up to 5 activities",
       "Advanced calendar & exports",
       "Admin roles & staff access",
       "Priority support",
@@ -43,9 +43,9 @@ const PLANS: {
     key: "ENTERPRISE",
     label: "Enterprise",
     priceLabel: "€149 / month",
-    description: "Unlimited courts and premium support.",
+    description: "Unlimited activities and premium support.",
     features: [
-      "Unlimited courts",
+      "Unlimited activities",
       "Priority onboarding",
       "Monthly performance reports",
       "Direct support channel",
@@ -232,7 +232,7 @@ export default function BillingClient({
                 Cancel subscription
               </p>
               <p className="mt-1 text-[11px] text-red-100/80">
-                You can cancel your subscription at any time. Your access to TennisPro will stop immediately and you will not be charged again.
+                You can cancel your subscription at any time. Your access to Aegean Rush will stop immediately and you will not be charged again.
               </p>
             </div>
             <button

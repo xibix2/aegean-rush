@@ -19,7 +19,9 @@ export function NewActivityFormClient({
         {/* LEFT SIDE */}
         <div className="grid gap-4">
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm opacity-80">{t("admin.activities.form.name")}</label>
+            <label className="text-sm opacity-80">
+              {t("admin.activities.form.name")}
+            </label>
             <input
               name="name"
               required
@@ -28,7 +30,9 @@ export function NewActivityFormClient({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm opacity-80">{t("admin.activities.form.duration")}</label>
+            <label className="text-sm opacity-80">
+              {t("admin.activities.form.duration")}
+            </label>
             <input
               name="durationMin"
               type="number"
@@ -40,7 +44,9 @@ export function NewActivityFormClient({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm opacity-80">{t("admin.activities.form.price")}</label>
+            <label className="text-sm opacity-80">
+              {t("admin.activities.form.price")}
+            </label>
             <input
               name="basePriceEuro"
               type="number"
@@ -53,7 +59,9 @@ export function NewActivityFormClient({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm opacity-80">{t("admin.activities.form.capacity")}</label>
+            <label className="text-sm opacity-80">
+              {t("admin.activities.form.capacity")}
+            </label>
             <input
               name="maxParty"
               type="number"
@@ -66,10 +74,12 @@ export function NewActivityFormClient({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm opacity-80">{t("admin.activities.form.location")}</label>
+            <label className="text-sm opacity-80">
+              {t("admin.activities.form.location")}
+            </label>
             <input
               name="locationId"
-              defaultValue="athens-marina"
+              placeholder="Location identifier"
               className="h-10 rounded-lg u-border u-surface px-3 focus:outline-none focus:ring-1 focus:ring-[var(--accent-400)]"
             />
           </div>
@@ -82,14 +92,18 @@ export function NewActivityFormClient({
 
         {/* RIGHT SIDE: Cover Image */}
         <div className="flex flex-col gap-3">
-          <label className="text-sm opacity-80">{t("admin.activities.form.cover")}</label>
+          <label className="text-sm opacity-80">
+            {t("admin.activities.form.cover")}
+          </label>
           <CoverPicker name="coverFile" size={280} />
         </div>
       </div>
 
       {/* Description */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm opacity-80">{t("admin.activities.form.description")}</label>
+        <label className="text-sm opacity-80">
+          {t("admin.activities.form.description")}
+        </label>
         <textarea
           name="description"
           placeholder={t("admin.activities.form.descriptionPlaceholder")}

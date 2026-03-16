@@ -76,14 +76,14 @@ export default async function SuperAdminHome() {
             href="/admin/clubs"
             className="inline-flex items-center rounded-lg u-border u-surface px-3 py-1.5 text-sm hover:u-surface-2"
           >
-            View Clubs →
+            View Businesses →
           </Link>
         </div>
       </header>
 
       {/* KPI Cards */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard label="Total clubs" value={String(clubs.length)} />
+        <KpiCard label="Total businesses" value={String(clubs.length)} />
         <KpiCard label="Admin users" value={String(admins)} />
         <KpiCard label="Bookings (30d)" value={String(bookingCount)} />
         <KpiCard
@@ -93,14 +93,14 @@ export default async function SuperAdminHome() {
         />
       </section>
 
-      {/* Recent clubs */}
+      {/* Recent businesses */}
       <section className="rounded-2xl u-border u-surface p-5">
-        <h2 className="text-lg font-semibold mb-3">Recent clubs</h2>
+        <h2 className="text-lg font-semibold mb-3">Recent businesses</h2>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="sticky-head">
               <tr>
-                <th className="px-3 py-2.5 text-left">Name</th>
+                <th className="px-3 py-2.5 text-left">Business</th>
                 <th className="px-3 py-2.5 text-left">Slug</th>
                 <th className="px-3 py-2.5 text-left">Created</th>
                 <th className="px-3 py-2.5 text-right">Actions</th>
@@ -134,7 +134,7 @@ export default async function SuperAdminHome() {
               {recentClubs.length === 0 && (
                 <tr>
                   <td colSpan={4} className="px-3 py-8 text-center opacity-70">
-                    No clubs yet.
+                    No businesses yet.
                   </td>
                 </tr>
               )}

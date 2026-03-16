@@ -20,13 +20,15 @@ export default function ForgotPasswordPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
-      // We always show success (don’t leak whether an account exists)
+
+      // Always show success (don't reveal if an account exists)
       if (!res.ok) {
-        // optional: log/debug response
+        // optional: debug logging
       }
+
       setSent(true);
     } catch {
-      // Ignore network errors purposely for privacy; still show success box
+      // Ignore network errors purposely for privacy
       setSent(true);
     } finally {
       setLoading(false);
@@ -37,10 +39,10 @@ export default function ForgotPasswordPage() {
     <main className="min-h-[100svh] flex items-center justify-center p-6">
       <div className="w-full max-w-lg">
         <h1 className="text-3xl font-semibold tracking-tight">
-          <span className="text-accent-gradient">Forgot password</span>
+          <span className="text-accent-gradient">Reset your password</span>
         </h1>
         <p className="opacity-70 mt-2 text-sm">
-          Enter your email and we’ll send you a reset link.
+          Enter your account email and we’ll send you a secure password reset link.
         </p>
 
         {sent ? (
@@ -50,14 +52,20 @@ export default function ForgotPasswordPage() {
               If an account exists for <b>{email}</b>, we’ve sent a link to reset your
               password. The link expires in 30 minutes.
             </p>
-            <a href="/login" className="inline-block mt-4 text-sm opacity-90 hover:opacity-100">
+            <a
+              href="/login"
+              className="inline-block mt-4 text-sm opacity-90 hover:opacity-100"
+            >
               Back to sign in
             </a>
           </div>
         ) : (
-          <form onSubmit={submit} className="mt-6 space-y-4 rounded-xl u-border u-surface p-5">
+          <form
+            onSubmit={submit}
+            className="mt-6 space-y-4 rounded-xl u-border u-surface p-5"
+          >
             <label className="block text-sm">
-              <span className="opacity-80">Email</span>
+              <span className="opacity-80">Email address</span>
               <input
                 type="email"
                 value={email}
@@ -68,11 +76,13 @@ export default function ForgotPasswordPage() {
                 autoComplete="email"
               />
             </label>
+
             {err && (
               <div className="rounded-md border border-rose-400/30 bg-rose-400/10 text-rose-200 px-3 py-2 text-sm">
                 {err}
               </div>
             )}
+
             <button
               className="btn-accent h-11 rounded-xl px-5 text-sm font-medium"
               disabled={loading || !email}

@@ -14,9 +14,8 @@ export default function StatusPoller({
   const base = tenantSlug ? `/${tenantSlug}` : "";
 
   useEffect(() => {
-    // Stop polling once terminal
     const s = status.toLowerCase();
-    if (s === "paid" || s === "cancelled" || s === "refunded" || s === "confirmed") return;
+    if (["paid", "cancelled", "refunded", "confirmed"].includes(s)) return;
 
     let cancelled = false;
     let tries = 0;
@@ -24,28 +23,48 @@ export default function StatusPoller({
     const tick = async () => {
       tries++;
       try {
-        const res = await fetch(`${base}/api/bookings/${bookingId}`, { cache: "no-store" });
+        const res = await fetch(`${base}/api/bookings/${bookingId}`, {
+          cache: "no-store",
+        });
+
         if (res.ok) {
           const j = await res.json();
           if (j.status && j.status !== status) setStatus(j.status);
+
           const low = String(j.status || "").toLowerCase();
           if (["paid", "cancelled", "refunded", "confirmed"].includes(low)) return;
         }
       } catch {}
+
       if (!cancelled && tries < 30) setTimeout(tick, 2000);
     };
 
     tick();
+
     return () => {
       cancelled = true;
     };
   }, [base, bookingId, status]);
 
-  const isPaidLike = ["paid", "confirmed"].includes(status.toLowerCase());
+  const low = status.toLowerCase();
+  const isPaidLike = ["paid", "confirmed"].includes(low);
+
+  const label =
+    low === "paid" || low === "confirmed"
+      ? "Paid"
+      : low === "cancelled"
+      ? "Cancelled"
+      : low === "refunded"
+      ? "Refunded"
+      : "Processing";
 
   return (
-    <span className={`capitalize ${isPaidLike ? "text-green-500" : "text-yellow-500"}`}>
-      {status}
+    <span
+      className={`capitalize ${
+        isPaidLike ? "text-green-500" : "text-yellow-500"
+      }`}
+    >
+      {label}
     </span>
   );
 }

@@ -35,8 +35,9 @@ async function generate(formData: FormData) {
   await requireClubAdminStrict(tenant.id);
   const base = `/${tenant.slug}`;
 
-  // tenant-specific tz
-  const setting = await prisma.appSetting.findUnique({ where: { clubId: tenant.id } });
+  const setting = await prisma.appSetting.findUnique({
+    where: { clubId: tenant.id },
+  });
   const tz = setting?.tz || DEFAULT_TZ;
 
   const activityId = String(formData.get("activityId") || "");
@@ -48,41 +49,37 @@ async function generate(formData: FormData) {
     .filter(Boolean);
   const days = (formData.getAll("days") as DayKey[]) || [];
 
-  if (!activityId) throw new Error("Activity is required.");
+  if (!activityId) throw new Error("Experience is required.");
   if (!from || !to) throw new Error("Date range is required.");
   if (!times.length) throw new Error("At least one time is required.");
   if (!days.length) throw new Error("Select at least one day.");
 
-  // 🔒 ensure the activity belongs to this tenant & pull defaults
   const activity = await prisma.activity.findFirst({
     where: { id: activityId, clubId: tenant.id },
     select: {
       id: true,
-      durationMin: true, // default duration
-      basePrice: true,   // default price (cents)
-      maxParty: true,    // we'll use this as default capacity
+      durationMin: true,
+      basePrice: true,
+      maxParty: true,
     },
   });
-  if (!activity) throw new Error("Activity not found for this club.");
 
-  // ---- Use activity defaults if fields are left empty in the form ----
+  if (!activity) throw new Error("Experience not found for this business.");
+
   const durationInput = Number(formData.get("durationMin") || "");
   const capacityInput = Number(formData.get("capacity") || "");
   const priceEuroInput = Number(formData.get("priceEuro") || "");
 
-  // Duration: prefer explicit form value, else activity.durationMin, else 60
   const durationMin =
     Number.isFinite(durationInput) && durationInput > 0
       ? durationInput
       : activity.durationMin ?? 60;
 
-  // Capacity: prefer explicit form value, else activity.maxParty, else 4
   const capacity =
     Number.isFinite(capacityInput) && capacityInput > 0
       ? capacityInput
       : activity.maxParty ?? 4;
 
-  // Price: prefer explicit form value (in €), else activity.basePrice (already cents), else 0
   const priceCents =
     Number.isFinite(priceEuroInput) && priceEuroInput > 0
       ? Math.round(priceEuroInput * 100)
@@ -101,7 +98,11 @@ async function generate(formData: FormData) {
 
   const toCreate: NewSlot[] = [];
 
-  for (let cursor = new Date(start); cursor <= addDays(end, 1); cursor = addDays(cursor, 1)) {
+  for (
+    let cursor = new Date(start);
+    cursor <= addDays(end, 1);
+    cursor = addDays(cursor, 1)
+  ) {
     const ymd = toLocalYMD(cursor);
     const dow = String(weekdayInTz(ymd, tz)) as DayKey;
 
@@ -117,20 +118,29 @@ async function generate(formData: FormData) {
   if (!toCreate.length) redirect(`${base}/admin/slots?created=0`);
 
   let inserted = 0;
+
   for (const group of chunk(toCreate, 25)) {
     await prisma.$transaction(
       group.map((s) =>
         prisma.timeSlot.upsert({
-          where: { activityId_startAt: { activityId: s.activityId, startAt: s.startAt } },
+          where: {
+            activityId_startAt: {
+              activityId: s.activityId,
+              startAt: s.startAt,
+            },
+          },
           create: s,
-          update: { endAt: s.endAt, capacity: s.capacity, priceCents: s.priceCents },
-        }),
-      ),
+          update: {
+            endAt: s.endAt,
+            capacity: s.capacity,
+            priceCents: s.priceCents,
+          },
+        })
+      )
     );
     inserted += group.length;
   }
 
-  // tenant-scoped revalidation + redirect
   revalidatePath(`${base}/admin/slots`);
   revalidatePath(`${base}/timetable`);
   redirect(`${base}/admin/slots?created=${inserted}`);
@@ -150,7 +160,6 @@ export default async function GenerateSlotsPage({
   const sp = searchParams ?? {};
   const created = Number(sp.created ?? NaN);
 
-  // Only tenant's activities – include defaults for the client
   const activities = await prisma.activity.findMany({
     where: { clubId: tenant.id },
     orderBy: { name: "asc" },
@@ -163,10 +172,10 @@ export default async function GenerateSlotsPage({
     },
   });
 
-  // Default values
   const today = new Date();
   const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
   const fmt = (d: Date) => d.toISOString().split("T")[0];
+
   const defaults = {
     from: fmt(today),
     to: fmt(nextWeek),

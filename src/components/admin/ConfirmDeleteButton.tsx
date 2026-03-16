@@ -1,4 +1,3 @@
-// src/components/admin/ConfirmDeleteButton.tsx
 "use client";
 
 type Props = {
@@ -8,7 +7,7 @@ type Props = {
 
 export default function ConfirmDeleteButton({
   label = "Delete",
-  confirmText = "Are you sure? This action cannot be undone.",
+  confirmText = "Are you sure you want to delete this item? This action cannot be undone.",
 }: Props) {
   return (
     <button

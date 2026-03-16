@@ -5,12 +5,10 @@ import { requireClubAdmin } from "@/lib/admin-guard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const revalidate = 0; // always fresh
+export const revalidate = 0;
 
-// Map/normalize status query to DB values (lowercase)
 const STATUS = new Set(["paid", "pending", "cancelled", "refunded"]);
 
-/** Format a JS Date to "local" string for a specific IANA tz */
 function fmtLocal(dt: Date, tz: string) {
   return new Intl.DateTimeFormat("en-GB", {
     year: "numeric",
@@ -24,10 +22,9 @@ function fmtLocal(dt: Date, tz: string) {
   }).format(dt);
 }
 
-/** Conservative CSV cell quoting + protect against Excel formula injection */
 function csvCell(v: unknown): string {
   let s = String(v ?? "");
-  if (/^[=+\-@]/.test(s)) s = "'" + s; // neutralize formula starts
+  if (/^[=+\-@]/.test(s)) s = "'" + s;
   return `"${s.replace(/"/g, '""')}"`;
 }
 
@@ -38,41 +35,41 @@ export async function GET(
   try {
     const slug = params.club;
 
-    // 🔒 Resolve tenant by slug from the path
     const tenant = await prisma.club.findUnique({
       where: { slug },
       select: { id: true, slug: true },
     });
+
     if (!tenant) {
-      return NextResponse.json({ error: "Club not found" }, { status: 404 });
+      return NextResponse.json({ error: "Business not found" }, { status: 404 });
     }
 
-    // 🔒 Admin guard for this tenant
     await requireClubAdmin(tenant.id);
 
     const url = new URL(req.url);
-    const from = url.searchParams.get("from"); // YYYY-MM-DD
-    const to = url.searchParams.get("to");     // YYYY-MM-DD
-    const statusRaw = url.searchParams.get("status"); // paid|pending|cancelled|refunded
+    const from = url.searchParams.get("from");
+    const to = url.searchParams.get("to");
+    const statusRaw = url.searchParams.get("status");
 
-    // Resolve tenant tz (fallback sensible default)
     const setting = await prisma.appSetting.findUnique({
       where: { clubId: tenant.id },
       select: { tz: true },
     });
+
     const tz = setting?.tz || "Europe/Athens";
 
-    // Build filters (scoped to tenant via relation)
     const where: any = {
       timeSlot: { activity: { clubId: tenant.id } },
     };
 
     if (from || to) {
       where.createdAt = {};
+
       if (from) {
         const dFrom = new Date(`${from}T00:00:00.000Z`);
         if (!Number.isNaN(dFrom.getTime())) where.createdAt.gte = dFrom;
       }
+
       if (to) {
         const dTo = new Date(`${to}T23:59:59.999Z`);
         if (!Number.isNaN(dTo.getTime())) where.createdAt.lte = dTo;
@@ -94,15 +91,14 @@ export async function GET(
       },
     });
 
-    // CSV header
     const header = [
       "booking_id",
       "status",
       "created_at_local",
       "customer_name",
       "customer_email",
-      "activity",
-      "startAt_local",
+      "experience",
+      "start_at_local",
       "party_size",
       "total_cents",
       "total_eur",
@@ -144,6 +140,7 @@ export async function GET(
     const code =
       msg === "Unauthorized" ? 401 :
       msg.includes("Forbidden") ? 403 : 400;
+
     return NextResponse.json({ error: msg }, { status: code });
   }
 }
