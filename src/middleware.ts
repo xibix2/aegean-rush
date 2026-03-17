@@ -36,7 +36,7 @@ function isStaticPath(pathname: string) {
     pathname === "/sitemap.xml"
   );
 }
-
+    
 function isValidTenantSlug(slug: string | undefined | null) {
   if (!slug) return false;
   if (slug === "undefined" || slug === "null") return false;
