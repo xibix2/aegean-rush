@@ -39,6 +39,7 @@ async function getBookingWithTenant(bookingId: string) {
     select: {
       id: true,
       customerId: true,
+      status: true,
       timeSlot: {
         select: {
           startAt: true,
@@ -233,8 +234,9 @@ async function markBookingPaid(
   amount?: number | null,
 ) {
   const b = await getBookingWithTenant(bookingId);
-  if (!b) return;
+  if (!b) return { alreadyPaid: false, found: false };
 
+  const alreadyPaid = b.status === "paid";
   const clubCurrency =
     b.timeSlot?.activity.club?.currency?.toUpperCase?.() || "EUR";
 
@@ -256,10 +258,96 @@ async function markBookingPaid(
     },
   });
 
-  await prisma.booking.update({
-    where: { id: bookingId },
-    data: { status: "paid" },
+  if (!alreadyPaid) {
+    await prisma.booking.update({
+      where: { id: bookingId },
+      data: { status: "paid" },
+    });
+  }
+
+  return { alreadyPaid, found: true };
+}
+
+async function markBookingCancelledIfPending(bookingId: string) {
+  await prisma.booking.updateMany({
+    where: { id: bookingId, status: "pending" as any },
+    data: { status: "cancelled" as any },
   });
+}
+
+function extractBookingIdFromSession(session: Stripe.Checkout.Session) {
+  return (
+    (session.metadata?.bookingId as string | undefined) ||
+    (session.client_reference_id as string | undefined) ||
+    null
+  );
+}
+
+function extractPaymentIntentIdFromSession(session: Stripe.Checkout.Session) {
+  return typeof session.payment_intent === "string"
+    ? session.payment_intent
+    : session.payment_intent?.id ?? null;
+}
+
+async function getPayerDetails(
+  session: Stripe.Checkout.Session,
+  paymentIntentId: string | null,
+) {
+  const payerEmail =
+    session.customer_details?.email ?? session.customer_email ?? null;
+
+  let payerName: string | null = null;
+
+  if (paymentIntentId) {
+    try {
+      const pi = await stripe.paymentIntents.retrieve(paymentIntentId, {
+        expand: ["latest_charge"],
+      });
+      const charge = (pi.latest_charge as Stripe.Charge) || null;
+      payerName = charge?.billing_details?.name || null;
+    } catch (e: any) {
+      console.error("PI retrieve failed:", e?.message || e);
+    }
+  }
+
+  return { payerEmail, payerName };
+}
+
+async function handleSuccessfulCheckoutSession(
+  session: Stripe.Checkout.Session,
+  eventLabel: string,
+) {
+  const bookingId = extractBookingIdFromSession(session);
+  if (!bookingId) return;
+
+  const paymentIntentId = extractPaymentIntentIdFromSession(session);
+  const amount = session.amount_total ?? null;
+  const { payerEmail, payerName } = await getPayerDetails(
+    session,
+    paymentIntentId,
+  );
+
+  console.log(`✅ ${eventLabel} (booking)`, {
+    bookingId,
+    sessionId: session.id,
+    payerEmail,
+    payerName,
+  });
+
+  const result = await markBookingPaid(bookingId, paymentIntentId, amount);
+  await attachRealCustomerToBooking(bookingId, payerEmail, payerName);
+
+  if (!result.alreadyPaid) {
+    await sendConfirmationEmail(bookingId, payerEmail || undefined);
+  }
+}
+
+async function handleFailedOrExpiredCheckoutSession(
+  session: Stripe.Checkout.Session,
+) {
+  const bookingId = extractBookingIdFromSession(session);
+  if (!bookingId) return;
+  await markBookingCancelledIfPending(bookingId);
 }
 
 // ---------- Webhook handler ----------
@@ -285,63 +373,31 @@ export async function POST(req: NextRequest) {
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
+        await handleSuccessfulCheckoutSession(
+          session,
+          "checkout.session.completed",
+        );
+        break;
+      }
 
-        const bookingId =
-          (session.metadata?.bookingId as string | undefined) ||
-          (session.client_reference_id as string | undefined) ||
-          null;
-
-        if (!bookingId) break;
-
-        const paymentIntentId =
-          typeof session.payment_intent === "string"
-            ? session.payment_intent
-            : session.payment_intent?.id ?? null;
-
-        const amount = session.amount_total ?? null;
-        const payerEmail =
-          session.customer_details?.email ?? session.customer_email ?? null;
-
-        let payerName: string | null = null;
-
-        if (paymentIntentId) {
-          try {
-            const pi = await stripe.paymentIntents.retrieve(paymentIntentId, {
-              expand: ["latest_charge"],
-            });
-            const charge = (pi.latest_charge as Stripe.Charge) || null;
-            payerName = charge?.billing_details?.name || null;
-          } catch (e: any) {
-            console.error("PI retrieve failed:", e?.message || e);
-          }
-        }
-
-        console.log("✅ checkout.session.completed (booking)", {
-          bookingId,
-          sessionId: session.id,
-          payerEmail,
-          payerName,
-        });
-
-        await markBookingPaid(bookingId, paymentIntentId, amount);
-        await attachRealCustomerToBooking(bookingId, payerEmail, payerName);
-        await sendConfirmationEmail(bookingId, payerEmail || undefined);
+      case "checkout.session.async_payment_succeeded": {
+        const session = event.data.object as Stripe.Checkout.Session;
+        await handleSuccessfulCheckoutSession(
+          session,
+          "checkout.session.async_payment_succeeded",
+        );
         break;
       }
 
       case "checkout.session.expired": {
         const session = event.data.object as Stripe.Checkout.Session;
-        const bookingId =
-          (session.metadata?.bookingId as string | undefined) ||
-          (session.client_reference_id as string | undefined) ||
-          null;
+        await handleFailedOrExpiredCheckoutSession(session);
+        break;
+      }
 
-        if (bookingId) {
-          await prisma.booking.updateMany({
-            where: { id: bookingId, status: "pending" as any },
-            data: { status: "cancelled" as any },
-          });
-        }
+      case "checkout.session.async_payment_failed": {
+        const session = event.data.object as Stripe.Checkout.Session;
+        await handleFailedOrExpiredCheckoutSession(session);
         break;
       }
 
@@ -350,10 +406,7 @@ export async function POST(req: NextRequest) {
         const bookingId = (pi.metadata?.bookingId as string) || null;
 
         if (bookingId) {
-          await prisma.booking.updateMany({
-            where: { id: bookingId, status: "pending" as any },
-            data: { status: "cancelled" as any },
-          });
+          await markBookingCancelledIfPending(bookingId);
         }
         break;
       }
