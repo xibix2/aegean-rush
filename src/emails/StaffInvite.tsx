@@ -11,7 +11,8 @@ export default function StaffInviteEmail(props: {
   return (
     <div
       style={{
-        fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
+        fontFamily:
+          "system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
         backgroundColor: "#050711",
         color: "#f9fafb",
         padding: "32px 20px",
@@ -29,17 +30,18 @@ export default function StaffInviteEmail(props: {
         }}
       >
         <h1 style={{ fontSize: 22, margin: "0 0 12px" }}>
-          You’re invited to join <span style={{ color: "#a855f7" }}>{clubName}</span>
+          You’re invited to join{" "}
+          <span style={{ color: "#a855f7" }}>{clubName}</span>
         </h1>
 
         <p style={{ fontSize: 14, lineHeight: 1.6, margin: "0 0 12px" }}>
           You’ve been invited to access the{" "}
-          <strong>{clubName}</strong> dashboard as{" "}
+          <strong>{clubName}</strong> business dashboard as{" "}
           <strong>{roleLabel}</strong>.
         </p>
 
         <p style={{ fontSize: 14, lineHeight: 1.6, margin: "0 0 20px" }}>
-          Click the button below to accept the invite and create your login.
+          Click the button below to accept the invitation and create your login.
         </p>
 
         <p style={{ textAlign: "center", margin: "0 0 20px" }}>
@@ -57,7 +59,7 @@ export default function StaffInviteEmail(props: {
                 "linear-gradient(90deg, #22c55e, #4ade80, #22c55e)",
             }}
           >
-            Accept invite
+            Accept invitation
           </a>
         </p>
 

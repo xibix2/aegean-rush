@@ -22,7 +22,7 @@ export default function BookingConfirmed({
   const start = new Date(startISO);
   const end = new Date(endISO);
 
-  const color = brandPrimary || "#22c55e"; // accent
+  const color = brandPrimary || "#22c55e";
 
   const formatterDate = new Intl.DateTimeFormat("en-GB", {
     weekday: "short",
@@ -62,7 +62,6 @@ export default function BookingConfirmed({
         backgroundColor: "#020617",
       }}
     >
-      {/* Outer card */}
       <div
         style={{
           backgroundColor: "#0b1220",
@@ -72,7 +71,6 @@ export default function BookingConfirmed({
           boxShadow: "0 18px 45px rgba(15,23,42,0.7)",
         }}
       >
-        {/* Top accent bar */}
         <div
           style={{
             height: 4,
@@ -82,7 +80,6 @@ export default function BookingConfirmed({
           }}
         />
 
-        {/* Header: logo + title + status pill */}
         <div
           style={{
             display: "flex",
@@ -91,7 +88,6 @@ export default function BookingConfirmed({
             marginBottom: 16,
           }}
         >
-          {/* Title + club name */}
           <div style={{ flex: 1, minWidth: 0 }}>
             <div
               style={{
@@ -118,7 +114,7 @@ export default function BookingConfirmed({
                 textOverflow: "ellipsis",
               }}
             >
-              Your court is locked in 🎉
+              Your activity is confirmed 🎉
             </h2>
             <p
               style={{
@@ -132,7 +128,6 @@ export default function BookingConfirmed({
           </div>
         </div>
 
-        {/* Main booking summary card */}
         <div
           style={{
             marginTop: 8,
@@ -143,7 +138,6 @@ export default function BookingConfirmed({
             padding: 14,
           }}
         >
-          {/* Activity */}
           <div style={{ marginBottom: 10 }}>
             <div
               style={{
@@ -167,7 +161,6 @@ export default function BookingConfirmed({
             </div>
           </div>
 
-          {/* Date & time + party size + price */}
           <div
             style={{
               display: "grid",
@@ -219,8 +212,7 @@ export default function BookingConfirmed({
                   marginBottom: 2,
                 }}
               >
-                Party size:{" "}
-                <span style={{ fontWeight: 500 }}>{partySize}</span>
+                Guests: <span style={{ fontWeight: 500 }}>{partySize}</span>
               </div>
               <div
                 style={{
@@ -242,7 +234,6 @@ export default function BookingConfirmed({
           </div>
         </div>
 
-        {/* Info / instructions */}
         <div
           style={{
             marginTop: 16,
@@ -253,17 +244,16 @@ export default function BookingConfirmed({
         >
           <p style={{ margin: "0 0 8px" }}>
             Please arrive{" "}
-            <span style={{ fontWeight: 500 }}>10 minutes early</span> to warm up
-            and check in at{" "}
+            <span style={{ fontWeight: 500 }}>10 minutes early</span> so there’s
+            enough time for check-in and any pre-activity preparation at{" "}
             <span style={{ fontWeight: 500 }}>{clubName}</span>.
           </p>
           <p style={{ margin: 0 }}>
-            Bring your own racket and water, and show this email at reception if
-            asked for your booking.
+            Bring this email with you in case your booking needs to be verified.
+            Follow any instructions shared by the operator before arrival.
           </p>
         </div>
 
-        {/* Divider */}
         <hr
           style={{
             marginTop: 20,
@@ -273,7 +263,6 @@ export default function BookingConfirmed({
           }}
         />
 
-        {/* Footer / help text */}
         <p
           style={{
             fontSize: 11,
@@ -283,9 +272,8 @@ export default function BookingConfirmed({
           }}
         >
           If you have any questions or need to make a change, simply reply to
-          this email and{" "}
-          <span style={{ fontWeight: 500 }}>{clubName}</span> will get back to
-          you.
+          this email and <span style={{ fontWeight: 500 }}>{clubName}</span>{" "}
+          will get back to you.
         </p>
 
         <p
@@ -295,7 +283,8 @@ export default function BookingConfirmed({
             marginTop: 10,
           }}
         >
-          Thank you for booking with {clubName}. See you on court. 🎾
+          Thank you for booking with {clubName}. We hope you have an amazing
+          experience. 🌊
         </p>
       </div>
     </div>

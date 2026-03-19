@@ -48,8 +48,12 @@ export function ActivitiesStatsClient({
             />
 
             <div className="relative z-10">
-              <div className="text-2xl font-semibold tracking-tight">{stat.value}</div>
-              <div className="text-[11px] uppercase opacity-70 mt-1">{stat.label}</div>
+              <div className="text-2xl font-semibold tracking-tight">
+                {stat.value}
+              </div>
+              <div className="text-[11px] uppercase opacity-70 mt-1">
+                {stat.label}
+              </div>
             </div>
           </div>
         ))}
