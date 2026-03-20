@@ -31,7 +31,14 @@ type Activity = {
 type Props = {
   activities: Activity[];
   created?: number;
-  defaults: { from: string; to: string; time: string };
+  defaults: {
+    from: string;
+    to: string;
+    departureTime: string;
+    availableFromTime: string;
+    availableToTime: string;
+  };
+  backHref: string;
   action: (formData: FormData) => Promise<void>;
 };
 
@@ -44,6 +51,7 @@ export default function SlotGeneratorClient({
   activities,
   created,
   defaults,
+  backHref,
   action,
 }: Props) {
   const t = useT();
@@ -65,29 +73,13 @@ export default function SlotGeneratorClient({
   const isRental = selectedActivity?.mode === "DYNAMIC_RENTAL";
   const isHybrid = selectedActivity?.mode === "HYBRID_UNIT_BOOKING";
 
-  const durationLabel = isFixed
-    ? "Duration (minutes)"
-    : "Default slot duration (minutes)";
-
-  const capacityLabel = isFixed
-    ? "Seats available"
-    : "Units available";
-
-  const priceLabel = isFixed
-    ? "Price per guest (€)"
-    : "Fallback slot price (€)";
-
   const helperText = isFixed
     ? "Generate scheduled departures where guests reserve seats."
     : isRental
-    ? "Generate rental start times. Capacity means how many units are available at each start time."
+    ? "Generate daily rental availability windows. Guests will later choose a start time and duration inside that window."
     : isHybrid
-    ? "Generate timed unit start slots. Capacity means how many units can be booked at the same time."
+    ? "Generate daily unit-availability windows. Guests will later choose a start time, duration, and number of units inside that window."
     : "Choose an activity to configure slot generation.";
-
-  const pricingHint = isFixed
-    ? "Used as the per-guest slot price."
-    : "Used as fallback only. Main customer pricing usually comes from duration options.";
 
   const selectedModeBadge = isFixed
     ? "Fixed Event"
@@ -112,17 +104,15 @@ export default function SlotGeneratorClient({
         return;
       }
 
-      if (act.mode === "DYNAMIC_RENTAL" || act.mode === "HYBRID_UNIT_BOOKING") {
-        setDurationMin(firstOption?.durationMin ?? act.durationMin ?? 60);
-        setCapacity(act.maxUnitsPerBooking ?? 1);
-        setPriceEuro(
-          firstOption?.priceCents != null
-            ? firstOption.priceCents / 100
-            : act.basePrice != null
-            ? act.basePrice / 100
-            : 0
-        );
-      }
+      setCapacity(act.maxUnitsPerBooking ?? 1);
+      setDurationMin(firstOption?.durationMin ?? act.durationMin ?? 60);
+      setPriceEuro(
+        firstOption?.priceCents != null
+          ? firstOption.priceCents / 100
+          : act.basePrice != null
+          ? act.basePrice / 100
+          : 0
+      );
     },
     [activities]
   );
@@ -224,18 +214,48 @@ export default function SlotGeneratorClient({
               </select>
             </label>
 
-            <label className="text-sm">
-              {t("slots.generator.time")}
-              <input
-                name="times"
-                type="time"
-                step={60}
-                defaultValue={defaults.time}
-                lang="en-GB"
-                inputMode="none"
-                className="mt-1 w-full rounded-lg u-border u-surface px-3 py-2 outline-none focus:ring-2 focus:ring-[var(--accent-500)]/40"
-              />
-            </label>
+            {isFixed ? (
+              <label className="text-sm">
+                Departure time
+                <input
+                  name="times"
+                  type="time"
+                  step={60}
+                  defaultValue={defaults.departureTime}
+                  lang="en-GB"
+                  inputMode="none"
+                  className="mt-1 w-full rounded-lg u-border u-surface px-3 py-2 outline-none focus:ring-2 focus:ring-[var(--accent-500)]/40"
+                />
+              </label>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                <label className="text-sm">
+                  Available from
+                  <input
+                    name="windowStartTime"
+                    type="time"
+                    step={60}
+                    defaultValue={defaults.availableFromTime}
+                    lang="en-GB"
+                    inputMode="none"
+                    className="mt-1 w-full rounded-lg u-border u-surface px-3 py-2 outline-none focus:ring-2 focus:ring-[var(--accent-500)]/40"
+                  />
+                </label>
+
+                <label className="text-sm">
+                  Available to
+                  <input
+                    name="windowEndTime"
+                    type="time"
+                    step={60}
+                    defaultValue={defaults.availableToTime}
+                    lang="en-GB"
+                    inputMode="none"
+                    className="mt-1 w-full rounded-lg u-border u-surface px-3 py-2 outline-none focus:ring-2 focus:ring-[var(--accent-500)]/40"
+                  />
+                </label>
+              </div>
+            )}
 
             <label className="text-sm">
               {t("slots.generator.from")}
@@ -273,9 +293,15 @@ export default function SlotGeneratorClient({
                 )}
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-3 text-sm">
+              <div
+                className={`grid gap-3 text-sm ${
+                  isFixed ? "sm:grid-cols-3" : "sm:grid-cols-2"
+                }`}
+              >
                 <div className="rounded-xl u-border u-surface px-3 py-2">
-                  <div className="opacity-65">Default duration</div>
+                  <div className="opacity-65">
+                    {isFixed ? "Default duration" : "Shortest option"}
+                  </div>
                   <div className="mt-1 font-medium">
                     {firstDurationOption?.durationMin ??
                       selectedActivity.durationMin ??
@@ -286,7 +312,7 @@ export default function SlotGeneratorClient({
 
                 <div className="rounded-xl u-border u-surface px-3 py-2">
                   <div className="opacity-65">
-                    {isFixed ? "Default seat price" : "Default fallback price"}
+                    {isFixed ? "Default seat price" : "Pricing starts from"}
                   </div>
                   <div className="mt-1 font-medium">
                     €{" "}
@@ -296,36 +322,49 @@ export default function SlotGeneratorClient({
                   </div>
                 </div>
 
-                <div className="rounded-xl u-border u-surface px-3 py-2">
-                  <div className="opacity-65">
-                    {isFixed ? "Guest capacity" : "Max units per booking"}
+                {isFixed ? (
+                  <div className="rounded-xl u-border u-surface px-3 py-2">
+                    <div className="opacity-65">Guest capacity</div>
+                    <div className="mt-1 font-medium">
+                      {selectedActivity.maxParty ?? 4}
+                    </div>
                   </div>
-                  <div className="mt-1 font-medium">
-                    {isFixed
-                      ? selectedActivity.maxParty ?? 4
-                      : selectedActivity.maxUnitsPerBooking ?? 1}
+                ) : (
+                  <div className="rounded-xl u-border u-surface px-3 py-2">
+                    <div className="opacity-65">
+                      {isHybrid ? "Guests per unit" : "Max units per booking"}
+                    </div>
+                    <div className="mt-1 font-medium">
+                      {isHybrid
+                        ? selectedActivity.guestsPerUnit ?? 1
+                        : selectedActivity.maxUnitsPerBooking ?? 1}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
-              {(isRental || isHybrid) && selectedActivity.durationOptions.length > 0 && (
-                <div className="space-y-2">
-                  <div className="text-sm font-medium">Configured duration options</div>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedActivity.durationOptions.map(
-                      (opt: ActivityDurationOption) => (
-                        <div
-                          key={opt.id}
-                          className="rounded-full px-3 py-1.5 text-xs u-border u-surface opacity-90"
-                        >
-                          {opt.label ? `${opt.label} · ` : ""}
-                          {opt.durationMin} min · € {formatEuroFromCents(opt.priceCents)}
-                        </div>
-                      )
-                    )}
+              {(isRental || isHybrid) &&
+                selectedActivity.durationOptions.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium">
+                      Configured duration options
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedActivity.durationOptions.map(
+                        (opt: ActivityDurationOption) => (
+                          <div
+                            key={opt.id}
+                            className="rounded-full px-3 py-1.5 text-xs u-border u-surface opacity-90"
+                          >
+                            {opt.label ? `${opt.label} · ` : ""}
+                            {opt.durationMin} min · €{" "}
+                            {formatEuroFromCents(opt.priceCents)}
+                          </div>
+                        )
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
               {isHybrid && selectedActivity.guestsPerUnit && (
                 <div className="text-sm opacity-75">
@@ -337,46 +376,69 @@ export default function SlotGeneratorClient({
             </div>
           )}
 
-          <div className="grid md:grid-cols-2 gap-3">
-            <label className="text-sm">
-              {durationLabel}
-              <input
-                type="number"
-                name="durationMin"
-                min={5}
-                step={5}
-                value={durationMin}
-                onChange={(e) => handleDurationChange(e.target.value)}
-                className="mt-1 w-full rounded-lg u-border u-surface px-3 py-2 outline-none focus:ring-2 focus:ring-[var(--accent-500)]/40"
-              />
-            </label>
+          {isFixed ? (
+            <div className="grid md:grid-cols-2 gap-3">
+              <label className="text-sm">
+                Duration (minutes)
+                <input
+                  type="number"
+                  name="durationMin"
+                  min={5}
+                  step={5}
+                  value={durationMin}
+                  onChange={(e) => handleDurationChange(e.target.value)}
+                  className="mt-1 w-full rounded-lg u-border u-surface px-3 py-2 outline-none focus:ring-2 focus:ring-[var(--accent-500)]/40"
+                />
+              </label>
 
-            <label className="text-sm">
-              {capacityLabel}
-              <input
-                type="number"
-                name="capacity"
-                min={1}
-                value={capacity}
-                onChange={(e) => handleCapacityChange(e.target.value)}
-                className="mt-1 w-full rounded-lg u-border u-surface px-3 py-2 outline-none focus:ring-2 focus:ring-[var(--accent-500)]/40"
-              />
-            </label>
+              <label className="text-sm">
+                Seats available
+                <input
+                  type="number"
+                  name="capacity"
+                  min={1}
+                  value={capacity}
+                  onChange={(e) => handleCapacityChange(e.target.value)}
+                  className="mt-1 w-full rounded-lg u-border u-surface px-3 py-2 outline-none focus:ring-2 focus:ring-[var(--accent-500)]/40"
+                />
+              </label>
 
-            <label className="text-sm md:col-span-2">
-              {priceLabel}
-              <input
-                type="number"
-                name="priceEuro"
-                step="0.01"
-                min={0}
-                value={priceEuro}
-                onChange={(e) => handlePriceChange(e.target.value)}
-                className="mt-1 w-full rounded-lg u-border u-surface px-3 py-2 outline-none focus:ring-2 focus:ring-[var(--accent-500)]/40"
-              />
-              <div className="mt-1 text-xs opacity-60">{pricingHint}</div>
-            </label>
-          </div>
+              <label className="text-sm md:col-span-2">
+                Price per guest (€)
+                <input
+                  type="number"
+                  name="priceEuro"
+                  step="0.01"
+                  min={0}
+                  value={priceEuro}
+                  onChange={(e) => handlePriceChange(e.target.value)}
+                  className="mt-1 w-full rounded-lg u-border u-surface px-3 py-2 outline-none focus:ring-2 focus:ring-[var(--accent-500)]/40"
+                />
+                <div className="mt-1 text-xs opacity-60">
+                  Used as the per-guest slot price.
+                </div>
+              </label>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 gap-3">
+              <label className="text-sm">
+                Units available
+                <input
+                  type="number"
+                  name="capacity"
+                  min={1}
+                  value={capacity}
+                  onChange={(e) => handleCapacityChange(e.target.value)}
+                  className="mt-1 w-full rounded-lg u-border u-surface px-3 py-2 outline-none focus:ring-2 focus:ring-[var(--accent-500)]/40"
+                />
+              </label>
+
+              <div className="rounded-xl u-border u-surface px-4 py-3 text-sm opacity-80 flex items-center">
+                Daily availability windows use the activity’s configured
+                duration options and pricing during booking.
+              </div>
+            </div>
+          )}
 
           <fieldset className="grid gap-2">
             <div className="text-sm font-medium">{t("slots.generator.days")}</div>
@@ -428,7 +490,7 @@ export default function SlotGeneratorClient({
             </button>
 
             <a
-              href="/admin/slots"
+              href={backHref}
               className="inline-flex h-11 items-center justify-center rounded-[12px] px-4 text-sm u-border u-surface hover:opacity-90 transition"
             >
               {t("slots.generator.back")}

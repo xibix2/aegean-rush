@@ -1,4 +1,4 @@
-// src/app/[club]/admin/slots/generate/page.tsx
+// src/app/[club]/admin/slots/page.tsx
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -34,10 +34,11 @@ function parsePositiveInt(value: FormDataEntryValue | null, fallback: number) {
   return Number.isFinite(n) && n > 0 ? Math.round(n) : fallback;
 }
 
-function parseEuroToCents(value: FormDataEntryValue | null, fallback = 0) {
-  const raw = String(value || "").replace(",", ".").trim();
-  const n = Number(raw);
-  return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) : fallback;
+function parseTimeList(value: FormDataEntryValue | null) {
+  return String(value || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
 }
 
 /* =========================
@@ -58,15 +59,10 @@ async function generate(tenantSlug: string, formData: FormData) {
   const activityId = String(formData.get("activityId") || "");
   const from = String(formData.get("from") || "");
   const to = String(formData.get("to") || "");
-  const times = String(formData.get("times") || "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
   const days = (formData.getAll("days") as DayKey[]) || [];
 
   if (!activityId) throw new Error("Activity is required.");
   if (!from || !to) throw new Error("Date range is required.");
-  if (!times.length) throw new Error("At least one time is required.");
   if (!days.length) throw new Error("Select at least one day.");
 
   const activity = await prisma.activity.findFirst({
@@ -77,7 +73,6 @@ async function generate(tenantSlug: string, formData: FormData) {
       durationMin: true,
       basePrice: true,
       maxParty: true,
-      slotIntervalMin: true,
       maxUnitsPerBooking: true,
       guestsPerUnit: true,
       durationOptions: {
@@ -98,52 +93,6 @@ async function generate(tenantSlug: string, formData: FormData) {
   }
 
   const firstDurationOption = activity.durationOptions[0] ?? null;
-
-  const durationInput = Number(formData.get("durationMin") || "");
-  const capacityInput = Number(formData.get("capacity") || "");
-  const priceEuroInput = Number(formData.get("priceEuro") || "");
-
-  let durationMin = activity.durationMin ?? 60;
-  let capacity = activity.maxParty ?? 4;
-  let priceCents = activity.basePrice ?? 0;
-
-  if (activity.mode === "FIXED_SEAT_EVENT") {
-    durationMin =
-      Number.isFinite(durationInput) && durationInput > 0
-        ? Math.round(durationInput)
-        : activity.durationMin ?? 60;
-
-    capacity =
-      Number.isFinite(capacityInput) && capacityInput > 0
-        ? Math.round(capacityInput)
-        : activity.maxParty ?? 4;
-
-    priceCents =
-      Number.isFinite(priceEuroInput) && priceEuroInput >= 0
-        ? Math.round(priceEuroInput * 100)
-        : activity.basePrice ?? 0;
-  }
-
-  if (
-    activity.mode === "DYNAMIC_RENTAL" ||
-    activity.mode === "HYBRID_UNIT_BOOKING"
-  ) {
-    durationMin =
-      Number.isFinite(durationInput) && durationInput > 0
-        ? Math.round(durationInput)
-        : firstDurationOption?.durationMin ?? activity.durationMin ?? 60;
-
-    capacity =
-      Number.isFinite(capacityInput) && capacityInput > 0
-        ? Math.round(capacityInput)
-        : activity.maxUnitsPerBooking ?? 1;
-
-    priceCents = parseEuroToCents(
-      formData.get("priceEuro"),
-      firstDurationOption?.priceCents ?? activity.basePrice ?? 0
-    );
-  }
-
   const start = localStartOfDayUTC(from, tz);
   const end = localStartOfDayUTC(to, tz);
 
@@ -157,26 +106,84 @@ async function generate(tenantSlug: string, formData: FormData) {
 
   const toCreate: NewSlot[] = [];
 
-  for (
-    let cursor = new Date(start);
-    cursor <= addDays(end, 1);
-    cursor = addDays(cursor, 1)
-  ) {
-    const ymd = toLocalYMD(cursor);
-    const dow = String(weekdayInTz(ymd, tz)) as DayKey;
+  if (activity.mode === "FIXED_SEAT_EVENT") {
+    const times = parseTimeList(formData.get("times"));
+    if (!times.length) throw new Error("At least one departure time is required.");
 
-    if (!days.includes(dow)) continue;
+    const durationMin = parsePositiveInt(
+      formData.get("durationMin"),
+      activity.durationMin ?? 60
+    );
 
-    for (const t of times) {
-      const startAt = wallToUTC(ymd, t, tz);
-      const endAt = new Date(startAt.getTime() + durationMin * 60 * 1000);
+    const capacity = parsePositiveInt(
+      formData.get("capacity"),
+      activity.maxParty ?? 4
+    );
+
+    const priceCents = Math.max(
+      0,
+      Math.round(Number(formData.get("priceEuro") || 0) * 100)
+    );
+
+    for (
+      let cursor = new Date(start);
+      cursor <= addDays(end, 1);
+      cursor = addDays(cursor, 1)
+    ) {
+      const ymd = toLocalYMD(cursor);
+      const dow = String(weekdayInTz(ymd, tz)) as DayKey;
+
+      if (!days.includes(dow)) continue;
+
+      for (const t of times) {
+        const startAt = wallToUTC(ymd, t, tz);
+        const endAt = new Date(startAt.getTime() + durationMin * 60 * 1000);
+
+        toCreate.push({
+          activityId,
+          startAt,
+          endAt,
+          capacity,
+          priceCents: priceCents > 0 ? priceCents : activity.basePrice ?? 0,
+        });
+      }
+    }
+  } else {
+    const windowStartTime = String(formData.get("windowStartTime") || "").trim();
+    const windowEndTime = String(formData.get("windowEndTime") || "").trim();
+
+    if (!windowStartTime || !windowEndTime) {
+      throw new Error("Available from/to times are required.");
+    }
+
+    const unitsAvailable = parsePositiveInt(
+      formData.get("capacity"),
+      activity.maxUnitsPerBooking ?? 1
+    );
+
+    for (
+      let cursor = new Date(start);
+      cursor <= addDays(end, 1);
+      cursor = addDays(cursor, 1)
+    ) {
+      const ymd = toLocalYMD(cursor);
+      const dow = String(weekdayInTz(ymd, tz)) as DayKey;
+
+      if (!days.includes(dow)) continue;
+
+      const startAt = wallToUTC(ymd, windowStartTime, tz);
+      const endAt = wallToUTC(ymd, windowEndTime, tz);
+
+      if (endAt <= startAt) {
+        throw new Error("Available-to time must be later than available-from time.");
+      }
 
       toCreate.push({
         activityId,
         startAt,
         endAt,
-        capacity,
-        priceCents,
+        capacity: unitsAvailable,
+        priceCents: firstDurationOption?.priceCents ?? activity.basePrice ?? 0,
       });
     }
   }
@@ -264,7 +271,9 @@ export default async function GenerateSlotsPage({
   const defaults = {
     from: fmt(today),
     to: fmt(nextWeek),
-    time: "09:00",
+    departureTime: "09:00",
+    availableFromTime: "09:00",
+    availableToTime: "21:00",
   };
 
   return (
@@ -272,6 +281,7 @@ export default async function GenerateSlotsPage({
       activities={activities}
       created={Number.isFinite(created) ? created : undefined}
       defaults={defaults}
+      backHref={`/${params.club}/admin/slots`}
       action={generate.bind(null, params.club)}
     />
   );
