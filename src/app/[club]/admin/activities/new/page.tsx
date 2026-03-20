@@ -53,6 +53,77 @@ async function saveImageFile(file: File | null): Promise<string | null> {
   return null;
 }
 
+function parsePositiveInt(value: FormDataEntryValue | null, fallback: number) {
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0 ? Math.round(n) : fallback;
+}
+
+function parseOptionalPositiveInt(value: FormDataEntryValue | null) {
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0 ? Math.round(n) : null;
+}
+
+function parseEuroToCents(value: FormDataEntryValue | null, fallback = 0) {
+  const raw = String(value || "").replace(",", ".").trim();
+  const n = Number(raw);
+  return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) : fallback;
+}
+
+function normalizeText(value: FormDataEntryValue | null) {
+  const s = String(value || "").trim();
+  return s.length ? s : null;
+}
+
+type ActivityModeValue =
+  | "FIXED_SEAT_EVENT"
+  | "DYNAMIC_RENTAL"
+  | "HYBRID_UNIT_BOOKING";
+
+function parseActivityMode(value: FormDataEntryValue | null): ActivityModeValue {
+  const v = String(value || "").trim();
+  if (
+    v === "FIXED_SEAT_EVENT" ||
+    v === "DYNAMIC_RENTAL" ||
+    v === "HYBRID_UNIT_BOOKING"
+  ) {
+    return v;
+  }
+  return "FIXED_SEAT_EVENT";
+}
+
+function parseDurationOptions(formData: FormData) {
+  const durations = formData.getAll("durationOptionDurationMin");
+  const prices = formData.getAll("durationOptionPriceEuro");
+  const labels = formData.getAll("durationOptionLabel");
+
+  const out: Array<{
+    label: string | null;
+    durationMin: number;
+    priceCents: number;
+    sortOrder: number;
+  }> = [];
+
+  const total = Math.max(durations.length, prices.length, labels.length);
+
+  for (let i = 0; i < total; i++) {
+    const durationMin = parseOptionalPositiveInt(durations[i] ?? null);
+    const priceCents = parseEuroToCents(prices[i] ?? null, -1);
+    const labelRaw = String(labels[i] ?? "").trim();
+
+    if (!durationMin) continue;
+    if (priceCents < 0) continue;
+
+    out.push({
+      label: labelRaw || null,
+      durationMin,
+      priceCents,
+      sortOrder: out.length,
+    });
+  }
+
+  return out;
+}
+
 /* ====== server action (tenant-scoped via slug) ====== */
 async function createActivityAction(tenantSlug: string, formData: FormData) {
   "use server";
@@ -80,13 +151,46 @@ async function createActivityAction(tenantSlug: string, formData: FormData) {
   const name = String(formData.get("name") || "").trim();
   if (!name) return;
 
-  const durationMin = Number(formData.get("durationMin") || 60) || 60;
-  const basePriceEuro = Number(formData.get("basePriceEuro") || 0);
-  const basePrice = Math.max(0, Math.round(basePriceEuro * 100));
-  const maxParty = Math.max(1, Number(formData.get("maxParty") || 4));
-  const locationId = String(formData.get("locationId") || "hersonissos-port");
-  const description = String(formData.get("description") || "");
+  const mode = parseActivityMode(formData.get("mode"));
+  const description = String(formData.get("description") || "").trim();
+  const locationId = String(formData.get("locationId") || "hersonissos-port").trim() || "hersonissos-port";
   const active = formData.get("active") === "on";
+
+  const meetingPoint = normalizeText(formData.get("meetingPoint"));
+  const includedText = normalizeText(formData.get("includedText"));
+  const bringText = normalizeText(formData.get("bringText"));
+  const cancellationText = normalizeText(formData.get("cancellationText"));
+  const ageInfo = normalizeText(formData.get("ageInfo"));
+  const skillLevel = normalizeText(formData.get("skillLevel"));
+  const safetyInfo = normalizeText(formData.get("safetyInfo"));
+  const pricingNotes = normalizeText(formData.get("pricingNotes"));
+
+  const minParty = parsePositiveInt(formData.get("minParty"), 1);
+  const maxParty = Math.max(
+    minParty,
+    parsePositiveInt(formData.get("maxParty"), mode === "FIXED_SEAT_EVENT" ? 4 : 6)
+  );
+
+  const slotIntervalMin = parseOptionalPositiveInt(formData.get("slotIntervalMin"));
+  const guestsPerUnit = parseOptionalPositiveInt(formData.get("guestsPerUnit"));
+  const maxUnitsPerBooking = parseOptionalPositiveInt(formData.get("maxUnitsPerBooking"));
+
+  const durationOptions = parseDurationOptions(formData);
+
+  const manualDurationMin = parsePositiveInt(formData.get("durationMin"), 60);
+  const manualBasePrice = parseEuroToCents(formData.get("basePriceEuro"), 0);
+
+  const fallbackDurationMin =
+    durationOptions.length > 0 ? durationOptions[0].durationMin : manualDurationMin;
+
+  const fallbackBasePrice =
+    durationOptions.length > 0 ? durationOptions[0].priceCents : manualBasePrice;
+
+  const durationMin =
+    mode === "FIXED_SEAT_EVENT" ? manualDurationMin : fallbackDurationMin;
+
+  const basePrice =
+    mode === "FIXED_SEAT_EVENT" ? manualBasePrice : fallbackBasePrice;
 
   const uploaded = (formData.get("coverFile") as File) || null;
   const cover = await saveImageFile(uploaded);
@@ -96,16 +200,44 @@ async function createActivityAction(tenantSlug: string, formData: FormData) {
       club: { connect: { id: tenant.id } },
       name,
       slug: await getUniqueSlug(name, tenant.id),
+
       description,
       durationMin,
+      minParty,
+      maxParty,
       basePrice,
+
+      requiresInstructor: false,
       locationId,
       active,
-      coverImageUrl: cover,
-      minParty: 1,
-      maxParty,
-      requiresInstructor: false,
       sport: "watersports",
+      coverImageUrl: cover,
+
+      mode,
+      meetingPoint,
+      includedText,
+      bringText,
+      cancellationText,
+      ageInfo,
+      skillLevel,
+      safetyInfo,
+      pricingNotes,
+      guestsPerUnit,
+      maxUnitsPerBooking,
+      slotIntervalMin,
+
+      ...(durationOptions.length
+        ? {
+            durationOptions: {
+              create: durationOptions.map((opt) => ({
+                label: opt.label,
+                durationMin: opt.durationMin,
+                priceCents: opt.priceCents,
+                sortOrder: opt.sortOrder,
+              })),
+            },
+          }
+        : {}),
     },
   });
 
@@ -117,9 +249,11 @@ async function createActivityAction(tenantSlug: string, formData: FormData) {
 /* ====== page ====== */
 export default function NewActivityPage({
   params,
-}: { params: { club: string } }) {
+}: {
+  params: { club: string };
+}) {
   return (
-    <main className="mx-auto max-w-4xl space-y-8 px-6 py-10">
+    <main className="mx-auto max-w-5xl space-y-8 px-6 py-10">
       <NewActivityHeaderClient />
       <NewActivityFormClient
         createAction={createActivityAction.bind(null, params.club)}

@@ -21,6 +21,11 @@ enum SubscriptionStatus {
   CANCELED
 }
 
+enum ActivityMode {
+  FIXED_SEAT_EVENT
+  DYNAMIC_RENTAL
+  HYBRID_UNIT_BOOKING
+}
 
 model Club {
   id         String       @id @default(cuid())
@@ -31,7 +36,7 @@ model Club {
 
   // BRANDING
   primaryHex      String?
-  logoKey         String?   
+  logoKey         String?
   emailFromName   String?
   emailFromEmail  String?
 
@@ -47,10 +52,10 @@ model Club {
   subscriptionPlan    SubscriptionPlan   @default(BASIC)
   subscriptionStatus  SubscriptionStatus @default(INACTIVE)
 
-  stripeCustomerId     String? @unique
-  stripeSubscriptionId String? @unique
-  stripePriceId        String?
-  trialEndsAt          DateTime?
+  stripeCustomerId      String? @unique
+  stripeSubscriptionId  String? @unique
+  stripePriceId         String?
+  trialEndsAt           DateTime?
 
   // Stripe Connect Express account for payouts
   stripeConnectAccountId String? @unique
@@ -99,7 +104,7 @@ model Customer {
 }
 
 model Activity {
-  id                 String     @id @default(cuid())
+  id                 String       @id @default(cuid())
   clubId             String
   name               String
   slug               String
@@ -110,17 +115,53 @@ model Activity {
   basePrice          Int?
   requiresInstructor Boolean
   locationId         String
-  active             Boolean    @default(true)
-  sport              String     @default("tennis")
+  active             Boolean      @default(true)
+  sport              String       @default("tennis")
   coverImageUrl      String?
-  createdAt          DateTime   @default(now())
-  updatedAt          DateTime   @default(now()) @updatedAt
-  club               Club       @relation(fields: [clubId], references: [id])
+
+  // NEW: activity behavior mode
+  mode               ActivityMode @default(FIXED_SEAT_EVENT)
+
+  // NEW: tourism / rental / hybrid metadata
+  meetingPoint       String?
+  includedText       String?
+  bringText          String?
+  cancellationText   String?
+  ageInfo            String?
+  skillLevel         String?
+  safetyInfo         String?
+  pricingNotes       String?
+
+  // NEW: unit-based booking logic
+  guestsPerUnit      Int?
+  maxUnitsPerBooking Int?
+  slotIntervalMin    Int?
+
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @default(now()) @updatedAt
+  club               Club         @relation(fields: [clubId], references: [id])
   bookings           Booking[]
   timeSlots          TimeSlot[]
+  durationOptions    ActivityDurationOption[]
 
   @@unique([clubId, slug])
   @@index([clubId])
+}
+
+model ActivityDurationOption {
+  id          String   @id @default(cuid())
+  activityId  String
+  label       String?
+  durationMin Int
+  priceCents  Int
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  activity    Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@index([activityId, sortOrder])
 }
 
 model TimeSlot {
@@ -138,21 +179,31 @@ model TimeSlot {
 }
 
 model Booking {
-  id         String        @id @default(cuid())
-  customerId String
-  activityId String
-  timeSlotId String
-  partySize  Int
-  totalPrice Int
-  status     BookingStatus @default(pending)
-  notes      String?
-  createdAt  DateTime      @default(now())
-  activity   Activity      @relation(fields: [activityId], references: [id])
-  customer   Customer      @relation(fields: [customerId], references: [id])
-  timeSlot   TimeSlot      @relation(fields: [timeSlotId], references: [id])
-  payment    Payment?
+  id                   String        @id @default(cuid())
+  customerId           String
+  activityId           String
+  timeSlotId           String
+  partySize            Int
+  totalPrice           Int
+  status               BookingStatus @default(pending)
+  notes                String?
+
+  // NEW: unit/duration snapshot fields for rentals + hybrid bookings
+  reservedUnits        Int           @default(1)
+  bookingStartAt       DateTime?
+  bookingEndAt         DateTime?
+  durationMinSnapshot  Int?
+  unitPriceSnapshot    Int?
+  pricingLabelSnapshot String?
+
+  createdAt            DateTime      @default(now())
+  activity             Activity      @relation(fields: [activityId], references: [id])
+  customer             Customer      @relation(fields: [customerId], references: [id])
+  timeSlot             TimeSlot      @relation(fields: [timeSlotId], references: [id])
+  payment              Payment?
 
   @@index([timeSlotId])
+  @@index([activityId, bookingStartAt, bookingEndAt])
 }
 
 model Payment {
@@ -209,7 +260,6 @@ enum PaymentStatus {
   refunded
   failed
 }
-
 
 model StaffInvite {
   id        String   @id @default(cuid())
