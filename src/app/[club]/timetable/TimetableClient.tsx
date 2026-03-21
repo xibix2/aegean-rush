@@ -12,19 +12,79 @@ import { useT } from "@/components/I18nProvider";
 type DayBucket = "none" | "low" | "medium" | "high" | "full";
 type DayInfo = { capacity: number; paid: number; remaining: number; bucket: DayBucket };
 
-type Slot = {
+type ActivityMode =
+  | "FIXED_SEAT_EVENT"
+  | "DYNAMIC_RENTAL"
+  | "HYBRID_UNIT_BOOKING";
+
+type DurationOption = {
   id: string;
+  label: string | null;
+  durationMin: number;
+  priceCents: number;
+};
+
+type ActivityInfo = {
+  id: string;
+  name: string;
+  mode: ActivityMode;
+  slotIntervalMin: number | null;
+  guestsPerUnit: number | null;
+  maxUnitsPerBooking: number | null;
+  durationOptions: DurationOption[];
+};
+
+type FixedSlot = {
+  id: string;
+  kind: "fixed";
   start: string;
-  end: string;
+  end: string | null;
+  capacity: number;
   remaining: number;
   canFit: boolean;
-  pricePerPerson: number; // cents
-  totalPrice: number; // cents
+  unitPrice: number;
+  totalPrice: number;
+  requestedPartySize: number;
+  errors?: string[];
+};
+
+type RentalOrHybridSlot = {
+  id: string;
+  kind: "rental" | "hybrid";
+  start: string;
+  end: string | null;
+  capacity: number;
+  availableWindowStart: string;
+  availableWindowEnd: string | null;
+  durationOptions?: DurationOption[];
+  requiresStartTimeSelection?: boolean;
+  requiresDurationSelection?: boolean;
+
+  bookingStartAt?: string;
+  bookingEndAt?: string;
+
+  remainingUnits?: number;
+  canFit?: boolean;
+
+  reservedUnits?: number;
+  requiredUnits?: number | null;
+  requestedGuests?: number | null;
+
+  durationMin?: number | null;
+  pricingLabel?: string | null;
+  unitPrice?: number;
+  totalPrice?: number;
+
+  errors?: string[];
+};
+
+type AvailabilityResponse = {
+  activity?: ActivityInfo;
+  slots?: Array<FixedSlot | RentalOrHybridSlot>;
 };
 
 const TIMEZONE = "Europe/Athens";
 
-/* Detect tenant from first URL segment on the client */
 function detectTenantSlug(): string | null {
   if (typeof window === "undefined") return null;
   const seg = window.location.pathname.split("/").filter(Boolean)[0] ?? "";
@@ -41,6 +101,25 @@ function calcBucket(remaining: number, capacity: number): DayBucket {
   return "low";
 }
 
+function formatMoney(cents: number) {
+  return (cents / 100).toFixed(2);
+}
+
+function toTimeInputValue(iso: string) {
+  const d = new Date(iso);
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  return `${hh}:${mm}`;
+}
+
+function combineDateAndTime(dateYmd: string, timeHm: string) {
+  return new Date(`${dateYmd}T${timeHm}:00`).toISOString();
+}
+
+function ceilDiv(a: number, b: number) {
+  return Math.ceil(a / b);
+}
+
 export default function TimetableClient() {
   const t = useT();
 
@@ -51,15 +130,23 @@ export default function TimetableClient() {
   const date = params.get("date") ?? "";
 
   const [partySize, setPartySize] = useState<number>(Number(params.get("partySize") ?? 1));
+  const [units, setUnits] = useState<number>(Number(params.get("units") ?? 1));
+  const [guests, setGuests] = useState<number>(Number(params.get("guests") ?? 1));
+  const [selectedTime, setSelectedTime] = useState<string>(params.get("startTime") ?? "");
+  const [selectedDurationId, setSelectedDurationId] = useState<string>(
+    params.get("durationOptionId") ?? "",
+  );
+
   const [loading, setLoading] = useState(false);
-  const [slots, setSlots] = useState<Slot[]>([]);
+  const [activity, setActivity] = useState<ActivityInfo | null>(null);
+  const [slots, setSlots] = useState<Array<FixedSlot | RentalOrHybridSlot>>([]);
 
   const tenantSlug = useMemo(() => detectTenantSlug(), []);
   const base = tenantSlug ? `/${tenantSlug}` : "";
 
   const minBookable = useMemo(
     () => formatInTimeZone(addDays(new Date(), 1), TIMEZONE, "yyyy-MM-dd"),
-    []
+    [],
   );
 
   const safeDate = date || minBookable;
@@ -73,18 +160,38 @@ export default function TimetableClient() {
   const ym = (y: number, m: number) => `${y}-${String(m).padStart(2, "0")}`;
   const clampToMin = (s: string) => (s < minBookable ? minBookable : s);
 
-  /* Slug-safe router.replace */
-  const setQuery = (updates: Partial<{ date: string; partySize: number }>) => {
+  const setQuery = (
+    updates: Partial<{
+      date: string;
+      partySize: number;
+      units: number;
+      guests: number;
+      startTime: string;
+      durationOptionId: string;
+    }>,
+  ) => {
     const q = safeParamsCopy();
+
     if (updates.date) q.set("date", clampToMin(updates.date));
     if (updates.partySize != null) q.set("partySize", String(updates.partySize));
+    if (updates.units != null) q.set("units", String(updates.units));
+    if (updates.guests != null) q.set("guests", String(updates.guests));
+
+    if (typeof updates.startTime === "string") {
+      if (updates.startTime) q.set("startTime", updates.startTime);
+      else q.delete("startTime");
+    }
+
+    if (typeof updates.durationOptionId === "string") {
+      if (updates.durationOptionId) q.set("durationOptionId", updates.durationOptionId);
+      else q.delete("durationOptionId");
+    }
+
     if (!q.get("activityId")) q.set("activityId", activityId);
 
-    // Update URL without jumping to the top
     router.replace(`${base}/timetable?${q.toString()}`, { scroll: false });
   };
 
-  /* Normalize month heat map payloads */
   const normalizeDays = (raw: unknown): Record<string, DayInfo> => {
     const out: Record<string, DayInfo> = {};
     if (!raw || typeof raw !== "object") return out;
@@ -111,7 +218,6 @@ export default function TimetableClient() {
     return out;
   };
 
-  /* Shared fetch init — adds slug header */
   const commonFetchInit = useMemo<RequestInit>(() => {
     const headers = new Headers();
     headers.set("cache-control", "no-store");
@@ -119,141 +225,165 @@ export default function TimetableClient() {
     return { headers, cache: "no-store" as RequestCache };
   }, [tenantSlug]);
 
-  /* Month heat */
   const fetchMonth = async (y: number, m: number) => {
     if (!activityId) return;
     try {
       const qs = new URLSearchParams({ activityId, month: ym(y, m) }).toString();
       const url = `/api/availability/month?${qs}`;
       const res = await fetch(url, commonFetchInit);
-      if (process.env.NODE_ENV !== "production") {
-        console.log(
-          "[month] GET",
-          url,
-          Object.fromEntries((commonFetchInit.headers as Headers).entries()),
-          res.status
-        );
-      }
       if (!res.ok) {
         setHeat({});
         return;
       }
       const json = await res.json();
-      if (process.env.NODE_ENV !== "production") console.log("[month] payload", json);
       const daysBlock =
         json && typeof json === "object" && "days" in (json as any)
           ? (json as any).days
           : json;
       setHeat(normalizeDays(daysBlock));
-    } catch (err) {
-      if (process.env.NODE_ENV !== "production") console.warn("[month] error", err);
+    } catch {
       setHeat({});
     }
   };
 
-  /* Day slots — tolerant parser */
-  const pickSlotsArray = (json: any): Slot[] => {
-    if (Array.isArray(json)) return json as Slot[];
-    if (json && typeof json === "object") {
-      if (Array.isArray(json.slots)) return json.slots as Slot[];
-      if (json.data && Array.isArray(json.data.slots)) return json.data.slots as Slot[];
-      if (json.availability && Array.isArray(json.availability.slots))
-        return json.availability.slots as Slot[];
-    }
-    return [];
-  };
-
-  const fetchAvailability = async (ps: number) => {
+  const fetchAvailability = async (nextPartySize: number) => {
     if (!activityId || !safeDate) return;
+
     setLoading(true);
     try {
       const qs = new URLSearchParams({
         activityId,
         date: safeDate,
-        partySize: String(ps),
-      }).toString();
-      const url = `/api/availability/day?${qs}`;
+        partySize: String(nextPartySize),
+      });
+
+      if (units > 0) qs.set("units", String(units));
+      if (guests > 0) qs.set("guests", String(guests));
+      if (selectedTime) qs.set("startTime", combineDateAndTime(safeDate, selectedTime));
+      if (selectedDurationId) qs.set("durationOptionId", selectedDurationId);
+
+      const url = `/api/availability/day?${qs.toString()}`;
       const res = await fetch(url, commonFetchInit);
-      if (process.env.NODE_ENV !== "production") {
-        console.log(
-          "[day] GET",
-          url,
-          Object.fromEntries((commonFetchInit.headers as Headers).entries()),
-          res.status
-        );
-      }
-      const json = await res.json().catch(() => ({}));
+      const json = (await res.json().catch(() => ({}))) as AvailabilityResponse;
 
-      if (!res.ok) throw new Error(t("timetable.errors.loadAvailability"));
+      if (!res.ok) throw new Error((json as any)?.error || t("timetable.errors.loadAvailability"));
 
-      const list = pickSlotsArray(json);
-      setSlots(Array.isArray(list) ? list : []);
-      if (process.env.NODE_ENV !== "production") console.log("[day] parsed slots", list);
+      setActivity(json.activity ?? null);
+      setSlots(Array.isArray(json.slots) ? json.slots : []);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : t("timetable.errors.generic");
-      toast?.error(msg);
+      toast.error(msg);
+      setActivity(null);
       setSlots([]);
     } finally {
       setLoading(false);
     }
   };
 
-  /* Checkout */
-  const handleChooseSlot = async (slotId: string, _totalCents: number) => {
+  const handleChooseSlot = async (slotId: string) => {
     try {
       setLoading(true);
+
+      const payload: Record<string, unknown> = {
+        activityId,
+        slotId,
+      };
+
+      if (activity?.mode === "FIXED_SEAT_EVENT") {
+        payload.partySize = partySize;
+      } else if (activity?.mode === "DYNAMIC_RENTAL") {
+        payload.partySize = 1;
+        payload.units = units;
+        payload.startTime = combineDateAndTime(safeDate, selectedTime);
+        payload.durationOptionId = selectedDurationId;
+      } else if (activity?.mode === "HYBRID_UNIT_BOOKING") {
+        payload.partySize = guests;
+        payload.guests = guests;
+        payload.units = units;
+        payload.startTime = combineDateAndTime(safeDate, selectedTime);
+        payload.durationOptionId = selectedDurationId;
+      }
+
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           ...(tenantSlug ? { "x-tenant-slug": tenantSlug } : {}),
         },
-        body: JSON.stringify({ activityId, slotId, partySize }),
+        body: JSON.stringify(payload),
       });
+
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? t("timetable.errors.checkoutFailed"));
       window.location.href = json.url;
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : t("timetable.errors.checkoutGeneric");
-      toast?.error(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
   };
 
-  /* Ensure date param is present and >= minBookable */
   useEffect(() => {
     if (!activityId) return;
     if (!date || date < minBookable) {
       const q = safeParamsCopy();
       q.set("date", date ? clampToMin(date) : minBookable);
       if (!q.get("activityId")) q.set("activityId", activityId);
-      // Avoid scroll jump on initial normalization
       router.replace(`${base}/timetable?${q.toString()}`, { scroll: false });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /* React to date/activity changes */
   useEffect(() => {
     if (!activityId || !safeDate) return;
     fetchAvailability(partySize);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activityId, safeDate, tenantSlug]);
+  }, [activityId, safeDate, tenantSlug, selectedDurationId, selectedTime, units, guests]);
 
-  /* Month heat reactiveness */
   useEffect(() => {
     if (!activityId) return;
     fetchMonth(year, month);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activityId, month, year, tenantSlug]);
 
-  /* Controls */
+  useEffect(() => {
+    setQuery({
+      partySize,
+      units,
+      guests,
+      startTime: selectedTime,
+      durationOptionId: selectedDurationId,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [partySize, units, guests, selectedTime, selectedDurationId]);
+
+  useEffect(() => {
+    if (!activity || activity.mode !== "HYBRID_UNIT_BOOKING") return;
+    const gpu = Math.max(1, activity.guestsPerUnit ?? 1);
+    const required = ceilDiv(Math.max(1, guests), gpu);
+    if (units < required) {
+      setUnits(required);
+    }
+  }, [activity, guests, units]);
+
   const onPartyChange = (n: number) => {
     const v = Math.max(1, Math.min(20, Number.isFinite(n) ? n : 1));
     setPartySize(v);
-    fetchAvailability(v);
-    setQuery({ partySize: v });
+    if (activity?.mode === "FIXED_SEAT_EVENT") {
+      fetchAvailability(v);
+    }
+  };
+
+  const onUnitsChange = (n: number) => {
+    const max = Math.max(1, activity?.maxUnitsPerBooking ?? 20);
+    const v = Math.max(1, Math.min(max, Number.isFinite(n) ? n : 1));
+    setUnits(v);
+  };
+
+  const onGuestsChange = (n: number) => {
+    const v = Math.max(1, Math.min(50, Number.isFinite(n) ? n : 1));
+    setGuests(v);
   };
 
   const onDateInputChange = (s: string) => {
@@ -264,10 +394,12 @@ export default function TimetableClient() {
     const d = parse(`${safeDate}`, "yyyy-MM-dd", new Date());
     setQuery({ date: ymd(addDays(d, -1)) });
   };
+
   const goNextDay = () => {
     const d = parse(`${safeDate}`, "yyyy-MM-dd", new Date());
     setQuery({ date: ymd(addDays(d, +1)) });
   };
+
   const onPickDay = (iso: string) => setQuery({ date: iso });
 
   const prevMonth = () => {
@@ -275,6 +407,7 @@ export default function TimetableClient() {
     setYear(d.getFullYear());
     setMonth(d.getMonth() + 1);
   };
+
   const nextMonth = () => {
     const d = addMonths(new Date(year, month - 1, 1), 1);
     setYear(d.getFullYear());
@@ -284,9 +417,15 @@ export default function TimetableClient() {
   const pretty = format(parse(safeDate, "yyyy-MM-dd", new Date()), "eeee, d MMM yyyy");
   const isAtMin = safeDate <= minBookable;
 
+  const mode = activity?.mode ?? "FIXED_SEAT_EVENT";
+  const selectedDuration = activity?.durationOptions.find((d) => d.id === selectedDurationId) ?? null;
+  const hybridMinUnits =
+    mode === "HYBRID_UNIT_BOOKING"
+      ? ceilDiv(Math.max(1, guests), Math.max(1, activity?.guestsPerUnit ?? 1))
+      : 1;
+
   return (
     <main className="mx-auto max-w-5xl px-0 sm:px-6 py-3 sm:py-6 space-y-8">
-      {/* utilities & no-spinner for number input */}
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -301,7 +440,6 @@ export default function TimetableClient() {
         }}
       />
 
-      {/* --- PAGE TITLE --- */}
       <div className="text-center mb-8 mt-2">
         <h1 className="text-3xl md:text-4xl font-semibold tracking-tight bg-gradient-to-r from-yellow-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent drop-shadow-[0_0_10px_rgba(255,200,80,0.25)]">
           {t("timetable.title")}
@@ -312,7 +450,6 @@ export default function TimetableClient() {
         </p>
       </div>
 
-      {/* CALENDAR */}
       <section
         className="relative rounded-2xl overflow-hidden t-anim"
         style={{ animation: "tFade .35s ease-out" }}
@@ -331,10 +468,8 @@ export default function TimetableClient() {
         </div>
       </section>
 
-      {/* CONTROLS BAR */}
       <div className="mx-auto max-w-5xl">
         <div className="relative rounded-2xl">
-          {/* gradient stroke */}
           <div
             className="pointer-events-none absolute inset-0 rounded-2xl"
             aria-hidden
@@ -347,7 +482,6 @@ export default function TimetableClient() {
               maskComposite: "exclude",
             }}
           />
-          {/* elegant background */}
           <div
             className="relative rounded-[calc(theme(borderRadius.2xl)-1px)] px-3 py-2 border border-[--color-border]"
             style={{
@@ -355,82 +489,167 @@ export default function TimetableClient() {
                 "radial-gradient(120% 140% at 10% -40%, rgba(147,51,234,.16), transparent 55%), radial-gradient(120% 140% at 90% 140%, rgba(255,210,80,.12), transparent 55%), linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02))",
             }}
           >
-            <div
-              className="pointer-events-none absolute inset-0 opacity-[0.035] mix-blend-overlay"
-              style={{
-                backgroundImage:
-                  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'%3E%3Ccircle cx='2' cy='2' r='1' fill='%23ffffff' fill-opacity='0.35'/%3E%3Ccircle cx='20' cy='14' r='1' fill='%23ffffff' fill-opacity='0.3'/%3E%3Ccircle cx='12' cy='26' r='1' fill='%23ffffff' fill-opacity='0.28'/%3E%3Ccircle cx='30' cy='32' r='1' fill='%23ffffff' fill-opacity='0.28'/%3E%3C/svg%3E\")",
-              }}
-            />
-
             <div className="relative z-10 flex flex-wrap items-center gap-2">
-              {/* prev */}
               <button
                 type="button"
                 onClick={goPrevDay}
                 disabled={loading || isAtMin}
-                className="rounded-lg px-3 py-1.5 text-sm border border-white/10 bg-black/30 hover:bg-black/40 disabled:opacity-40 transition shadow-[inset_0_0_0_1px_rgba(255,255,255,.03)]"
-                aria-label={t("timetable.controls.prevAria")}
-                title={
-                  isAtMin ? t("timetable.controls.noPast") : t("timetable.controls.prevTitle")
-                }
+                className="rounded-lg px-3 py-1.5 text-sm border border-white/10 bg-black/30 hover:bg-black/40 disabled:opacity-40 transition"
               >
                 ‹
               </button>
 
-              {/* date input */}
               <input
                 type="date"
                 value={safeDate}
                 min={minBookable}
                 onChange={(e) => onDateInputChange(e.target.value)}
                 className="rounded-lg px-3 py-1.5 text-sm border border-white/10 bg-black/25 outline-none focus:ring-2 focus:ring-amber-400/40"
-                aria-label={t("timetable.controls.datePicker")}
               />
 
-              {/* next */}
               <button
                 type="button"
                 onClick={goNextDay}
                 disabled={loading}
-                className="rounded-lg px-3 py-1.5 text-sm border border-white/10 bg-black/30 hover:bg-black/40 disabled:opacity-40 transition shadow-[inset_0_0_0_1px_rgba(255,255,255,.03)]"
-                aria-label={t("timetable.controls.nextAria")}
+                className="rounded-lg px-3 py-1.5 text-sm border border-white/10 bg-black/30 hover:bg-black/40 disabled:opacity-40 transition"
               >
                 ›
               </button>
 
-              {/* party size */}
-              <div className="ml-auto flex items-center gap-2">
-                <span className="text-sm opacity-70">{t("timetable.controls.party")}</span>
-                <div className="flex items-center rounded-lg border border-white/10 bg-black/25 shadow-[inset_0_0_0_1px_rgba(255,255,255,.03)]">
-                  <button
-                    className="px-3 py-1.5 text-sm hover:bg-black/30 transition"
-                    onClick={() => onPartyChange(partySize - 1)}
-                    disabled={loading}
-                    aria-label={t("timetable.controls.decrease")}
-                  >
-                    −
-                  </button>
-                  <input
-                    id="party"
-                    type="number"
-                    min={1}
-                    max={20}
-                    value={partySize}
-                    onChange={(e) => onPartyChange(Number(e.target.value))}
-                    className="no-spin w-16 bg-transparent px-2 py-1.5 text-center outline-none"
-                    aria-label={t("timetable.controls.party")}
-                  />
-                  <button
-                    className="px-3 py-1.5 text-sm hover:bg-black/30 transition"
-                    onClick={() => onPartyChange(partySize + 1)}
-                    disabled={loading}
-                    aria-label={t("timetable.controls.increase")}
-                  >
-                    +
-                  </button>
+              {mode === "FIXED_SEAT_EVENT" && (
+                <div className="ml-auto flex items-center gap-2">
+                  <span className="text-sm opacity-70">{t("timetable.controls.party")}</span>
+                  <div className="flex items-center rounded-lg border border-white/10 bg-black/25">
+                    <button
+                      className="px-3 py-1.5 text-sm hover:bg-black/30 transition"
+                      onClick={() => onPartyChange(partySize - 1)}
+                      disabled={loading}
+                    >
+                      −
+                    </button>
+                    <input
+                      type="number"
+                      min={1}
+                      max={20}
+                      value={partySize}
+                      onChange={(e) => onPartyChange(Number(e.target.value))}
+                      className="no-spin w-16 bg-transparent px-2 py-1.5 text-center outline-none"
+                    />
+                    <button
+                      className="px-3 py-1.5 text-sm hover:bg-black/30 transition"
+                      onClick={() => onPartyChange(partySize + 1)}
+                      disabled={loading}
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {mode !== "FIXED_SEAT_EVENT" && (
+                <div className="ml-auto flex flex-wrap items-center gap-2">
+                  <input
+                    type="time"
+                    value={selectedTime}
+                    onChange={(e) => setSelectedTime(e.target.value)}
+                    className="rounded-lg px-3 py-1.5 text-sm border border-white/10 bg-black/25 outline-none focus:ring-2 focus:ring-amber-400/40"
+                  />
+
+                  <select
+                    value={selectedDurationId}
+                    onChange={(e) => setSelectedDurationId(e.target.value)}
+                    className="rounded-lg px-3 py-1.5 text-sm border border-white/10 bg-black/25 outline-none"
+                  >
+                    <option value="">{t("timetable.chooseTime")}</option>
+                    {activity?.durationOptions.map((d) => (
+                      <option key={d.id} value={d.id}>
+                        {d.label || `${d.durationMin} min`} — €{formatMoney(d.priceCents)}
+                      </option>
+                    ))}
+                  </select>
+
+                  {mode === "DYNAMIC_RENTAL" && (
+                    <div className="flex items-center rounded-lg border border-white/10 bg-black/25">
+                      <button
+                        className="px-3 py-1.5 text-sm hover:bg-black/30 transition"
+                        onClick={() => onUnitsChange(units - 1)}
+                        disabled={loading}
+                      >
+                        −
+                      </button>
+                      <input
+                        type="number"
+                        min={1}
+                        max={activity?.maxUnitsPerBooking ?? 20}
+                        value={units}
+                        onChange={(e) => onUnitsChange(Number(e.target.value))}
+                        className="no-spin w-16 bg-transparent px-2 py-1.5 text-center outline-none"
+                      />
+                      <button
+                        className="px-3 py-1.5 text-sm hover:bg-black/30 transition"
+                        onClick={() => onUnitsChange(units + 1)}
+                        disabled={loading}
+                      >
+                        +
+                      </button>
+                    </div>
+                  )}
+
+                  {mode === "HYBRID_UNIT_BOOKING" && (
+                    <>
+                      <div className="flex items-center rounded-lg border border-white/10 bg-black/25">
+                        <button
+                          className="px-3 py-1.5 text-sm hover:bg-black/30 transition"
+                          onClick={() => onGuestsChange(guests - 1)}
+                          disabled={loading}
+                        >
+                          −
+                        </button>
+                        <input
+                          type="number"
+                          min={1}
+                          max={50}
+                          value={guests}
+                          onChange={(e) => onGuestsChange(Number(e.target.value))}
+                          className="no-spin w-16 bg-transparent px-2 py-1.5 text-center outline-none"
+                        />
+                        <button
+                          className="px-3 py-1.5 text-sm hover:bg-black/30 transition"
+                          onClick={() => onGuestsChange(guests + 1)}
+                          disabled={loading}
+                        >
+                          +
+                        </button>
+                      </div>
+
+                      <div className="flex items-center rounded-lg border border-white/10 bg-black/25">
+                        <button
+                          className="px-3 py-1.5 text-sm hover:bg-black/30 transition"
+                          onClick={() => onUnitsChange(units - 1)}
+                          disabled={loading}
+                        >
+                          −
+                        </button>
+                        <input
+                          type="number"
+                          min={hybridMinUnits}
+                          max={activity?.maxUnitsPerBooking ?? 20}
+                          value={units}
+                          onChange={(e) => onUnitsChange(Number(e.target.value))}
+                          className="no-spin w-16 bg-transparent px-2 py-1.5 text-center outline-none"
+                        />
+                        <button
+                          className="px-3 py-1.5 text-sm hover:bg-black/30 transition"
+                          onClick={() => onUnitsChange(units + 1)}
+                          disabled={loading}
+                        >
+                          +
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -440,7 +659,6 @@ export default function TimetableClient() {
         </p>
       </div>
 
-      {/* TITLE */}
       <div className="mx-auto max-w-5xl pt-2 text-center">
         <div className="inline-block">
           <h1
@@ -459,7 +677,24 @@ export default function TimetableClient() {
         <p className="mt-2 text-sm text-muted-foreground">{pretty}</p>
       </div>
 
-      {/* SLOTS */}
+      {mode !== "FIXED_SEAT_EVENT" && (
+        <div className="rounded-2xl border border-[--color-border] p-4 text-sm opacity-80">
+          <div>
+            {mode === "DYNAMIC_RENTAL" ? "Rental booking" : "Hybrid booking"}
+          </div>
+          <div className="mt-1 opacity-70">
+            {selectedTime ? `Start: ${selectedTime}` : "Choose a start time"}{" "}
+            ·{" "}
+            {selectedDuration
+              ? `Duration: ${selectedDuration.label || `${selectedDuration.durationMin} min`}`
+              : "Choose a duration"}
+            {mode === "DYNAMIC_RENTAL" && ` · Units: ${units}`}
+            {mode === "HYBRID_UNIT_BOOKING" &&
+              ` · Guests: ${guests} · Units: ${units} (min ${hybridMinUnits})`}
+          </div>
+        </div>
+      )}
+
       <section className="grid gap-5">
         {loading && (
           <div className="rounded-2xl border border-[--color-border] p-5">
@@ -480,84 +715,142 @@ export default function TimetableClient() {
           </div>
         )}
 
-        {slots.map((s) => {
-          const disabled = !s.canFit;
-          const pricePer = (s.pricePerPerson / 100).toFixed(2);
-          const total = (s.totalPrice / 100).toFixed(2);
-          const start = new Date(s.start);
-          const end = new Date(s.end);
+        {!loading &&
+          slots.map((s) => {
+            if (s.kind === "fixed") {
+              const disabled = !s.canFit;
+              const start = new Date(s.start);
+              const end = s.end ? new Date(s.end) : null;
 
-          return (
-            <div
-              key={s.id}
-              className="relative overflow-hidden rounded-2xl border border-[--color-border] bg-[--color-card] p-5 sm:p-6 transition hover:-translate-y-[2px] hover:shadow-[0_18px_48px_-20px_rgba(255,210,80,0.35)]"
-            >
-              {/* subtle gradient edge */}
-              <div
-                className="pointer-events-none absolute inset-0 rounded-2xl"
-                aria-hidden
-                style={{
-                  background:
-                    "linear-gradient(90deg, rgba(147,51,234,.28), rgba(255,210,80,.25), rgba(176,136,248,.28))",
-                  padding: 1,
-                  WebkitMask: "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
-                  WebkitMaskComposite: "xor",
-                  maskComposite: "exclude",
-                }}
-              />
+              return (
+                <div
+                  key={s.id}
+                  className="relative overflow-hidden rounded-2xl border border-[--color-border] bg-[--color-card] p-5 sm:p-6"
+                >
+                  <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                      <div className="text-lg font-semibold">
+                        {format(start, "HH:mm")}
+                        {end ? `–${format(end, "HH:mm")}` : ""}
+                      </div>
+                      <div className="mt-1 text-xs opacity-70">
+                        {t("timetable.remaining")}: {s.remaining}
+                      </div>
+                    </div>
 
-              <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                  <div className="text-lg font-semibold">
-                    {format(start, "HH:mm")}–{format(end, "HH:mm")}
+                    <div className="flex items-end gap-6 sm:items-center">
+                      <div className="text-right">
+                        <div className="text-xs opacity-70">
+                          €{formatMoney(s.unitPrice)} {t("timetable.perPerson")}
+                        </div>
+                        <div className="text-xl font-semibold">
+                          €{formatMoney(s.totalPrice)} {t("timetable.total")}
+                        </div>
+                      </div>
+
+                      <button
+                        disabled={disabled || loading}
+                        onClick={() => handleChooseSlot(s.id)}
+                        className={`inline-flex h-11 items-center rounded-[12px] px-5 text-sm font-medium text-white border border-white/10 ${
+                          disabled || loading
+                            ? "opacity-40 cursor-not-allowed"
+                            : "hover:scale-[1.02]"
+                        } transition-transform duration-300`}
+                        style={{
+                          backgroundColor:
+                            "color-mix(in oklab, var(--accent-500) 95%, black)",
+                        }}
+                      >
+                        {disabled ? t("timetable.notEnough") : t("timetable.choose")}
+                      </button>
+                    </div>
                   </div>
-                  <div className="mt-1 text-xs opacity-70">
-                    {t("timetable.remaining")}: {s.remaining}
-                    {s.remaining <= 3 && (
-                      <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[11px] text-amber-300">
-                        <span className="inline-block size-1.5 rounded-full bg-amber-400" />
-                        {`${s.remaining} ${t("timetable.left")}`}
-                      </span>
+                </div>
+              );
+            }
+
+            const disabled =
+              !!s.requiresStartTimeSelection ||
+              !!s.requiresDurationSelection ||
+              !s.canFit;
+
+            const windowStart = new Date(s.availableWindowStart);
+            const windowEnd = s.availableWindowEnd ? new Date(s.availableWindowEnd) : null;
+
+            return (
+              <div
+                key={s.id}
+                className="relative overflow-hidden rounded-2xl border border-[--color-border] bg-[--color-card] p-5 sm:p-6"
+              >
+                <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div>
+                    <div className="text-lg font-semibold">
+                      {format(windowStart, "HH:mm")}
+                      {windowEnd ? `–${format(windowEnd, "HH:mm")}` : ""}
+                    </div>
+
+                    <div className="mt-1 text-xs opacity-70">
+                      {s.requiresStartTimeSelection || s.requiresDurationSelection ? (
+                        <>Select start time and duration to check availability</>
+                      ) : (
+                        <>
+                          {s.bookingStartAt && s.bookingEndAt
+                            ? `${format(new Date(s.bookingStartAt), "HH:mm")}–${format(
+                                new Date(s.bookingEndAt),
+                                "HH:mm",
+                              )}`
+                            : "Selected range unavailable"}
+                        </>
+                      )}
+                    </div>
+
+                    {!s.requiresStartTimeSelection && !s.requiresDurationSelection && (
+                      <div className="mt-2 text-xs opacity-70">
+                        Remaining units: {s.remainingUnits ?? 0}
+                        {typeof s.requiredUnits === "number" && s.requiredUnits > 0 && (
+                          <span className="ml-2">
+                            Required units: {s.requiredUnits}
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {!!s.errors?.length && (
+                      <div className="mt-2 text-xs text-amber-300">{s.errors[0]}</div>
                     )}
                   </div>
-                </div>
 
-                <div className="flex items-end gap-6 sm:items-center">
-                  <div className="text-right">
-                    <div className="text-xs opacity-70">
-                      €{pricePer} {t("timetable.perPerson")}
+                  <div className="flex items-end gap-6 sm:items-center">
+                    <div className="text-right">
+                      <div className="text-xs opacity-70">
+                        €{formatMoney(s.unitPrice ?? 0)} / unit
+                      </div>
+                      <div className="text-xl font-semibold">
+                        €{formatMoney(s.totalPrice ?? 0)} {t("timetable.total")}
+                      </div>
+                      {s.pricingLabel && (
+                        <div className="mt-1 text-xs opacity-60">{s.pricingLabel}</div>
+                      )}
                     </div>
-                    <div className="text-xl font-semibold">
-                      €{total} {t("timetable.total")}
-                    </div>
+
+                    <button
+                      disabled={disabled || loading}
+                      onClick={() => handleChooseSlot(s.id)}
+                      className={`inline-flex h-11 items-center rounded-[12px] px-5 text-sm font-medium text-white border border-white/10 ${
+                        disabled || loading ? "opacity-40 cursor-not-allowed" : "hover:scale-[1.02]"
+                      } transition-transform duration-300`}
+                      style={{
+                        backgroundColor:
+                          "color-mix(in oklab, var(--accent-500) 95%, black)",
+                      }}
+                    >
+                      {disabled ? t("timetable.notEnough") : t("timetable.choose")}
+                    </button>
                   </div>
-
-                  <button
-                    disabled={disabled || loading}
-                    onClick={() => handleChooseSlot(s.id, s.totalPrice)}
-                    className={`inline-flex h-11 items-center rounded-[12px] px-5 text-sm font-medium
-                      text-white border border-white/10
-                      bg-[linear-gradient(90deg,var(--accent-600),var(--accent-500),var(--accent-600))] bg-[length:200%_100%]
-                      shadow-[0_10px_30px_-12px_color-mix(in_oklab,var(--accent-500),transparent_65%)]
-                      ${
-                        disabled || loading
-                          ? "opacity-40 cursor-not-allowed"
-                          : "hover:scale-[1.02] hover:shadow-[0_18px_40px_-18px_color-mix(in_oklab,var(--accent-500),transparent_55%)]"
-                      }
-                      transition-transform duration-300
-                    `}
-                    style={{
-                      backgroundColor:
-                        "color-mix(in oklab, var(--accent-500) 95%, black)",
-                    }}
-                  >
-                    {disabled ? t("timetable.notEnough") : t("timetable.choose")}
-                  </button>
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
       </section>
     </main>
   );

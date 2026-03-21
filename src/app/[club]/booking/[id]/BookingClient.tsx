@@ -1,3 +1,4 @@
+// src/app/[club]/booking/[id]/BookingClient.tsx
 "use client";
 
 import { format } from "date-fns";
@@ -7,19 +8,39 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardTitle, CardSubtle } from "@/components/ui/Card";
 import { useT } from "@/components/I18nProvider";
 
+type ActivityMode =
+  | "FIXED_SEAT_EVENT"
+  | "DYNAMIC_RENTAL"
+  | "HYBRID_UNIT_BOOKING";
+
 type BookingPayload =
   | null
   | {
       id: string;
       status: string;
       partySize: number;
-      totalPrice: number; // cents
+      totalPrice: number;
+
+      reservedUnits: number;
+      bookingStartAt: string;
+      bookingEndAt: string;
+      durationMinSnapshot: number | null;
+      unitPriceSnapshot: number | null;
+      pricingLabelSnapshot: string | null;
+
       timeSlot: {
-        startAt: string; // ISO
-        endAt: string | null; // ISO
-        activity: { name: string };
+        startAt: string;
+        endAt: string | null;
+        activity: {
+          name: string;
+          mode: ActivityMode;
+        };
       };
     };
+
+function formatMoney(cents: number, currencyGlyph: string) {
+  return `${currencyGlyph}${(cents / 100).toFixed(2)}`;
+}
 
 export default function BookingClient({
   tenantSlug,
@@ -60,10 +81,10 @@ export default function BookingClient({
     );
   }
 
-  const start = new Date(booking.timeSlot.startAt);
-  const end = booking.timeSlot.endAt
-    ? new Date(booking.timeSlot.endAt)
-    : new Date(start.getTime() + 90 * 60 * 1000);
+  const mode = booking.timeSlot.activity.mode;
+
+  const actualStart = new Date(booking.bookingStartAt);
+  const actualEnd = new Date(booking.bookingEndAt);
 
   const rawStatus = booking.status.toLowerCase();
   const isPaidFromDb =
@@ -106,6 +127,29 @@ export default function BookingClient({
       t("booking.pending3"),
     ];
   }
+
+  const bookingTypeLabel =
+    mode === "FIXED_SEAT_EVENT"
+      ? t("booking.guests") ?? "Guests"
+      : mode === "DYNAMIC_RENTAL"
+      ? "Units"
+      : "Guests / Units";
+
+  const bookingTypeValue =
+    mode === "FIXED_SEAT_EVENT"
+      ? `${booking.partySize}`
+      : mode === "DYNAMIC_RENTAL"
+      ? `${booking.reservedUnits}`
+      : `${booking.partySize} / ${booking.reservedUnits}`;
+
+  const unitPriceText =
+    typeof booking.unitPriceSnapshot === "number"
+      ? formatMoney(booking.unitPriceSnapshot, currencyGlyph)
+      : null;
+
+  const durationText =
+    booking.pricingLabelSnapshot ||
+    (booking.durationMinSnapshot ? `${booking.durationMinSnapshot} min` : null);
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-28 flex flex-col items-center text-center relative">
@@ -214,18 +258,29 @@ export default function BookingClient({
 
         <CardSubtle className="text-lg">
           <b>{t("booking.date")}:</b>{" "}
-          {format(start, "PPPP p")} – {format(end, "p")}
+          {format(actualStart, "PPPP p")} – {format(actualEnd, "p")}
         </CardSubtle>
 
+        {durationText && mode !== "FIXED_SEAT_EVENT" && (
+          <CardSubtle className="text-lg">
+            <b>Duration:</b> {durationText}
+          </CardSubtle>
+        )}
+
         <CardSubtle className="text-lg">
-          <b>{t("booking.guests") ?? "Guests"}:</b> {booking.partySize}
+          <b>{bookingTypeLabel}:</b> {bookingTypeValue}
         </CardSubtle>
+
+        {unitPriceText && mode !== "FIXED_SEAT_EVENT" && (
+          <CardSubtle className="text-lg">
+            <b>Unit price:</b> {unitPriceText}
+          </CardSubtle>
+        )}
 
         <CardSubtle className="text-lg">
           <b>{t("booking.total")}:</b>{" "}
           <span className="font-semibold">
-            {currencyGlyph}
-            {(booking.totalPrice / 100).toFixed(2)}
+            {formatMoney(booking.totalPrice, currencyGlyph)}
           </span>
         </CardSubtle>
       </Card>

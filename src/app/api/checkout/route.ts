@@ -4,6 +4,10 @@ import Stripe from "stripe";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
 import { requireTenant } from "@/lib/tenant";
+import {
+  getBookingQuoteAndAvailability,
+} from "@/lib/booking-engine";
+import { ActivityMode } from "@prisma/client";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,7 +16,16 @@ const Body = z.object({
   activityId: z.string().cuid(),
   timeSlotId: z.string().cuid().optional(),
   slotId: z.string().cuid().optional(),
-  partySize: z.coerce.number().int().min(1),
+
+  // fixed event
+  partySize: z.coerce.number().int().min(1).optional(),
+
+  // rental / hybrid
+  startTime: z.union([z.string(), z.date()]).optional(),
+  durationOptionId: z.string().cuid().optional(),
+  units: z.coerce.number().int().min(1).optional(),
+  guests: z.coerce.number().int().min(1).optional(),
+
   customer: z
     .object({
       email: z.string().email().optional(),
@@ -30,7 +43,6 @@ function env(name: string) {
   return v;
 }
 
-// Resolve base URL from env OR request (works in dev + prod)
 function getBaseUrl(req: NextRequest) {
   const requestOrigin = req.nextUrl?.origin;
 
@@ -46,15 +58,96 @@ function getBaseUrl(req: NextRequest) {
   return requestOrigin?.replace(/\/+$/, "") ?? "http://localhost:3000";
 }
 
-// Helper to build "/{slug}" (or "" on the root)
 function getTenantBase(req: NextRequest, tenantSlug?: string | null) {
   const headerSlug = (req.headers.get("x-tenant-slug") || "").trim();
   const slug = headerSlug || (tenantSlug ?? "");
   return slug ? `/${slug}` : "";
 }
 
-// Construct at module scope (envs must be set)
 const stripe = new Stripe(env("STRIPE_SECRET_KEY"));
+
+function getCheckoutConflictStatus(errors: string[]) {
+  const availabilityError = errors.some((e) =>
+    [
+      "Not enough seats left.",
+      "Not enough units available for the selected time range.",
+      "This slot has no available capacity.",
+    ].includes(e),
+  );
+
+  return availabilityError ? 409 : 400;
+}
+
+function buildStripeLineItem(args: {
+  activityName: string;
+  mode: ActivityMode;
+  unitPrice: number;
+  quantity: number;
+  pricingLabel: string | null;
+  durationMin: number | null;
+}) {
+  const { activityName, mode, unitPrice, quantity, pricingLabel, durationMin } = args;
+
+  let suffix = "";
+
+  if (mode === ActivityMode.FIXED_SEAT_EVENT) {
+    suffix = "Seat";
+  } else if (pricingLabel) {
+    suffix = pricingLabel;
+  } else if (durationMin) {
+    suffix = `${durationMin} min`;
+  } else {
+    suffix = "Unit booking";
+  }
+
+  return {
+    quantity,
+    price_data: {
+      currency: "eur", // replaced later with tenant currency
+      unit_amount: unitPrice,
+      product_data: {
+        name: `${activityName}${suffix ? ` — ${suffix}` : ""}`,
+      },
+    },
+  };
+}
+
+async function findOrCreateCustomer(params: {
+  clubId: string;
+  email?: string;
+  name?: string;
+  phone?: string;
+}) {
+  const { clubId, email, name, phone } = params;
+
+  if (email) {
+    const c = await prisma.customer.upsert({
+      where: { clubId_email: { clubId, email } },
+      update: {
+        name: name ?? undefined,
+        phone: phone ?? null,
+      },
+      create: {
+        clubId,
+        email,
+        name: name ?? "Customer",
+        phone: phone ?? null,
+      },
+    });
+    return c.id;
+  }
+
+  const guest = await prisma.customer.create({
+    data: {
+      clubId,
+      name: name?.trim() || "Guest",
+      email: `guest+${Date.now()}@example.com`,
+      phone: phone ?? null,
+    },
+  });
+
+  return guest.id;
+}
 
 async function createSessionAndMaybeRedirect(
   req: NextRequest,
@@ -62,8 +155,19 @@ async function createSessionAndMaybeRedirect(
 ) {
   const baseUrl = getBaseUrl(req);
 
-  const { activityId, timeSlotId, slotId, partySize, customer } = payload;
-  const tsId = timeSlotId ?? slotId!;
+  const {
+    activityId,
+    timeSlotId,
+    slotId,
+    partySize,
+    startTime,
+    durationOptionId,
+    units,
+    guests,
+    customer,
+  } = payload;
+
+  const tsId = timeSlotId ?? slotId;
   if (!tsId) {
     return NextResponse.json(
       { error: "timeSlotId is required" },
@@ -71,40 +175,59 @@ async function createSessionAndMaybeRedirect(
     );
   }
 
-  // Tenant (header -> cookie)
   const tenant = await requireTenant();
   const currency = (tenant.currency || "EUR").toLowerCase();
-
-  // Build "/{slug}" once and reuse below
   const tenantBase = getTenantBase(req, (tenant as any)?.slug);
 
-  // Activity must belong to tenant
-  const activity = await prisma.activity.findFirst({
-    where: { id: activityId, clubId: tenant.id, active: true },
-    select: { id: true, name: true, clubId: true },
-  });
-  if (!activity) {
-    return NextResponse.json(
-      { error: "Activity not found for tenant" },
-      { status: 404 },
-    );
-  }
-
-  // Load slot + activity + current holds, but ensure slot belongs to same tenant & activity
   const slot = await prisma.timeSlot.findFirst({
     where: {
       id: tsId,
-      activity: { id: activityId, clubId: tenant.id },
+      activity: {
+        id: activityId,
+        clubId: tenant.id,
+        active: true,
+      },
     },
     include: {
       activity: {
-        select: { id: true, name: true, clubId: true, basePrice: true },
+        select: {
+          id: true,
+          name: true,
+          mode: true,
+          minParty: true,
+          maxParty: true,
+          basePrice: true,
+          guestsPerUnit: true,
+          maxUnitsPerBooking: true,
+          slotIntervalMin: true,
+          durationOptions: {
+            where: { isActive: true },
+            orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+            select: {
+              id: true,
+              label: true,
+              durationMin: true,
+              priceCents: true,
+              isActive: true,
+              sortOrder: true,
+            },
+          },
+        },
       },
       bookings: {
-        select: { status: true, partySize: true, createdAt: true },
+        select: {
+          id: true,
+          status: true,
+          createdAt: true,
+          partySize: true,
+          reservedUnits: true,
+          bookingStartAt: true,
+          bookingEndAt: true,
+        },
       },
     },
   });
+
   if (!slot) {
     return NextResponse.json(
       { error: "Time slot not found for tenant/activity" },
@@ -112,76 +235,59 @@ async function createSessionAndMaybeRedirect(
     );
   }
 
-  // Capacity check (paid + fresh pending <30m)
-  const now = Date.now();
-  const held = slot.bookings.reduce((sum, b) => {
-    const freshPending =
-      b.status === "pending" &&
-      (now - new Date(b.createdAt).getTime()) / 60000 < 30;
-    const paid = b.status === "paid";
-    return sum + (paid || freshPending ? b.partySize : 0);
-  }, 0);
-  const remaining = Math.max(0, slot.capacity - held);
-  if (remaining < partySize) {
+  const quote = getBookingQuoteAndAvailability({
+    activity: slot.activity,
+    slot: {
+      id: slot.id,
+      activityId: slot.activityId,
+      startAt: slot.startAt,
+      endAt: slot.endAt,
+      capacity: slot.capacity,
+      priceCents: slot.priceCents,
+    },
+    existingBookings: slot.bookings,
+    partySize,
+    startTime,
+    durationOptionId,
+    units,
+    guests,
+  });
+
+  if (!quote.isValid) {
     return NextResponse.json(
-      { error: "Not enough seats left" },
-      { status: 409 },
+      {
+        error: quote.errors[0] ?? "Invalid booking request",
+        errors: quote.errors,
+      },
+      { status: getCheckoutConflictStatus(quote.errors) },
     );
   }
 
-  // DB customer (scoped to tenant club)
-  let dbCustomerId: string;
-  if (customer?.email) {
-    const c = await prisma.customer.upsert({
-      where: { clubId_email: { clubId: tenant.id, email: customer.email } },
-      update: {
-        name: customer.name ?? undefined,
-        phone: customer.phone ?? null,
-      },
-      create: {
-        clubId: tenant.id,
-        email: customer.email,
-        name: customer.name ?? "Customer",
-        phone: customer.phone ?? null,
-      },
-    });
-    dbCustomerId = c.id;
-  } else {
-    const guest = await prisma.customer.create({
-      data: {
-        clubId: tenant.id,
-        name: "Guest",
-        email: `guest+${Date.now()}@example.com`,
-      },
-    });
-    dbCustomerId = guest.id;
-  }
+  const customerId = await findOrCreateCustomer({
+    clubId: tenant.id,
+    email: customer?.email,
+    name: customer?.name,
+    phone: customer?.phone,
+  });
 
-  // Ensure unit is a number (no nulls) to satisfy Stripe types
-  const unitRaw =
-    (slot as any).priceCents ?? (slot.activity as any).basePrice ?? 0;
-  const unit =
-    typeof unitRaw === "number" &&
-    Number.isFinite(unitRaw) &&
-    unitRaw >= 0
-      ? unitRaw
-      : 0;
-
-  const total = unit * partySize;
-
-  // Pending booking (activity/slot already tenant-validated)
   const booking = await prisma.booking.create({
     data: {
-      customerId: dbCustomerId,
+      customerId,
       activityId,
       timeSlotId: slot.id,
-      partySize,
-      totalPrice: total,
+      partySize: quote.partySize,
+      totalPrice: quote.totalPrice,
       status: "pending",
+
+      reservedUnits: quote.reservedUnits,
+      bookingStartAt: quote.bookingStartAt,
+      bookingEndAt: quote.bookingEndAt,
+      durationMinSnapshot: quote.durationMin,
+      unitPriceSnapshot: quote.unitPrice,
+      pricingLabelSnapshot: quote.pricingLabel,
     },
   });
 
-  // Load club payout account (for Stripe Connect)
   const clubForPayout = await prisma.club.findUnique({
     where: { id: tenant.id },
     select: { stripeConnectAccountId: true },
@@ -190,19 +296,25 @@ async function createSessionAndMaybeRedirect(
   const successUrl = `${baseUrl}${tenantBase}/booking/${booking.id}?status=success`;
   const cancelUrl = `${baseUrl}${tenantBase}/booking/${booking.id}?status=cancelled`;
 
-  // Build payment_intent_data with optional transfer_data to the club account
   const paymentIntentData: Stripe.Checkout.SessionCreateParams.PaymentIntentData =
     {
       metadata: {
         bookingId: booking.id,
         timeSlotId: slot.id,
+        activityId,
         tenantSlug: tenantBase.replace("/", ""),
+        activityMode: quote.mode,
+        bookingStartAt: quote.bookingStartAt.toISOString(),
+        bookingEndAt: quote.bookingEndAt.toISOString(),
+        reservedUnits: String(quote.reservedUnits),
+        partySize: String(quote.partySize),
       },
     };
 
-  // If the club has connected Stripe, send 80% to them and keep 20% on the platform
   if (clubForPayout?.stripeConnectAccountId) {
-    const applicationFeeAmount = Math.round(total * PLATFORM_FEE_PERCENT);
+    const applicationFeeAmount = Math.round(
+      quote.totalPrice * PLATFORM_FEE_PERCENT,
+    );
 
     paymentIntentData.transfer_data = {
       destination: clubForPayout.stripeConnectAccountId,
@@ -211,7 +323,20 @@ async function createSessionAndMaybeRedirect(
     paymentIntentData.application_fee_amount = applicationFeeAmount;
   }
 
-  // Stripe Checkout Session (expire in 30 minutes)
+  const stripeQuantity =
+    quote.mode === ActivityMode.FIXED_SEAT_EVENT
+      ? quote.partySize
+      : quote.reservedUnits;
+
+  const stripeLineItem = buildStripeLineItem({
+    activityName: slot.activity.name,
+    mode: quote.mode,
+    unitPrice: quote.unitPrice,
+    quantity: stripeQuantity,
+    pricingLabel: quote.pricingLabel,
+    durationMin: quote.durationMin,
+  });
+
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
     success_url: successUrl,
@@ -221,30 +346,31 @@ async function createSessionAndMaybeRedirect(
     metadata: {
       bookingId: booking.id,
       timeSlotId: slot.id,
+      activityId,
       tenantSlug: tenantBase.replace("/", ""),
+      activityMode: quote.mode,
     },
     payment_intent_data: paymentIntentData,
     customer_email: customer?.email,
     line_items: [
       {
-        quantity: partySize,
+        ...stripeLineItem,
         price_data: {
-          currency: currency,
-          unit_amount: unit,
-          product_data: { name: slot.activity.name },
+          ...stripeLineItem.price_data,
+          currency,
         },
       },
     ],
     expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
   });
 
-  // Optional: store stub
   await prisma.payment.create({
     data: {
       bookingId: booking.id,
       provider: "stripe",
-      providerIntentId: session.id, // will be updated by webhook with PI id
-      amount: total,
+      providerIntentId: session.id,
+      amount: quote.totalPrice,
+      currency: currency.toUpperCase(),
       status: "requires_action",
     },
   });
@@ -252,7 +378,6 @@ async function createSessionAndMaybeRedirect(
   const ct = req.headers.get("content-type") || "";
   const wantsHtml = (req.headers.get("accept") || "").includes("text/html");
 
-  // If it's a browser navigation (GET or form post), redirect to Stripe
   if (
     req.method === "GET" ||
     wantsHtml ||
@@ -262,25 +387,31 @@ async function createSessionAndMaybeRedirect(
     return NextResponse.redirect(session.url!, { status: 303 });
   }
 
-  // Otherwise (XHR/fetch POST), return JSON
   return NextResponse.json({ url: session.url });
 }
 
 export async function POST(req: NextRequest) {
   try {
-    // Accept form posts or JSON
     let data: unknown;
     const ct = req.headers.get("content-type") || "";
+
     if (
       ct.includes("application/x-www-form-urlencoded") ||
       ct.includes("multipart/form-data")
     ) {
       const form = await req.formData();
+
       data = {
         activityId: form.get("activityId"),
         timeSlotId: form.get("timeSlotId"),
         slotId: form.get("slotId"),
         partySize: form.get("partySize"),
+
+        startTime: (form.get("startTime") as string) || undefined,
+        durationOptionId: (form.get("durationOptionId") as string) || undefined,
+        units: form.get("units"),
+        guests: form.get("guests"),
+
         customer: {
           email: (form.get("email") as string) || undefined,
           name: (form.get("name") as string) || undefined,
@@ -298,6 +429,7 @@ export async function POST(req: NextRequest) {
         { status: 400 },
       );
     }
+
     return createSessionAndMaybeRedirect(req, parsed.data);
   } catch (err: any) {
     console.error("Checkout error (POST):", err?.message || err);
@@ -310,13 +442,19 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
-    // Support ?activityId=&timeSlotId= or slotId=&partySize=&email=&name=&phone=
     const url = new URL(req.url);
+
     const data = {
-      activityId: url.searchParams.get("activityId"),
-      timeSlotId: url.searchParams.get("timeSlotId"),
-      slotId: url.searchParams.get("slotId"),
-      partySize: url.searchParams.get("partySize"),
+      activityId: url.searchParams.get("activityId") || undefined,
+      timeSlotId: url.searchParams.get("timeSlotId") || undefined,
+      slotId: url.searchParams.get("slotId") || undefined,
+      partySize: url.searchParams.get("partySize") || undefined,
+
+      startTime: url.searchParams.get("startTime") || undefined,
+      durationOptionId: url.searchParams.get("durationOptionId") || undefined,
+      units: url.searchParams.get("units") || undefined,
+      guests: url.searchParams.get("guests") || undefined,
+
       customer: {
         email: url.searchParams.get("email") || undefined,
         name: url.searchParams.get("name") || undefined,
@@ -331,6 +469,7 @@ export async function GET(req: NextRequest) {
         { status: 400 },
       );
     }
+
     return createSessionAndMaybeRedirect(req, parsed.data);
   } catch (err: any) {
     console.error("Checkout error (GET):", err?.message || err);
