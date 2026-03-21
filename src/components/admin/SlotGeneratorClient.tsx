@@ -377,49 +377,11 @@ export default function SlotGeneratorClient({
           )}
 
           {isFixed ? (
-            <div className="grid md:grid-cols-2 gap-3">
-              <label className="text-sm">
-                Duration (minutes)
-                <input
-                  type="number"
-                  name="durationMin"
-                  min={5}
-                  step={5}
-                  value={durationMin}
-                  onChange={(e) => handleDurationChange(e.target.value)}
-                  className="mt-1 w-full rounded-lg u-border u-surface px-3 py-2 outline-none focus:ring-2 focus:ring-[var(--accent-500)]/40"
-                />
-              </label>
-
-              <label className="text-sm">
-                Seats available
-                <input
-                  type="number"
-                  name="capacity"
-                  min={1}
-                  value={capacity}
-                  onChange={(e) => handleCapacityChange(e.target.value)}
-                  className="mt-1 w-full rounded-lg u-border u-surface px-3 py-2 outline-none focus:ring-2 focus:ring-[var(--accent-500)]/40"
-                />
-              </label>
-
-              <label className="text-sm md:col-span-2">
-                Price per guest (€)
-                <input
-                  type="number"
-                  name="priceEuro"
-                  step="0.01"
-                  min={0}
-                  value={priceEuro}
-                  onChange={(e) => handlePriceChange(e.target.value)}
-                  className="mt-1 w-full rounded-lg u-border u-surface px-3 py-2 outline-none focus:ring-2 focus:ring-[var(--accent-500)]/40"
-                />
-                <div className="mt-1 text-xs opacity-60">
-                  Used as the per-guest slot price.
-                </div>
-              </label>
+            <div className="rounded-xl u-border u-surface px-4 py-3 text-sm opacity-80">
+              This generator will create scheduled departures using the activity’s
+              default duration, seat price, and guest capacity.
             </div>
-          ) : (
+          ) : ( 
             <div className="grid md:grid-cols-2 gap-3">
               <label className="text-sm">
                 Units available
