@@ -7,6 +7,7 @@ import { format, addDays, addMonths, subMonths, parse } from "date-fns";
 import { formatInTimeZone } from "date-fns-tz";
 import { toast } from "sonner";
 import MonthCalendar from "@/components/MonthCalendar";
+import AvailabilityTimeline from "@/components/booking/AvailabilityTimeline";
 import { useT } from "@/components/I18nProvider";
 
 type DayBucket = "none" | "low" | "medium" | "high" | "full";
@@ -75,6 +76,12 @@ type RentalOrHybridSlot = {
   unitPrice?: number;
   totalPrice?: number;
 
+  bookedRanges?: Array<{
+    start: string;
+    end: string;
+    usedUnits?: number;
+  }>;
+
   errors?: string[];
 };
 
@@ -103,13 +110,6 @@ function calcBucket(remaining: number, capacity: number): DayBucket {
 
 function formatMoney(cents: number) {
   return (cents / 100).toFixed(2);
-}
-
-function toTimeInputValue(iso: string) {
-  const d = new Date(iso);
-  const hh = String(d.getHours()).padStart(2, "0");
-  const mm = String(d.getMinutes()).padStart(2, "0");
-  return `${hh}:${mm}`;
 }
 
 function combineDateAndTime(dateYmd: string, timeHm: string) {
@@ -418,7 +418,8 @@ export default function TimetableClient() {
   const isAtMin = safeDate <= minBookable;
 
   const mode = activity?.mode ?? "FIXED_SEAT_EVENT";
-  const selectedDuration = activity?.durationOptions.find((d) => d.id === selectedDurationId) ?? null;
+  const selectedDuration =
+    activity?.durationOptions.find((d) => d.id === selectedDurationId) ?? null;
   const hybridMinUnits =
     mode === "HYBRID_UNIT_BOOKING"
       ? ceilDiv(Math.max(1, guests), Math.max(1, activity?.guestsPerUnit ?? 1))
@@ -683,8 +684,7 @@ export default function TimetableClient() {
             {mode === "DYNAMIC_RENTAL" ? "Rental booking" : "Hybrid booking"}
           </div>
           <div className="mt-1 opacity-70">
-            {selectedTime ? `Start: ${selectedTime}` : "Choose a start time"}{" "}
-            ·{" "}
+            {selectedTime ? `Start: ${selectedTime}` : "Choose a start time"} ·{" "}
             {selectedDuration
               ? `Duration: ${selectedDuration.label || `${selectedDuration.durationMin} min`}`
               : "Choose a duration"}
@@ -782,71 +782,86 @@ export default function TimetableClient() {
                 key={s.id}
                 className="relative overflow-hidden rounded-2xl border border-[--color-border] bg-[--color-card] p-5 sm:p-6"
               >
-                <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  <div>
-                    <div className="text-lg font-semibold">
-                      {format(windowStart, "HH:mm")}
-                      {windowEnd ? `–${format(windowEnd, "HH:mm")}` : ""}
-                    </div>
+                <div className="relative z-10 flex flex-col gap-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                      <div className="text-lg font-semibold">
+                        {format(windowStart, "HH:mm")}
+                        {windowEnd ? `–${format(windowEnd, "HH:mm")}` : ""}
+                      </div>
 
-                    <div className="mt-1 text-xs opacity-70">
-                      {s.requiresStartTimeSelection || s.requiresDurationSelection ? (
-                        <>Select start time and duration to check availability</>
-                      ) : (
-                        <>
-                          {s.bookingStartAt && s.bookingEndAt
-                            ? `${format(new Date(s.bookingStartAt), "HH:mm")}–${format(
-                                new Date(s.bookingEndAt),
-                                "HH:mm",
-                              )}`
-                            : "Selected range unavailable"}
-                        </>
-                      )}
-                    </div>
-
-                    {!s.requiresStartTimeSelection && !s.requiresDurationSelection && (
-                      <div className="mt-2 text-xs opacity-70">
-                        Remaining units: {s.remainingUnits ?? 0}
-                        {typeof s.requiredUnits === "number" && s.requiredUnits > 0 && (
-                          <span className="ml-2">
-                            Required units: {s.requiredUnits}
-                          </span>
+                      <div className="mt-1 text-xs opacity-70">
+                        {s.requiresStartTimeSelection || s.requiresDurationSelection ? (
+                          <>Select start time and duration to check availability</>
+                        ) : (
+                          <>
+                            {s.bookingStartAt && s.bookingEndAt
+                              ? `${format(new Date(s.bookingStartAt), "HH:mm")}–${format(
+                                  new Date(s.bookingEndAt),
+                                  "HH:mm",
+                                )}`
+                              : "Selected range unavailable"}
+                          </>
                         )}
                       </div>
-                    )}
 
-                    {!!s.errors?.length && (
-                      <div className="mt-2 text-xs text-amber-300">{s.errors[0]}</div>
-                    )}
-                  </div>
+                      {!s.requiresStartTimeSelection && !s.requiresDurationSelection && (
+                        <div className="mt-2 text-xs opacity-70">
+                          Remaining units: {s.remainingUnits ?? 0}
+                          {typeof s.requiredUnits === "number" && s.requiredUnits > 0 && (
+                            <span className="ml-2">Required units: {s.requiredUnits}</span>
+                          )}
+                        </div>
+                      )}
 
-                  <div className="flex items-end gap-6 sm:items-center">
-                    <div className="text-right">
-                      <div className="text-xs opacity-70">
-                        €{formatMoney(s.unitPrice ?? 0)} / unit
-                      </div>
-                      <div className="text-xl font-semibold">
-                        €{formatMoney(s.totalPrice ?? 0)} {t("timetable.total")}
-                      </div>
-                      {s.pricingLabel && (
-                        <div className="mt-1 text-xs opacity-60">{s.pricingLabel}</div>
+                      {!!s.errors?.length && (
+                        <div className="mt-2 text-xs text-amber-300">{s.errors[0]}</div>
                       )}
                     </div>
 
-                    <button
-                      disabled={disabled || loading}
-                      onClick={() => handleChooseSlot(s.id)}
-                      className={`inline-flex h-11 items-center rounded-[12px] px-5 text-sm font-medium text-white border border-white/10 ${
-                        disabled || loading ? "opacity-40 cursor-not-allowed" : "hover:scale-[1.02]"
-                      } transition-transform duration-300`}
-                      style={{
-                        backgroundColor:
-                          "color-mix(in oklab, var(--accent-500) 95%, black)",
-                      }}
-                    >
-                      {disabled ? t("timetable.notEnough") : t("timetable.choose")}
-                    </button>
+                    <div className="flex items-end gap-6 sm:items-center">
+                      <div className="text-right">
+                        <div className="text-xs opacity-70">
+                          €{formatMoney(s.unitPrice ?? 0)} / unit
+                        </div>
+                        <div className="text-xl font-semibold">
+                          €{formatMoney(s.totalPrice ?? 0)} {t("timetable.total")}
+                        </div>
+                        {s.pricingLabel && (
+                          <div className="mt-1 text-xs opacity-60">{s.pricingLabel}</div>
+                        )}
+                      </div>
+
+                      <button
+                        disabled={disabled || loading}
+                        onClick={() => handleChooseSlot(s.id)}
+                        className={`inline-flex h-11 items-center rounded-[12px] px-5 text-sm font-medium text-white border border-white/10 ${
+                          disabled || loading
+                            ? "opacity-40 cursor-not-allowed"
+                            : "hover:scale-[1.02]"
+                        } transition-transform duration-300`}
+                        style={{
+                          backgroundColor:
+                            "color-mix(in oklab, var(--accent-500) 95%, black)",
+                        }}
+                      >
+                        {disabled ? t("timetable.notEnough") : t("timetable.choose")}
+                      </button>
+                    </div>
                   </div>
+
+                  <AvailabilityTimeline
+                    mode={mode}
+                    windowStart={s.availableWindowStart}
+                    windowEnd={s.availableWindowEnd}
+                    selectedStart={s.bookingStartAt ?? null}
+                    selectedEnd={s.bookingEndAt ?? null}
+                    capacity={s.capacity}
+                    remainingUnits={s.remainingUnits ?? null}
+                    reservedUnits={s.reservedUnits ?? null}
+                    requiredUnits={s.requiredUnits ?? null}
+                    bookedRanges={s.bookedRanges ?? []}
+                  />
                 </div>
               </div>
             );
