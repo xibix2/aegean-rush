@@ -24,6 +24,14 @@ function endOfDay(dateStr: string) {
   return d;
 }
 
+function isFreshPending(createdAt: Date, now: Date) {
+  return (now.getTime() - createdAt.getTime()) / 60000 < 30;
+}
+
+function countsAgainstAvailability(status: string, createdAt: Date, now: Date) {
+  return status === "paid" || (status === "pending" && isFreshPending(createdAt, now));
+}
+
 export async function GET(req: NextRequest) {
   const started = Date.now();
 
@@ -36,9 +44,7 @@ export async function GET(req: NextRequest) {
 
     const partySize = parsePositiveInt(sp.get("partySize"), 1);
     const units = sp.get("units") ? parsePositiveInt(sp.get("units"), 1) : undefined;
-    const guests = sp.get("guests")
-      ? parsePositiveInt(sp.get("guests"), 1)
-      : undefined;
+    const guests = sp.get("guests") ? parsePositiveInt(sp.get("guests"), 1) : undefined;
 
     const startTime = sp.get("startTime") || undefined;
     const durationOptionId = sp.get("durationOptionId") || undefined;
@@ -135,6 +141,8 @@ export async function GET(req: NextRequest) {
       });
     }
 
+    const now = new Date();
+
     const slotResults = slots.map((slot) => {
       if (activity.mode === ActivityMode.FIXED_SEAT_EVENT) {
         const quote = getBookingQuoteAndAvailability({
@@ -153,21 +161,35 @@ export async function GET(req: NextRequest) {
 
         return {
           id: slot.id,
-          kind: "fixed",
+          kind: "fixed" as const,
           start: slot.startAt.toISOString(),
           end: slot.endAt ? slot.endAt.toISOString() : null,
           capacity: slot.capacity,
-
           remaining: quote.remainingCapacity ?? 0,
           canFit: quote.isValid,
-
           unitPrice: quote.unitPrice,
           totalPrice: quote.totalPrice,
-
           requestedPartySize: quote.partySize,
           errors: quote.errors,
         };
       }
+
+      const bookedRanges = slot.bookings
+        .filter((b) => countsAgainstAvailability(b.status, b.createdAt, now))
+        .map((b) => {
+          const rangeStart = b.bookingStartAt ?? slot.startAt;
+          const rangeEnd =
+            b.bookingEndAt ??
+            slot.endAt ??
+            new Date(rangeStart.getTime() + 90 * 60 * 1000);
+
+          return {
+            start: rangeStart.toISOString(),
+            end: rangeEnd.toISOString(),
+            usedUnits: Math.max(1, b.reservedUnits ?? 1),
+          };
+        })
+        .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
 
       const selectedDuration =
         durationOptionId &&
@@ -176,21 +198,20 @@ export async function GET(req: NextRequest) {
       if (!startTime || !durationOptionId || !selectedDuration) {
         return {
           id: slot.id,
-          kind: activity.mode === ActivityMode.DYNAMIC_RENTAL ? "rental" : "hybrid",
+          kind:
+            activity.mode === ActivityMode.DYNAMIC_RENTAL ? ("rental" as const) : ("hybrid" as const),
           start: slot.startAt.toISOString(),
           end: slot.endAt ? slot.endAt.toISOString() : null,
           capacity: slot.capacity,
-
           availableWindowStart: slot.startAt.toISOString(),
           availableWindowEnd: slot.endAt ? slot.endAt.toISOString() : null,
-
+          bookedRanges,
           durationOptions: activity.durationOptions.map((d) => ({
             id: d.id,
             label: d.label,
             durationMin: d.durationMin,
             priceCents: d.priceCents,
           })),
-
           requiresStartTimeSelection: true,
           requiresDurationSelection: true,
         };
@@ -216,32 +237,26 @@ export async function GET(req: NextRequest) {
 
       return {
         id: slot.id,
-        kind: activity.mode === ActivityMode.DYNAMIC_RENTAL ? "rental" : "hybrid",
+        kind:
+          activity.mode === ActivityMode.DYNAMIC_RENTAL ? ("rental" as const) : ("hybrid" as const),
         start: slot.startAt.toISOString(),
         end: slot.endAt ? slot.endAt.toISOString() : null,
         capacity: slot.capacity,
-
         availableWindowStart: slot.startAt.toISOString(),
         availableWindowEnd: slot.endAt ? slot.endAt.toISOString() : null,
-
+        bookedRanges,
         bookingStartAt: quote.bookingStartAt.toISOString(),
         bookingEndAt: quote.bookingEndAt.toISOString(),
-
         remainingUnits: quote.remainingUnitsForRange ?? 0,
         canFit: quote.isValid,
-
         reservedUnits: quote.reservedUnits,
         requiredUnits: quote.requiredUnits,
         requestedGuests:
-          activity.mode === ActivityMode.HYBRID_UNIT_BOOKING
-            ? quote.partySize
-            : null,
-
+          activity.mode === ActivityMode.HYBRID_UNIT_BOOKING ? quote.partySize : null,
         durationMin: quote.durationMin,
         pricingLabel: quote.pricingLabel,
         unitPrice: quote.unitPrice,
         totalPrice: quote.totalPrice,
-
         errors: quote.errors,
       };
     });
