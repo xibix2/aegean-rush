@@ -215,6 +215,24 @@ function buildTimeOptions(args: {
   return options;
 }
 
+function splitTimeOptionsByHour(options: TimeOption[]) {
+  const map = new Map<string, TimeOption[]>();
+
+  for (const opt of options) {
+    const [hour] = opt.value.split(":");
+    const list = map.get(hour) ?? [];
+    list.push(opt);
+    map.set(hour, list);
+  }
+
+  return map;
+}
+
+function getHourAndMinute(value: string) {
+  const [hour = "", minute = ""] = value.split(":");
+  return { hour, minute };
+}
+
 export default function TimetableClient() {
   const t = useT();
 
@@ -228,6 +246,8 @@ export default function TimetableClient() {
   const [units, setUnits] = useState<number>(Number(params.get("units") ?? 1));
   const [guests, setGuests] = useState<number>(Number(params.get("guests") ?? 1));
   const [selectedTime, setSelectedTime] = useState<string>(params.get("startTime") ?? "");
+  const [selectedHour, setSelectedHour] = useState<string>("");
+  const [selectedMinute, setSelectedMinute] = useState<string>("");
   const [selectedDurationId, setSelectedDurationId] = useState<string>(
     params.get("durationOptionId") ?? "",
   );
@@ -418,6 +438,18 @@ export default function TimetableClient() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!selectedTime) {
+      setSelectedHour("");
+      setSelectedMinute("");
+      return;
+    }
+
+    const { hour, minute } = getHourAndMinute(selectedTime);
+    setSelectedHour(hour);
+    setSelectedMinute(minute);
+  }, [selectedTime]);
 
   useEffect(() => {
     if (!activityId) return;
@@ -659,6 +691,8 @@ export default function TimetableClient() {
                     value={selectedDurationId}
                     onChange={(e) => {
                       setSelectedTime("");
+                      setSelectedHour("");
+                      setSelectedMinute("");
                       setSelectedDurationId(e.target.value);
                     }}
                     className="rounded-lg px-3 py-1.5 text-sm border border-white/10 bg-black/25 outline-none"
@@ -926,74 +960,132 @@ export default function TimetableClient() {
                           <div className="flex flex-wrap items-center gap-3 text-xs text-white/65">
                             <span>
                               Valid starts:{" "}
-                              <span className="font-medium text-white/90">
-                                {validOptions.length}
-                              </span>
+                              <span className="font-medium text-white/90">{validOptions.length}</span>
                             </span>
                             {earliest && (
                               <span>
-                                Earliest:{" "}
-                                <span className="font-medium text-white/90">
-                                  {earliest.label}
-                                </span>
+                                Earliest: <span className="font-medium text-white/90">{earliest.label}</span>
                               </span>
                             )}
                             {latest && (
                               <span>
-                                Latest:{" "}
-                                <span className="font-medium text-white/90">
-                                  {latest.label}
-                                </span>
+                                Latest: <span className="font-medium text-white/90">{latest.label}</span>
                               </span>
                             )}
                           </div>
 
-                          <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-                            <label className="block">
-                              <div className="mb-2 text-xs font-medium text-white/80">
-                                Start time
-                              </div>
-                              <select
-                                value={activeOption}
-                                onChange={(e) => setSelectedTime(e.target.value)}
-                                disabled={!validOptions.length || loading}
-                                className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-emerald-400/30 disabled:opacity-50"
-                              >
-                                <option value="">
-                                  {validOptions.length
-                                    ? "Select a start time"
-                                    : "No valid start times"}
-                                </option>
-                                {validOptions.map((opt) => (
-                                  <option key={`${s.id}-${opt.value}`} value={opt.value}>
-                                    {opt.label} · {opt.availableUnits} unit
-                                    {opt.availableUnits === 1 ? "" : "s"} free
-                                  </option>
-                                ))}
-                              </select>
-                            </label>
+                          {(() => {
+                            const hourMap = splitTimeOptionsByHour(validOptions);
+                            const availableHours = Array.from(hourMap.keys()).sort();
+                            const effectiveHour =
+                              selectedHour && hourMap.has(selectedHour)
+                                ? selectedHour
+                                : availableHours[0] ?? "";
 
-                            <div className="flex flex-wrap gap-2">
-                              {quickOptions.map((opt) => {
-                                const active = activeOption === opt.value;
-                                return (
-                                  <button
-                                    key={`${s.id}-quick-${opt.value}`}
-                                    type="button"
-                                    onClick={() => setSelectedTime(opt.value)}
-                                    disabled={loading}
-                                    className={`rounded-full border px-3 py-2 text-xs transition ${
-                                      active
-                                        ? "border-emerald-300/60 bg-emerald-400/15 text-emerald-200"
-                                        : "border-white/10 bg-white/5 text-white/80 hover:bg-white/10"
-                                    }`}
+                            const minuteOptions = effectiveHour ? hourMap.get(effectiveHour) ?? [] : [];
+                            const availableMinutes = minuteOptions.map((opt) => opt.value.split(":")[1]);
+                            const effectiveMinute =
+                              selectedMinute && availableMinutes.includes(selectedMinute)
+                                ? selectedMinute
+                                : availableMinutes[0] ?? "";
+
+                            const composedTime =
+                              effectiveHour && effectiveMinute ? `${effectiveHour}:${effectiveMinute}` : "";
+
+                            if (composedTime && composedTime !== selectedTime) {
+                              queueMicrotask(() => {
+                                setSelectedHour(effectiveHour);
+                                setSelectedMinute(effectiveMinute);
+                                setSelectedTime(composedTime);
+                              });
+                            }
+
+                            return (
+                              <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
+                                <label className="block">
+                                  <div className="mb-2 text-xs font-medium text-white/80">Hour</div>
+                                  <select
+                                    value={effectiveHour}
+                                    onChange={(e) => {
+                                      const nextHour = e.target.value;
+                                      const nextMinuteOptions = hourMap.get(nextHour) ?? [];
+                                      const nextMinute = nextMinuteOptions[0]?.value.split(":")[1] ?? "";
+
+                                      setSelectedHour(nextHour);
+                                      setSelectedMinute(nextMinute);
+                                      setSelectedTime(nextHour && nextMinute ? `${nextHour}:${nextMinute}` : "");
+                                    }}
+                                    disabled={!availableHours.length || loading}
+                                    className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-emerald-400/30 disabled:opacity-50"
                                   >
-                                    {opt.label}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </div>
+                                    <option value="">
+                                      {availableHours.length ? "Select hour" : "No valid hours"}
+                                    </option>
+                                    {availableHours.map((hour) => (
+                                      <option key={`${s.id}-hour-${hour}`} value={hour}>
+                                        {hour}:00
+                                      </option>
+                                    ))}
+                                  </select>
+                                </label>
+
+                                <label className="block">
+                                  <div className="mb-2 text-xs font-medium text-white/80">Minutes</div>
+                                  <select
+                                    value={effectiveMinute}
+                                    onChange={(e) => {
+                                      const nextMinute = e.target.value;
+                                      setSelectedHour(effectiveHour);
+                                      setSelectedMinute(nextMinute);
+                                      setSelectedTime(
+                                        effectiveHour && nextMinute ? `${effectiveHour}:${nextMinute}` : "",
+                                      );
+                                    }}
+                                    disabled={!effectiveHour || !minuteOptions.length || loading}
+                                    className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-emerald-400/30 disabled:opacity-50"
+                                  >
+                                    <option value="">
+                                      {minuteOptions.length ? "Select minutes" : "No valid minutes"}
+                                    </option>
+                                    {minuteOptions.map((opt) => {
+                                      const minute = opt.value.split(":")[1];
+                                      return (
+                                        <option key={`${s.id}-minute-${opt.value}`} value={minute}>
+                                          {minute} · {opt.availableUnits} unit{opt.availableUnits === 1 ? "" : "s"} free
+                                        </option>
+                                      );
+                                    })}
+                                  </select>
+                                </label>
+
+                                <div className="flex flex-wrap gap-2">
+                                  {quickOptions.map((opt) => {
+                                    const active = activeOption === opt.value;
+                                    return (
+                                      <button
+                                        key={`${s.id}-quick-${opt.value}`}
+                                        type="button"
+                                        onClick={() => {
+                                          const { hour, minute } = getHourAndMinute(opt.value);
+                                          setSelectedHour(hour);
+                                          setSelectedMinute(minute);
+                                          setSelectedTime(opt.value);
+                                        }}
+                                        disabled={loading}
+                                        className={`rounded-full border px-3 py-2 text-xs transition ${
+                                          active
+                                            ? "border-emerald-300/60 bg-emerald-400/15 text-emerald-200"
+                                            : "border-white/10 bg-white/5 text-white/80 hover:bg-white/10"
+                                        }`}
+                                      >
+                                        {opt.label}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          })()}
                         </div>
                       )}
 
