@@ -90,6 +90,15 @@ type AvailabilityResponse = {
   slots?: Array<FixedSlot | RentalOrHybridSlot>;
 };
 
+type TimeOption = {
+  label: string;
+  value: string;
+  startIso: string;
+  endIso: string;
+  availableUnits: number;
+  canFit: boolean;
+};
+
 const TIMEZONE = "Europe/Athens";
 
 function detectTenantSlug(): string | null {
@@ -118,6 +127,94 @@ function combineDateAndTime(dateYmd: string, timeHm: string) {
 
 function ceilDiv(a: number, b: number) {
   return Math.ceil(a / b);
+}
+
+function overlaps(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date) {
+  return aStart < bEnd && aEnd > bStart;
+}
+
+function sameMinute(date: Date, hm: string) {
+  const hh = String(date.getHours()).padStart(2, "0");
+  const mm = String(date.getMinutes()).padStart(2, "0");
+  return `${hh}:${mm}` === hm;
+}
+
+function addMinutes(date: Date, minutes: number) {
+  return new Date(date.getTime() + minutes * 60 * 1000);
+}
+
+function getIntervalMinutes(activity: ActivityInfo | null) {
+  return Math.max(5, activity?.slotIntervalMin ?? 30);
+}
+
+function getRequestedUnits(
+  mode: ActivityMode,
+  units: number,
+  guests: number,
+  activity: ActivityInfo | null,
+) {
+  if (mode === "DYNAMIC_RENTAL") return Math.max(1, units);
+  if (mode === "HYBRID_UNIT_BOOKING") {
+    const minRequired = ceilDiv(
+      Math.max(1, guests),
+      Math.max(1, activity?.guestsPerUnit ?? 1),
+    );
+    return Math.max(minRequired, units);
+  }
+  return 1;
+}
+
+function buildTimeOptions(args: {
+  slot: RentalOrHybridSlot;
+  safeDate: string;
+  durationMin: number | null;
+  stepMin: number;
+  requestedUnits: number;
+}) {
+  const { slot, safeDate, durationMin, stepMin, requestedUnits } = args;
+  if (!durationMin || !slot.availableWindowEnd) return [];
+
+  const windowStart = new Date(slot.availableWindowStart);
+  const windowEnd = new Date(slot.availableWindowEnd);
+
+  if (Number.isNaN(windowStart.getTime()) || Number.isNaN(windowEnd.getTime())) {
+    return [];
+  }
+
+  const options: TimeOption[] = [];
+  const bookedRanges = slot.bookedRanges ?? [];
+
+  for (
+    let current = new Date(windowStart);
+    addMinutes(current, durationMin) <= windowEnd;
+    current = addMinutes(current, stepMin)
+  ) {
+    const bookingEnd = addMinutes(current, durationMin);
+
+    let usedUnits = 0;
+    for (const range of bookedRanges) {
+      const bStart = new Date(range.start);
+      const bEnd = new Date(range.end);
+      if (Number.isNaN(bStart.getTime()) || Number.isNaN(bEnd.getTime())) continue;
+      if (overlaps(current, bookingEnd, bStart, bEnd)) {
+        usedUnits += Math.max(1, range.usedUnits ?? 1);
+      }
+    }
+
+    const availableUnits = Math.max(0, slot.capacity - usedUnits);
+    const hm = format(current, "HH:mm");
+
+    options.push({
+      label: hm,
+      value: hm,
+      startIso: combineDateAndTime(safeDate, hm),
+      endIso: bookingEnd.toISOString(),
+      availableUnits,
+      canFit: availableUnits >= requestedUnits,
+    });
+  }
+
+  return options;
 }
 
 export default function TimetableClient() {
@@ -387,20 +484,28 @@ export default function TimetableClient() {
   };
 
   const onDateInputChange = (s: string) => {
-    if (s) setQuery({ date: s });
+    if (s) {
+      setSelectedTime("");
+      setQuery({ date: s, startTime: "" });
+    }
   };
 
   const goPrevDay = () => {
     const d = parse(`${safeDate}`, "yyyy-MM-dd", new Date());
-    setQuery({ date: ymd(addDays(d, -1)) });
+    setSelectedTime("");
+    setQuery({ date: ymd(addDays(d, -1)), startTime: "" });
   };
 
   const goNextDay = () => {
     const d = parse(`${safeDate}`, "yyyy-MM-dd", new Date());
-    setQuery({ date: ymd(addDays(d, +1)) });
+    setSelectedTime("");
+    setQuery({ date: ymd(addDays(d, +1)), startTime: "" });
   };
 
-  const onPickDay = (iso: string) => setQuery({ date: iso });
+  const onPickDay = (iso: string) => {
+    setSelectedTime("");
+    setQuery({ date: iso, startTime: "" });
+  };
 
   const prevMonth = () => {
     const d = subMonths(new Date(year, month - 1, 1), 1);
@@ -424,6 +529,9 @@ export default function TimetableClient() {
     mode === "HYBRID_UNIT_BOOKING"
       ? ceilDiv(Math.max(1, guests), Math.max(1, activity?.guestsPerUnit ?? 1))
       : 1;
+
+  const requestedUnits = getRequestedUnits(mode, units, guests, activity);
+  const stepMin = getIntervalMinutes(activity);
 
   return (
     <main className="mx-auto max-w-5xl px-0 sm:px-6 py-3 sm:py-6 space-y-8">
@@ -549,16 +657,12 @@ export default function TimetableClient() {
 
               {mode !== "FIXED_SEAT_EVENT" && (
                 <div className="ml-auto flex flex-wrap items-center gap-2">
-                  <input
-                    type="time"
-                    value={selectedTime}
-                    onChange={(e) => setSelectedTime(e.target.value)}
-                    className="rounded-lg px-3 py-1.5 text-sm border border-white/10 bg-black/25 outline-none focus:ring-2 focus:ring-amber-400/40"
-                  />
-
                   <select
                     value={selectedDurationId}
-                    onChange={(e) => setSelectedDurationId(e.target.value)}
+                    onChange={(e) => {
+                      setSelectedTime("");
+                      setSelectedDurationId(e.target.value);
+                    }}
                     className="rounded-lg px-3 py-1.5 text-sm border border-white/10 bg-black/25 outline-none"
                   >
                     <option value="">{t("timetable.chooseTime")}</option>
@@ -680,17 +784,16 @@ export default function TimetableClient() {
 
       {mode !== "FIXED_SEAT_EVENT" && (
         <div className="rounded-2xl border border-[--color-border] p-4 text-sm opacity-80">
-          <div>
-            {mode === "DYNAMIC_RENTAL" ? "Rental booking" : "Hybrid booking"}
-          </div>
+          <div>{mode === "DYNAMIC_RENTAL" ? "Rental booking" : "Hybrid booking"}</div>
           <div className="mt-1 opacity-70">
-            {selectedTime ? `Start: ${selectedTime}` : "Choose a start time"} ·{" "}
+            {selectedTime ? `Start: ${selectedTime}` : "Choose one of the available start times below"} ·{" "}
             {selectedDuration
               ? `Duration: ${selectedDuration.label || `${selectedDuration.durationMin} min`}`
               : "Choose a duration"}
             {mode === "DYNAMIC_RENTAL" && ` · Units: ${units}`}
             {mode === "HYBRID_UNIT_BOOKING" &&
               ` · Guests: ${guests} · Units: ${units} (min ${hybridMinUnits})`}
+            {activity?.slotIntervalMin ? ` · Step: ${activity.slotIntervalMin} min` : ""}
           </div>
         </div>
       )}
@@ -769,9 +872,20 @@ export default function TimetableClient() {
               );
             }
 
+            const timeOptions = buildTimeOptions({
+              slot: s,
+              safeDate,
+              durationMin: selectedDuration?.durationMin ?? null,
+              stepMin,
+              requestedUnits,
+            });
+
+            const activeOption =
+              selectedTime && timeOptions.find((opt) => opt.value === selectedTime) ? selectedTime : "";
+
             const disabled =
-              !!s.requiresStartTimeSelection ||
-              !!s.requiresDurationSelection ||
+              !selectedDuration ||
+              !activeOption ||
               !s.canFit;
 
             const windowStart = new Date(s.availableWindowStart);
@@ -791,22 +905,69 @@ export default function TimetableClient() {
                       </div>
 
                       <div className="mt-1 text-xs opacity-70">
-                        {s.requiresStartTimeSelection || s.requiresDurationSelection ? (
-                          <>Select start time and duration to check availability</>
-                        ) : (
+                        {!selectedDuration ? (
+                          <>Choose a duration to unlock valid start times</>
+                        ) : activeOption && s.bookingStartAt && s.bookingEndAt ? (
                           <>
-                            {s.bookingStartAt && s.bookingEndAt
-                              ? `${format(new Date(s.bookingStartAt), "HH:mm")}–${format(
-                                  new Date(s.bookingEndAt),
-                                  "HH:mm",
-                                )}`
-                              : "Selected range unavailable"}
+                            {format(new Date(s.bookingStartAt), "HH:mm")}–{format(
+                              new Date(s.bookingEndAt),
+                              "HH:mm",
+                            )}
                           </>
+                        ) : (
+                          <>Choose one of the valid start times below</>
                         )}
                       </div>
 
-                      {!s.requiresStartTimeSelection && !s.requiresDurationSelection && (
-                        <div className="mt-2 text-xs opacity-70">
+                      {selectedDuration && (
+                        <div className="mt-3">
+                          <div className="mb-2 text-xs font-medium text-white/80">
+                            Available start times
+                          </div>
+                          {timeOptions.length === 0 ? (
+                            <div className="text-xs text-amber-300">
+                              No valid start times for the selected duration.
+                            </div>
+                          ) : (
+                            <div className="flex flex-wrap gap-2">
+                              {timeOptions.map((opt) => {
+                                const chipActive = activeOption === opt.value;
+                                return (
+                                  <button
+                                    key={`${s.id}-${opt.value}`}
+                                    type="button"
+                                    disabled={!opt.canFit || loading}
+                                    onClick={() => setSelectedTime(opt.value)}
+                                    className={`rounded-full border px-3 py-1.5 text-xs transition ${
+                                      chipActive
+                                        ? "border-emerald-300/60 bg-emerald-400/15 text-emerald-200 shadow-[0_0_20px_rgba(52,211,153,0.12)]"
+                                        : opt.canFit
+                                        ? "border-white/10 bg-white/5 text-white/80 hover:bg-white/10"
+                                        : "border-white/5 bg-white/[0.03] text-white/30 cursor-not-allowed"
+                                    }`}
+                                    title={
+                                      opt.canFit
+                                        ? `${opt.label} • ${opt.availableUnits} units free`
+                                        : `${opt.label} • not enough units`
+                                    }
+                                  >
+                                    {opt.label}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {!selectedDuration && (
+                        <div className="mt-2 text-xs opacity-60">
+                          Pick duration first, then choose a suggested start time.
+                        </div>
+                      )}
+
+                      {selectedDuration && activeOption && (
+                        <div className="mt-3 text-xs opacity-70">
                           Remaining units: {s.remainingUnits ?? 0}
                           {typeof s.requiredUnits === "number" && s.requiredUnits > 0 && (
                             <span className="ml-2">Required units: {s.requiredUnits}</span>
