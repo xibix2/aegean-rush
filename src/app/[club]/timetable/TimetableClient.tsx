@@ -133,12 +133,6 @@ function overlaps(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date) {
   return aStart < bEnd && aEnd > bStart;
 }
 
-function sameMinute(date: Date, hm: string) {
-  const hh = String(date.getHours()).padStart(2, "0");
-  const mm = String(date.getMinutes()).padStart(2, "0");
-  return `${hh}:${mm}` === hm;
-}
-
 function addMinutes(date: Date, minutes: number) {
   return new Date(date.getTime() + minutes * 60 * 1000);
 }
@@ -885,12 +879,16 @@ export default function TimetableClient() {
             });
 
             const activeOption =
-              selectedTime && timeOptions.find((opt) => opt.value === selectedTime) ? selectedTime : "";
+              selectedTime && timeOptions.find((opt) => opt.value === selectedTime)
+                ? selectedTime
+                : "";
 
-            const disabled =
-              !selectedDuration ||
-              !activeOption ||
-              !s.canFit;
+            const validOptions = timeOptions.filter((opt) => opt.canFit);
+            const earliest = validOptions[0] ?? null;
+            const latest = validOptions[validOptions.length - 1] ?? null;
+            const quickOptions = validOptions.slice(0, 3);
+
+            const disabled = !selectedDuration || !activeOption || !s.canFit;
 
             const windowStart = new Date(s.availableWindowStart);
             const windowEnd = s.availableWindowEnd ? new Date(s.availableWindowEnd) : null;
@@ -902,7 +900,7 @@ export default function TimetableClient() {
               >
                 <div className="relative z-10 flex flex-col gap-4">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div>
+                    <div className="min-w-0 flex-1">
                       <div className="text-lg font-semibold">
                         {format(windowStart, "HH:mm")}
                         {windowEnd ? `–${format(windowEnd, "HH:mm")}` : ""}
@@ -919,54 +917,89 @@ export default function TimetableClient() {
                             )}
                           </>
                         ) : (
-                          <>Choose one of the valid start times below</>
+                          <>Choose a valid start time</>
                         )}
                       </div>
 
                       {selectedDuration && (
-                        <div className="mt-3">
-                          <div className="mb-2 text-xs font-medium text-white/80">
-                            Available start times
+                        <div className="mt-4 rounded-xl border border-white/10 bg-black/20 p-4">
+                          <div className="flex flex-wrap items-center gap-3 text-xs text-white/65">
+                            <span>
+                              Valid starts:{" "}
+                              <span className="font-medium text-white/90">
+                                {validOptions.length}
+                              </span>
+                            </span>
+                            {earliest && (
+                              <span>
+                                Earliest:{" "}
+                                <span className="font-medium text-white/90">
+                                  {earliest.label}
+                                </span>
+                              </span>
+                            )}
+                            {latest && (
+                              <span>
+                                Latest:{" "}
+                                <span className="font-medium text-white/90">
+                                  {latest.label}
+                                </span>
+                              </span>
+                            )}
                           </div>
-                          {timeOptions.length === 0 ? (
-                            <div className="text-xs text-amber-300">
-                              No valid start times for the selected duration.
-                            </div>
-                          ) : (
+
+                          <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+                            <label className="block">
+                              <div className="mb-2 text-xs font-medium text-white/80">
+                                Start time
+                              </div>
+                              <select
+                                value={activeOption}
+                                onChange={(e) => setSelectedTime(e.target.value)}
+                                disabled={!validOptions.length || loading}
+                                className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-emerald-400/30 disabled:opacity-50"
+                              >
+                                <option value="">
+                                  {validOptions.length
+                                    ? "Select a start time"
+                                    : "No valid start times"}
+                                </option>
+                                {validOptions.map((opt) => (
+                                  <option key={`${s.id}-${opt.value}`} value={opt.value}>
+                                    {opt.label} · {opt.availableUnits} unit
+                                    {opt.availableUnits === 1 ? "" : "s"} free
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+
                             <div className="flex flex-wrap gap-2">
-                              {timeOptions.map((opt) => {
-                                const chipActive = activeOption === opt.value;
+                              {quickOptions.map((opt) => {
+                                const active = activeOption === opt.value;
                                 return (
                                   <button
-                                    key={`${s.id}-${opt.value}`}
+                                    key={`${s.id}-quick-${opt.value}`}
                                     type="button"
-                                    disabled={!opt.canFit || loading}
                                     onClick={() => setSelectedTime(opt.value)}
-                                    className={`rounded-full border px-3 py-1.5 text-xs transition ${
-                                      chipActive
-                                        ? "border-emerald-300/60 bg-emerald-400/15 text-emerald-200 shadow-[0_0_20px_rgba(52,211,153,0.12)]"
-                                        : opt.canFit
-                                        ? "border-white/10 bg-white/5 text-white/80 hover:bg-white/10"
-                                        : "border-white/5 bg-white/[0.03] text-white/30 cursor-not-allowed"
+                                    disabled={loading}
+                                    className={`rounded-full border px-3 py-2 text-xs transition ${
+                                      active
+                                        ? "border-emerald-300/60 bg-emerald-400/15 text-emerald-200"
+                                        : "border-white/10 bg-white/5 text-white/80 hover:bg-white/10"
                                     }`}
-                                    title={
-                                      opt.canFit
-                                        ? `${opt.label} • ${opt.availableUnits} units free`
-                                        : `${opt.label} • not enough units`
-                                    }
                                   >
                                     {opt.label}
                                   </button>
                                 );
                               })}
                             </div>
-                          )}
+                          </div>
                         </div>
                       )}
 
                       {!selectedDuration && (
                         <div className="mt-2 text-xs opacity-60">
-                          Pick duration first, then choose a suggested start time.
+                          Pick duration first, then choose a start time from the compact selector.
                         </div>
                       )}
 
