@@ -143,8 +143,12 @@ function addMinutes(date: Date, minutes: number) {
   return new Date(date.getTime() + minutes * 60 * 1000);
 }
 
-function getIntervalMinutes(activity: ActivityInfo | null) {
-  return Math.max(5, activity?.slotIntervalMin ?? 30);
+function getBookingStepMinutes(activity: ActivityInfo | null) {
+  if (!activity) return 5;
+  if (activity.mode === "FIXED_SEAT_EVENT") {
+    return Math.max(5, activity.slotIntervalMin ?? 30);
+  }
+  return 5;
 }
 
 function getRequestedUnits(
@@ -531,7 +535,7 @@ export default function TimetableClient() {
       : 1;
 
   const requestedUnits = getRequestedUnits(mode, units, guests, activity);
-  const stepMin = getIntervalMinutes(activity);
+  const stepMin = getBookingStepMinutes(activity);
 
   return (
     <main className="mx-auto max-w-5xl px-0 sm:px-6 py-3 sm:py-6 space-y-8">

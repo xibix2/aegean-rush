@@ -87,6 +87,7 @@ export type BookingEngineResult = {
 };
 
 const PENDING_HOLD_MINUTES = 30;
+const RENTAL_BOOKING_STEP_MINUTES = 5;
 
 function isFreshPending(createdAt: Date, now: Date) {
   return (now.getTime() - createdAt.getTime()) / 60000 < PENDING_HOLD_MINUTES;
@@ -182,13 +183,23 @@ function validateInsideWindow(
   }
 }
 
+function getAllowedStartStepMinutes(activity: ActivityLike) {
+  if (activity.mode === ActivityMode.FIXED_SEAT_EVENT) {
+    const configured = activity.slotIntervalMin ?? null;
+    if (!configured || configured <= 1) return null;
+    return configured;
+  }
+
+  return RENTAL_BOOKING_STEP_MINUTES;
+}
+
 function validateInterval(
   activity: ActivityLike,
   start: Date,
   slot: TimeSlotLike,
   errors: string[],
 ) {
-  const step = activity.slotIntervalMin ?? null;
+  const step = getAllowedStartStepMinutes(activity);
   if (!step || step <= 1) return;
 
   const diffMs = start.getTime() - slot.startAt.getTime();
@@ -359,7 +370,6 @@ export function getBookingQuoteAndAvailability(
     };
   }
 
-  // HYBRID_UNIT_BOOKING
   const guests = normalizePositiveInt(input.guests ?? input.partySize, partySize);
   const guestsPerUnit = normalizePositiveInt(activity.guestsPerUnit, 1);
   const requiredUnits = ceilDiv(guests, guestsPerUnit);
