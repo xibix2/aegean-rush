@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireTenant } from "@/lib/tenant";
+import { ActivityMode } from "@prisma/client";
 
 export const runtime = "nodejs";
 export const revalidate = 0;
+
+const PENDING_HOLD_MINUTES = 30;
+
+function isFreshPending(createdAt: Date, now: Date) {
+  return (now.getTime() - createdAt.getTime()) / 60000 < PENDING_HOLD_MINUTES;
+}
 
 // GET /api/availability/month?activityId=...&month=YYYY-MM
 export async function GET(req: Request) {
@@ -19,21 +26,42 @@ export async function GET(req: Request) {
       );
     }
 
-    // 🔒 tenant scope
-    const tenant = await requireTenant(); // header -> cookie
+    const tenant = await requireTenant();
 
     const [y, m] = monthStr.split("-").map(Number);
     const start = new Date(y, m - 1, 1, 0, 0, 0, 0);
     const end = new Date(y, m, 1, 0, 0, 0, 0);
 
-    // 1) Slots in the month — scoped by tenant + activity
+    const activity = await prisma.activity.findFirst({
+      where: {
+        id: activityId,
+        clubId: tenant.id,
+        active: true,
+      },
+      select: {
+        id: true,
+        mode: true,
+      },
+    });
+
+    if (!activity) {
+      return NextResponse.json(
+        { error: "Activity not found" },
+        { status: 404 },
+      );
+    }
+
     const slots = await prisma.timeSlot.findMany({
       where: {
         startAt: { gte: start, lt: end },
-        activity: { id: activityId, clubId: tenant.id, active: true },
+        activityId: activity.id,
       },
       orderBy: { startAt: "asc" },
-      select: { id: true, startAt: true, capacity: true },
+      select: {
+        id: true,
+        startAt: true,
+        capacity: true,
+      },
     });
 
     if (slots.length === 0) {
@@ -54,7 +82,8 @@ export async function GET(req: Request) {
     const dayForSlot = new Map<string, string>();
 
     for (const s of slots) {
-      const iso = s.startAt.toISOString().slice(0, 10); // YYYY-MM-DD (UTC)
+      const iso = s.startAt.toISOString().slice(0, 10);
+
       if (!days[iso]) {
         days[iso] = {
           capacity: 0,
@@ -63,27 +92,45 @@ export async function GET(req: Request) {
           bucket: "none",
         };
       }
+
       days[iso].capacity += s.capacity ?? 0;
       slotIds.push(s.id);
       dayForSlot.set(s.id, iso);
     }
 
-    // 2) Bookings (paid + pending) for those slots
     const bookings = await prisma.booking.findMany({
       where: {
         timeSlotId: { in: slotIds },
         status: { in: ["paid", "pending"] },
       },
-      select: { timeSlotId: true, partySize: true },
+      select: {
+        timeSlotId: true,
+        status: true,
+        createdAt: true,
+        partySize: true,
+        reservedUnits: true,
+      },
     });
+
+    const now = new Date();
 
     for (const b of bookings) {
       const iso = dayForSlot.get(b.timeSlotId);
       if (!iso) continue;
-      days[iso].paid += b.partySize ?? 0;
+
+      const counts =
+        b.status === "paid" ||
+        (b.status === "pending" && isFreshPending(b.createdAt, now));
+
+      if (!counts) continue;
+
+      if (activity.mode === ActivityMode.FIXED_SEAT_EVENT) {
+        days[iso].paid += b.partySize ?? 0;
+      } else {
+        days[iso].paid += Math.max(1, b.reservedUnits ?? 1);
+      }
     }
 
-    // 3) Compute remaining + bucket for UI
     for (const iso of Object.keys(days)) {
       const d = days[iso];
       d.remaining = Math.max(0, d.capacity - d.paid);

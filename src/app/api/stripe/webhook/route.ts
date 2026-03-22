@@ -40,6 +40,8 @@ async function getBookingWithTenant(bookingId: string) {
       id: true,
       customerId: true,
       status: true,
+      bookingStartAt: true,
+      bookingEndAt: true,
       timeSlot: {
         select: {
           startAt: true,
@@ -145,10 +147,11 @@ async function sendConfirmationEmail(
   }
   if (!to) return;
 
-  const slotStart = b.timeSlot.startAt;
-  const slotEnd =
+  const bookingStart = b.bookingStartAt ?? b.timeSlot.startAt;
+  const bookingEnd =
+    b.bookingEndAt ??
     b.timeSlot.endAt ??
-    new Date(b.timeSlot.startAt.getTime() + 90 * 60 * 1000);
+    new Date(bookingStart.getTime() + 90 * 60 * 1000);
 
   const club = b.timeSlot.activity.club;
   const clubName = club?.name ?? "Your business";
@@ -158,8 +161,8 @@ async function sendConfirmationEmail(
   const clubTz =
     club?.setting?.tz?.trim() || process.env.TZ?.trim() || "Europe/Athens";
 
-  const startLocal = toZonedTime(slotStart, clubTz);
-  const endLocal = toZonedTime(slotEnd, clubTz);
+  const startLocal = toZonedTime(bookingStart, clubTz);
+  const endLocal = toZonedTime(bookingEnd, clubTz);
 
   const { error, value } = createEvent({
     title: b.timeSlot.activity.name,
