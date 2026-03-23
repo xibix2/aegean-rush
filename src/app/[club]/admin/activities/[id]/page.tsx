@@ -254,6 +254,7 @@ export default async function ActivityDetailPage({
     <main className="space-y-8 px-6 py-10 max-w-4xl mx-auto">
       <ActivityDetailHeaderClient name={a.name} />
       <ActivityFormClient
+        key={a.id}
         activity={{
           id: a.id,
           name: a.name,
