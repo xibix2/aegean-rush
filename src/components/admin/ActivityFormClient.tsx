@@ -65,7 +65,7 @@ export function ActivityFormClient({
   const [durationOptions, setDurationOptions] = React.useState<DurationOptionShape[]>(
     activity.durationOptions?.length
       ? activity.durationOptions
-      : mode === "FIXED_SEAT_EVENT"
+      : activity.mode === "FIXED_SEAT_EVENT"
       ? []
       : [
           {
@@ -77,6 +77,27 @@ export function ActivityFormClient({
           },
         ],
   );
+  const [formKey, setFormKey] = React.useState(activity.id);
+
+  React.useEffect(() => {
+    setFormKey(activity.id);
+    setMode(activity.mode);
+    setDurationOptions(
+      activity.durationOptions?.length
+        ? activity.durationOptions
+        : activity.mode === "FIXED_SEAT_EVENT"
+        ? []
+        : [
+            {
+              label: "Standard",
+              durationMin: activity.durationMin || 60,
+              priceEuro: activity.basePriceEuro || 0,
+              isActive: true,
+              sortOrder: 0,
+            },
+          ],
+    );
+  }, [activity]);
 
   const addDurationOption = () => {
     setDurationOptions((prev) => [
@@ -135,13 +156,13 @@ export function ActivityFormClient({
 
   return (
     <form
+      key={formKey}
       action={updateAction}
       className="relative overflow-hidden rounded-2xl u-border u-surface backdrop-blur-md p-6 sm:p-8 space-y-6 glow-soft"
     >
       <input type="hidden" name="durationOptionsJson" value={durationOptionsJson} />
 
       <div className="grid gap-6 sm:grid-cols-2">
-        {/* LEFT */}
         <div className="grid gap-4">
           <div className="flex flex-col gap-1.5">
             <label className="text-sm opacity-80">Activity type</label>
@@ -242,14 +263,12 @@ export function ActivityFormClient({
           </label>
         </div>
 
-        {/* RIGHT */}
         <div className="flex flex-col gap-3">
           <label className="text-sm opacity-80">{t("admin.activities.form.cover")}</label>
           <CoverPicker name="coverFile" size={280} />
         </div>
       </div>
 
-      {/* Description */}
       <div className="flex flex-col gap-1.5">
         <label className="text-sm opacity-80">{t("admin.activities.form.description")}</label>
         <textarea
@@ -260,7 +279,6 @@ export function ActivityFormClient({
         />
       </div>
 
-      {/* Mode-specific config */}
       <div className="grid gap-6">
         <div className="rounded-xl border border-white/10 bg-black/15 p-4">
           <div className="text-sm font-medium mb-4">Booking configuration</div>
@@ -480,7 +498,6 @@ export function ActivityFormClient({
         </div>
       </div>
 
-      {/* Actions */}
       <div className="flex items-center gap-3 pt-1">
         <button className="h-10 inline-flex items-center justify-center rounded-xl px-6 text-sm font-medium btn-accent">
           {t("admin.activities.form.save")}
