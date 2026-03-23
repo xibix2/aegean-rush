@@ -10,7 +10,7 @@ type Activity = {
   id: string;
   name: string;
   description?: string | null;
-  basePrice?: number | null;  // cents
+  basePrice?: number | null;
   coverImageUrl?: string | null;
   slug?: string | null;
   durationMin?: number | null;
@@ -23,7 +23,6 @@ type TFn = (key: string) => string;
 const EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
 const GAP_PX = 24;
 
-// ───────────────── Tenant helper: detect /{slug} base ────────────────
 function detectTenantBase(): string {
   if (typeof window === "undefined") return "";
   const seg = window.location.pathname.split("/").filter(Boolean)[0] ?? "";
@@ -40,16 +39,14 @@ function getCookie(name: string): string | null {
 export default function ActivityCarousel({
   activities,
   lang: langProp,
-  basePrefix, // e.g. "/harbor-tennis" or "" (global)
+  basePrefix,
 }: {
   activities: Activity[];
-  /** Optional language override; if omitted we read ui_lang cookie (default "en") */
   lang?: string;
   basePrefix?: string;
 }) {
   const [t, setT] = useState<TFn>(() => (k: string) => k);
 
-  // Prefer server-provided basePrefix to avoid hydration drift; fall back to client detection
   const detected = useMemo(() => detectTenantBase(), []);
   const tenantBase = basePrefix ?? detected;
 
@@ -60,10 +57,8 @@ export default function ActivityCarousel({
     (async () => {
       try {
         const tt = await getT(lang);
-        if (alive) setT(() => (tt as TFn));
-      } catch {
-        // noop; fallback is identity
-      }
+        if (alive) setT(() => tt as TFn);
+      } catch {}
     })();
     return () => {
       alive = false;
@@ -72,7 +67,6 @@ export default function ActivityCarousel({
 
   const base = Array.isArray(activities) ? activities : [];
 
-  // Put “New activity” first
   const data = useMemo<Activity[]>(
     () => [
       {
@@ -93,7 +87,6 @@ export default function ActivityCarousel({
   const trackRef = useRef<HTMLDivElement | null>(null);
   const viewportRef = useRef<HTMLDivElement | null>(null);
 
-  // store refs for either <div> or <a>
   const cardRefs = useRef<(HTMLElement | null)[]>([]);
   const imgRefs = useRef<(HTMLImageElement | null)[]>([]);
   cardRefs.current = new Array(data.length).fill(null);
@@ -101,12 +94,10 @@ export default function ActivityCarousel({
 
   const [cardW, setCardW] = useState<number>(320);
   const [viewportW, setViewportW] = useState<number>(0);
-
-  // Start centered on the second card (index 1) if it exists
   const [index, setIndex] = useState<number>(data.length > 1 ? 1 : 0);
   const [anim, setAnim] = useState<boolean>(true);
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
 
-  // measure viewport & a card
   useEffect(() => {
     const measure = () => {
       setViewportW(viewportRef.current?.clientWidth ?? 0);
@@ -122,10 +113,8 @@ export default function ActivityCarousel({
     if (viewportRef.current) ro.observe(viewportRef.current);
     cardRefs.current.forEach((el) => el && ro.observe(el));
     return () => ro.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data.length]);
 
-  // compute translate to center active
   const unit = cardW + GAP_PX;
   const translateX = useMemo(() => {
     const trackOffset = index * unit;
@@ -134,7 +123,6 @@ export default function ActivityCarousel({
     return viewportCenter - centerOffset;
   }, [cardW, viewportW, index, unit]);
 
-  // apply transform
   useEffect(() => {
     const node = trackRef.current;
     if (!node) return;
@@ -142,7 +130,6 @@ export default function ActivityCarousel({
     node.style.transform = `translate3d(${translateX}px, 0, 0)`;
   }, [translateX, anim]);
 
-  // keyboard support
   const onKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
       if (e.key === "ArrowLeft") {
@@ -160,6 +147,7 @@ export default function ActivityCarousel({
     setAnim(true);
     setIndex((i) => Math.max(0, i - 1));
   };
+
   const goNext = () => {
     setAnim(true);
     setIndex((i) => Math.min(data.length - 1, i + 1));
@@ -168,6 +156,12 @@ export default function ActivityCarousel({
   const isActive = (i: number) => i === index;
   const atStart = index === 0;
   const atEnd = index === data.length - 1;
+
+  const getCardZIndex = (i: number) => {
+    if (hoverIndex === i) return 40;
+    if (index === i) return 30;
+    return 10;
+  };
 
   return (
     <div className="relative mx-auto max-w-6xl" role="region" aria-label={t("carousel.aria")}>
@@ -209,11 +203,16 @@ export default function ActivityCarousel({
                 ref={(el) => {
                   cardRefs.current[i] = el;
                 }}
+                onMouseEnter={() => setHoverIndex(i)}
+                onMouseLeave={() => setHoverIndex((curr) => (curr === i ? null : curr))}
                 className={[
-                  "w-[var(--card-w)] flex-shrink-0 transition-all duration-500 transform-gpu",
+                  "relative w-[var(--card-w)] flex-shrink-0 transition-all duration-500 transform-gpu",
                   active ? "scale-[1.065] -translate-y-1" : "scale-[0.965] opacity-90",
                 ].join(" ")}
-                style={{ backfaceVisibility: "hidden" }}
+                style={{
+                  backfaceVisibility: "hidden",
+                  zIndex: getCardZIndex(i),
+                }}
               >
                 {isNew ? (
                   <Link
@@ -264,7 +263,6 @@ export default function ActivityCarousel({
                   >
                     <div className="relative h-44 w-full bg-[--color-muted] overflow-hidden">
                       {img ? (
-                        // eslint-disable-next-line @next/next/no-img-element
                         <img
                           ref={(el) => {
                             imgRefs.current[i] = el;
