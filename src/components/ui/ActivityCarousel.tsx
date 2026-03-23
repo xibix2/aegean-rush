@@ -216,6 +216,7 @@ export default function ActivityCarousel({
               >
                 {isNew ? (
                   <Link
+                    prefetch={false}
                     href={`${tenantBase}/admin/activities/new`}
                     className="block h-full rounded-3xl border border-white/15 bg-[--color-card]/60 overflow-hidden relative group"
                     title={t("carousel.new")}
@@ -257,6 +258,7 @@ export default function ActivityCarousel({
                   </Link>
                 ) : (
                   <Link
+                    prefetch={false}
                     href={`${tenantBase}/admin/activities/${a.id}`}
                     className="block h-full rounded-2xl border border-[--color-border] overflow-hidden bg-[--color-card] group"
                     title={`${t("carousel.edit")} ${a.name}`}

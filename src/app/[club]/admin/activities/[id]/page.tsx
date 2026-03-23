@@ -1,5 +1,6 @@
+// src/app/[club]/admin/activities/[id]/page.tsx
 import prisma from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, unstable_noStore as noStore } from "next/cache";
 import { writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { ActivityDetailHeaderClient } from "@/components/admin/ActivityDetailHeaderClient";
@@ -113,6 +114,15 @@ async function updateActivityAction(
   const tenant = await requireTenant(tenantSlug);
   await requireClubAdmin(tenant.id);
 
+  const existing = await prisma.activity.findUnique({
+    where: { id },
+    select: { id: true, clubId: true },
+  });
+
+  if (!existing || existing.clubId !== tenant.id) {
+    throw new Error("Activity not found for tenant");
+  }
+
   const name = String(formData.get("name") || "").trim();
   const mode = parseMode(formData.get("mode"));
 
@@ -149,8 +159,8 @@ async function updateActivityAction(
   }
 
   await prisma.$transaction(async (tx) => {
-    await tx.activity.updateMany({
-      where: { id, clubId: tenant.id },
+    await tx.activity.update({
+      where: { id },
       data: {
         name,
         mode,
@@ -215,8 +225,17 @@ async function deleteActivityAction(tenantSlug: string, id: string) {
   const tenant = await requireTenant(tenantSlug);
   await requireClubAdmin(tenant.id);
 
-  await prisma.activity.deleteMany({
-    where: { id, clubId: tenant.id },
+  const existing = await prisma.activity.findUnique({
+    where: { id },
+    select: { id: true, clubId: true },
+  });
+
+  if (!existing || existing.clubId !== tenant.id) {
+    throw new Error("Activity not found for tenant");
+  }
+
+  await prisma.activity.delete({
+    where: { id },
   });
 
   revalidatePath(`/${tenantSlug}/admin/activities`);
@@ -229,14 +248,13 @@ export default async function ActivityDetailPage({
 }: {
   params: { club: string; id: string };
 }) {
+  noStore();
+
   const tenant = await requireTenant(params.club);
   await requireClubAdmin(tenant.id);
 
-  const a = await prisma.activity.findFirst({
-    where: {
-      id: params.id,
-      clubId: tenant.id,
-    },
+  const a = await prisma.activity.findUnique({
+    where: { id: params.id },
     include: {
       durationOptions: {
         orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
@@ -244,7 +262,7 @@ export default async function ActivityDetailPage({
     },
   });
 
-  if (!a) {
+  if (!a || a.clubId !== tenant.id) {
     notFound();
   }
 
