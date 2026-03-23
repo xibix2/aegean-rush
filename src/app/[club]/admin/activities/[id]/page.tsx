@@ -1,4 +1,3 @@
-// src/app/[club]/admin/activities/[id]/page.tsx
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { writeFile, mkdir } from "node:fs/promises";
@@ -7,10 +6,11 @@ import { ActivityDetailHeaderClient } from "@/components/admin/ActivityDetailHea
 import { ActivityFormClient } from "@/components/admin/ActivityFormClient";
 import { requireTenant } from "@/lib/tenant";
 import { requireClubAdmin } from "@/lib/admin-guard";
-import { redirect } from "next/navigation";
+import { redirect, notFound } from "next/navigation";
 import { ActivityMode } from "@prisma/client";
 
 export const revalidate = 0;
+export const dynamic = "force-dynamic";
 
 /* ============ shared helpers ============ */
 async function saveImageFile(file: File | null): Promise<string | null> {
@@ -19,12 +19,14 @@ async function saveImageFile(file: File | null): Promise<string | null> {
   const ext = path.extname(file.name || "upload.jpg") || ".jpg";
   const filename = `${Date.now()}_${Math.random().toString(36).slice(2)}${ext}`;
   const buf = Buffer.from(await file.arrayBuffer());
+
   if (isDev) {
     const uploadsDir = path.join(process.cwd(), "public", "uploads");
     await mkdir(uploadsDir, { recursive: true });
     await writeFile(path.join(uploadsDir, filename), buf);
     return `/uploads/${filename}`;
   }
+
   return null;
 }
 
@@ -100,13 +102,14 @@ function parseDurationOptions(formData: FormData) {
   }
 }
 
-/* ============ server actions (tenant-scoped via slug) ============ */
+/* ============ server actions ============ */
 async function updateActivityAction(
   tenantSlug: string,
   id: string,
   formData: FormData
 ) {
   "use server";
+
   const tenant = await requireTenant(tenantSlug);
   await requireClubAdmin(tenant.id);
 
@@ -146,7 +149,7 @@ async function updateActivityAction(
   }
 
   await prisma.$transaction(async (tx) => {
-    await tx.activity.update({
+    await tx.activity.updateMany({
       where: { id, clubId: tenant.id },
       data: {
         name,
@@ -208,20 +211,19 @@ async function updateActivityAction(
 
 async function deleteActivityAction(tenantSlug: string, id: string) {
   "use server";
+
   const tenant = await requireTenant(tenantSlug);
   await requireClubAdmin(tenant.id);
 
-  await prisma.activity.delete({
+  await prisma.activity.deleteMany({
     where: { id, clubId: tenant.id },
   });
 
-  const listPath = `/${tenantSlug}/admin/activities`;
-  revalidatePath(listPath);
-
+  revalidatePath(`/${tenantSlug}/admin/activities`);
   redirect(`/${tenantSlug}/admin/activities/deleted`);
 }
 
-/* ============ page (server) ============ */
+/* ============ page ============ */
 export default async function ActivityDetailPage({
   params,
 }: {
@@ -231,7 +233,10 @@ export default async function ActivityDetailPage({
   await requireClubAdmin(tenant.id);
 
   const a = await prisma.activity.findFirst({
-    where: { id: params.id, clubId: tenant.id },
+    where: {
+      id: params.id,
+      clubId: tenant.id,
+    },
     include: {
       durationOptions: {
         orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
@@ -240,59 +245,54 @@ export default async function ActivityDetailPage({
   });
 
   if (!a) {
-    return (
-      <main className="p-6 text-center">
-        <div className="text-lg opacity-80">Activity not found.</div>
-        <a href={`/${tenant.slug}/admin/activities`} className="underline">
-          Back to activities
-        </a>
-      </main>
-    );
+    notFound();
   }
 
+  const activityPayload = {
+    id: a.id,
+    name: a.name,
+    mode: a.mode,
+
+    durationMin: a.durationMin ?? 60,
+    basePriceEuro: (a.basePrice ?? 0) / 100,
+    minParty: a.minParty ?? 1,
+    maxParty: a.maxParty ?? 4,
+
+    description: a.description ?? "",
+    locationId: a.locationId ?? "athens-marina",
+    active: a.active,
+    coverImageUrl: a.coverImageUrl ?? null,
+
+    meetingPoint: a.meetingPoint ?? "",
+    includedText: a.includedText ?? "",
+    bringText: a.bringText ?? "",
+    cancellationText: a.cancellationText ?? "",
+    ageInfo: a.ageInfo ?? "",
+    skillLevel: a.skillLevel ?? "",
+    safetyInfo: a.safetyInfo ?? "",
+    pricingNotes: a.pricingNotes ?? "",
+
+    guestsPerUnit: a.guestsPerUnit ?? 1,
+    maxUnitsPerBooking: a.maxUnitsPerBooking ?? 1,
+    slotIntervalMin: a.slotIntervalMin ?? 30,
+
+    durationOptions: a.durationOptions.map((opt) => ({
+      id: opt.id,
+      label: opt.label ?? "",
+      durationMin: opt.durationMin,
+      priceEuro: opt.priceCents / 100,
+      priceCents: opt.priceCents,
+      isActive: opt.isActive,
+      sortOrder: opt.sortOrder,
+    })),
+  };
+
   return (
-    <main className="space-y-8 px-6 py-10 max-w-4xl mx-auto">
-      <ActivityDetailHeaderClient name={a.name} />
+    <main key={a.id} className="space-y-8 px-6 py-10 max-w-4xl mx-auto">
+      <ActivityDetailHeaderClient key={a.id} name={a.name} />
       <ActivityFormClient
         key={a.id}
-        activity={{
-          id: a.id,
-          name: a.name,
-          mode: a.mode,
-
-          durationMin: a.durationMin ?? 60,
-          basePriceEuro: (a.basePrice ?? 0) / 100,
-          minParty: a.minParty ?? 1,
-          maxParty: a.maxParty ?? 4,
-
-          description: a.description ?? "",
-          locationId: a.locationId ?? "athens-marina",
-          active: a.active,
-          coverImageUrl: a.coverImageUrl ?? null,
-
-          meetingPoint: a.meetingPoint ?? "",
-          includedText: a.includedText ?? "",
-          bringText: a.bringText ?? "",
-          cancellationText: a.cancellationText ?? "",
-          ageInfo: a.ageInfo ?? "",
-          skillLevel: a.skillLevel ?? "",
-          safetyInfo: a.safetyInfo ?? "",
-          pricingNotes: a.pricingNotes ?? "",
-
-          guestsPerUnit: a.guestsPerUnit ?? 1,
-          maxUnitsPerBooking: a.maxUnitsPerBooking ?? 1,
-          slotIntervalMin: a.slotIntervalMin ?? 30,
-
-          durationOptions: a.durationOptions.map((opt) => ({
-            id: opt.id,
-            label: opt.label ?? "",
-            durationMin: opt.durationMin,
-            priceEuro: opt.priceCents / 100,
-            priceCents: opt.priceCents,
-            isActive: opt.isActive,
-            sortOrder: opt.sortOrder,
-          })),
-        }}
+        activity={activityPayload}
         updateAction={updateActivityAction.bind(null, params.club, a.id)}
         deleteAction={deleteActivityAction.bind(null, params.club, a.id)}
       />
