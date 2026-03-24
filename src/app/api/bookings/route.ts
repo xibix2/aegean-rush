@@ -20,6 +20,7 @@ export async function GET(req: Request) {
       date: url.searchParams.get("date") || "",
       tz: url.searchParams.get("tz") || undefined,
     });
+
     if (!parsed.success) {
       return NextResponse.json(
         { error: "date=YYYY-MM-DD is required" },
@@ -142,6 +143,7 @@ export async function GET(req: Request) {
 
           activityId: s.activity?.id ?? "",
           activityName: s.activity?.name ?? "",
+          slotId: s.id,
 
           slotStartAt: s.startAt,
           slotEndAt: s.endAt,
@@ -164,10 +166,12 @@ export async function GET(req: Request) {
     return NextResponse.json({ tz, bookings: rows });
   } catch (e: any) {
     const msg = e?.message || "Server error";
-    if (msg === "Unauthorized")
+    if (msg === "Unauthorized") {
       return NextResponse.json({ error: msg }, { status: 401 });
-    if (msg.includes("Forbidden"))
+    }
+    if (msg.includes("Forbidden")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     const status = msg.startsWith("Tenant not found") ? 400 : 500;
     return NextResponse.json({ error: msg }, { status });
   }

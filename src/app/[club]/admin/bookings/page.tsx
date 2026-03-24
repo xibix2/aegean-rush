@@ -1,4 +1,3 @@
-//src/app/[club]/admin/bookings/page.tsx
 "use client";
 
 import type React from "react";
@@ -131,69 +130,105 @@ export default function AdminBookingsPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
   const [search, setSearch] = useState("");
   const [sortDir, setSortDir] = useState<"desc" | "asc">("desc");
+  const [actionBusyId, setActionBusyId] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState("");
 
   const apiPath = (p: string) => `/${club}${p}`;
 
-  useEffect(() => {
+  async function loadBookings() {
     if (!club) return;
 
-    let alive = true;
+    setLoading(true);
+    setErrorMsg("");
 
-    (async () => {
-      setLoading(true);
+    try {
+      const res = await fetch(apiPath(`/api/bookings?date=${date}`), {
+        cache: "no-store",
+      });
 
-      try {
-        const res = await fetch(apiPath(`/api/bookings?date=${date}`), {
-          cache: "no-store",
-        });
-
-        if (!alive) return;
-
-        if (!res.ok) {
-          setRows([]);
-          return;
-        }
-
-        const data: APIResponse = await res.json();
-
-        const mapped: Row[] = (data.bookings || []).map((b) => ({
-          id: b.id,
-          ref: b.ref,
-          status: normalizeStatus(b.status),
-          mode: b.mode ?? "FIXED_SEAT_EVENT",
-
-          amountCents: b.totalPrice ?? 0,
-          players: b.partySize ?? 1,
-          reservedUnits: b.reservedUnits ?? null,
-
-          customerName: b.customerName ?? "",
-          customerEmail: b.customerEmail ?? "",
-          activityName: b.activityName ?? "",
-
-          slotStartAt: b.slotStartAt,
-          slotEndAt: b.slotEndAt,
-          bookingStartAt: b.bookingStartAt ?? null,
-          bookingEndAt: b.bookingEndAt ?? null,
-
-          durationMinSnapshot: b.durationMinSnapshot ?? null,
-          pricingLabelSnapshot: b.pricingLabelSnapshot ?? null,
-          guestsPerUnit: b.guestsPerUnit ?? null,
-
-          createdAt: b.createdAt,
-        }));
-
-        setRows(mapped);
-      } catch {
-        if (alive) setRows([]);
-      } finally {
-        if (alive) setLoading(false);
+      if (!res.ok) {
+        setRows([]);
+        setErrorMsg("Failed to load bookings.");
+        return;
       }
-    })();
 
-    return () => {
-      alive = false;
-    };
+      const data: APIResponse = await res.json();
+
+      const mapped: Row[] = (data.bookings || []).map((b) => ({
+        id: b.id,
+        ref: b.ref,
+        status: normalizeStatus(b.status),
+        mode: b.mode ?? "FIXED_SEAT_EVENT",
+
+        amountCents: b.totalPrice ?? 0,
+        players: b.partySize ?? 1,
+        reservedUnits: b.reservedUnits ?? null,
+
+        customerName: b.customerName ?? "",
+        customerEmail: b.customerEmail ?? "",
+        activityName: b.activityName ?? "",
+
+        slotStartAt: b.slotStartAt,
+        slotEndAt: b.slotEndAt,
+        bookingStartAt: b.bookingStartAt ?? null,
+        bookingEndAt: b.bookingEndAt ?? null,
+
+        durationMinSnapshot: b.durationMinSnapshot ?? null,
+        pricingLabelSnapshot: b.pricingLabelSnapshot ?? null,
+        guestsPerUnit: b.guestsPerUnit ?? null,
+
+        createdAt: b.createdAt,
+      }));
+
+      setRows(mapped);
+    } catch {
+      setRows([]);
+      setErrorMsg("Failed to load bookings.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void loadBookings();
   }, [date, club]);
+
+  async function runBookingAction(
+    row: Row,
+    action: "cancel" | "refund"
+  ) {
+    if (!club) return;
+
+    const confirmText =
+      action === "cancel"
+        ? `Cancel booking #${row.ref}?`
+        : `Refund booking #${row.ref}?`;
+
+    if (!window.confirm(confirmText)) return;
+
+    setActionBusyId(row.id);
+    setErrorMsg("");
+
+    try {
+      const res = await fetch(
+        apiPath(`/api/bookings/${row.id}/${action}`),
+        {
+          method: "POST",
+        }
+      );
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error || `Failed to ${action} booking`);
+      }
+
+      await loadBookings();
+    } catch (err: any) {
+      setErrorMsg(err?.message || `Failed to ${action} booking.`);
+    } finally {
+      setActionBusyId(null);
+    }
+  }
 
   const counts = useMemo(() => {
     const c: Record<StatusFilter, number> = {
@@ -300,7 +335,7 @@ export default function AdminBookingsPage() {
           </button>
 
           <button
-            onClick={() => setDate((d) => d)}
+            onClick={() => void loadBookings()}
             disabled={loading}
             className="h-10 rounded-xl px-4 text-sm font-medium btn-accent disabled:opacity-60"
           >
@@ -319,6 +354,12 @@ export default function AdminBookingsPage() {
             </Pill>
           ))}
         </div>
+
+        {errorMsg && (
+          <div className="mt-4 rounded-xl border border-rose-400/25 bg-rose-400/10 px-3 py-2 text-sm text-rose-200">
+            {errorMsg}
+          </div>
+        )}
       </section>
 
       <section className="relative rounded-2xl u-border u-surface backdrop-blur-md px-6 py-5 flex flex-wrap items-center justify-between overflow-hidden glow-soft">
@@ -374,12 +415,14 @@ export default function AdminBookingsPage() {
                 <Th className="text-right pr-3">
                   {mounted ? currencySymbol : "\u00A0"}
                 </Th>
+                <Th className="text-right pr-3">Actions</Th>
               </tr>
             </thead>
 
             <tbody className="transition-opacity">
               {filtered.map((r) => {
                 const range = getEffectiveRange(r);
+                const busy = actionBusyId === r.id;
 
                 return (
                   <tr
@@ -444,13 +487,22 @@ export default function AdminBookingsPage() {
                           })
                         : ""}
                     </Td>
+
+                    <Td className="text-right pr-3">
+                      <RowActions
+                        row={r}
+                        busy={busy}
+                        onCancel={() => void runBookingAction(r, "cancel")}
+                        onRefund={() => void runBookingAction(r, "refund")}
+                      />
+                    </Td>
                   </tr>
                 );
               })}
 
               {filtered.length === 0 && !loading && (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center opacity-70">
+                  <td colSpan={9} className="p-8 text-center opacity-70">
                     {t("bookings.empty")}
                   </td>
                 </tr>
@@ -460,6 +512,50 @@ export default function AdminBookingsPage() {
         </div>
       </section>
     </main>
+  );
+}
+
+function RowActions({
+  row,
+  busy,
+  onCancel,
+  onRefund,
+}: {
+  row: Row;
+  busy: boolean;
+  onCancel: () => void;
+  onRefund: () => void;
+}) {
+  if (row.status === "REFUNDED") {
+    return <span className="text-xs opacity-50">—</span>;
+  }
+
+  if (row.status === "CANCELLED") {
+    return <span className="text-xs opacity-50">—</span>;
+  }
+
+  if (row.status === "CONFIRMED") {
+    return (
+      <button
+        type="button"
+        disabled={busy}
+        onClick={onRefund}
+        className="inline-flex h-8 items-center rounded-lg border border-rose-400/25 bg-rose-400/10 px-3 text-xs font-medium text-rose-200 transition hover:bg-rose-400/15 disabled:opacity-50"
+      >
+        {busy ? "Working…" : "Refund"}
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      disabled={busy}
+      onClick={onCancel}
+      className="inline-flex h-8 items-center rounded-lg border border-amber-400/25 bg-amber-400/10 px-3 text-xs font-medium text-amber-200 transition hover:bg-amber-400/15 disabled:opacity-50"
+    >
+      {busy ? "Working…" : "Cancel"}
+    </button>
   );
 }
 
@@ -475,7 +571,9 @@ function BookingDetailsCell({ row }: { row: Row }) {
   if (row.mode === "DYNAMIC_RENTAL") {
     return (
       <div className="space-y-1">
-        {row.reservedUnits != null && <div>{row.reservedUnits} unit{row.reservedUnits === 1 ? "" : "s"}</div>}
+        {row.reservedUnits != null && (
+          <div>{row.reservedUnits} unit{row.reservedUnits === 1 ? "" : "s"}</div>
+        )}
         {row.durationMinSnapshot != null && (
           <div className="text-[12px] opacity-70">{row.durationMinSnapshot} min</div>
         )}
