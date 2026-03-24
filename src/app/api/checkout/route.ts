@@ -1,12 +1,9 @@
-// src/app/api/checkout/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
 import { requireTenant } from "@/lib/tenant";
-import {
-  getBookingQuoteAndAvailability,
-} from "@/lib/booking-engine";
+import { getBookingQuoteAndAvailability } from "@/lib/booking-engine";
 import { ActivityMode } from "@prisma/client";
 
 export const runtime = "nodejs";
@@ -103,7 +100,7 @@ function buildStripeLineItem(args: {
   return {
     quantity,
     price_data: {
-      currency: "eur", // replaced later with tenant currency
+      currency: "eur",
       unit_amount: unitPrice,
       product_data: {
         name: `${activityName}${suffix ? ` — ${suffix}` : ""}`,
@@ -278,6 +275,10 @@ async function createSessionAndMaybeRedirect(
       partySize: quote.partySize,
       totalPrice: quote.totalPrice,
       status: "pending",
+
+      contactName: customer?.name?.trim() || "Guest",
+      contactEmail: customer?.email?.trim() || null,
+      contactPhone: customer?.phone?.trim() || null,
 
       reservedUnits: quote.reservedUnits,
       bookingStartAt: quote.bookingStartAt,

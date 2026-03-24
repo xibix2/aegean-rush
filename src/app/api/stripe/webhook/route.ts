@@ -1,4 +1,3 @@
-// src/app/api/stripe/webhook/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import prisma from "@/lib/prisma";
@@ -31,8 +30,6 @@ function buildAbsoluteUrl(path: string | null | undefined): string | null {
   return `${cleanBase}/${cleanPath}`;
 }
 
-// ---------- Booking helpers ----------
-
 async function getBookingWithTenant(bookingId: string) {
   return prisma.booking.findUnique({
     where: { id: bookingId },
@@ -42,6 +39,9 @@ async function getBookingWithTenant(bookingId: string) {
       status: true,
       bookingStartAt: true,
       bookingEndAt: true,
+      contactName: true,
+      contactEmail: true,
+      contactPhone: true,
       timeSlot: {
         select: {
           startAt: true,
@@ -94,6 +94,25 @@ async function attachRealCustomerToBooking(
   });
 
   if (booking.customerId === real.id) {
+    const bookingUpdate: {
+      contactEmail?: string;
+      contactName?: string;
+    } = {};
+
+    if (email && booking.contactEmail !== email) {
+      bookingUpdate.contactEmail = email;
+    }
+    if (name && booking.contactName !== name) {
+      bookingUpdate.contactName = name;
+    }
+
+    if (Object.keys(bookingUpdate).length > 0) {
+      await prisma.booking.update({
+        where: { id: bookingId },
+        data: bookingUpdate,
+      });
+    }
+
     if (name) {
       await prisma.customer.update({
         where: { id: real.id },
@@ -105,7 +124,11 @@ async function attachRealCustomerToBooking(
 
   await prisma.booking.update({
     where: { id: bookingId },
-    data: { customerId: real.id },
+    data: {
+      customerId: real.id,
+      contactEmail: email ?? undefined,
+      contactName: name ?? undefined,
+    },
   });
 }
 
@@ -134,15 +157,14 @@ async function sendConfirmationEmail(
   });
   if (!b) return;
 
-  let to = fallbackEmail ?? b.customer?.email ?? null;
+  let to = fallbackEmail ?? b.contactEmail ?? b.customer?.email ?? null;
 
-  if (fallbackEmail && to && to.startsWith("guest+")) {
+  if (fallbackEmail && b.customer?.email?.startsWith("guest+")) {
     try {
       await prisma.customer.update({
         where: { id: b.customerId },
         data: { email: fallbackEmail },
       });
-      to = fallbackEmail;
     } catch {}
   }
   if (!to) return;
@@ -340,6 +362,16 @@ async function handleSuccessfulCheckoutSession(
   const result = await markBookingPaid(bookingId, paymentIntentId, amount);
   await attachRealCustomerToBooking(bookingId, payerEmail, payerName);
 
+  if (payerEmail || payerName) {
+    await prisma.booking.update({
+      where: { id: bookingId },
+      data: {
+        contactEmail: payerEmail ?? undefined,
+        contactName: payerName ?? undefined,
+      },
+    });
+  }
+
   if (!result.alreadyPaid) {
     await sendConfirmationEmail(bookingId, payerEmail || undefined);
   }
@@ -352,8 +384,6 @@ async function handleFailedOrExpiredCheckoutSession(
   if (!bookingId) return;
   await markBookingCancelledIfPending(bookingId);
 }
-
-// ---------- Webhook handler ----------
 
 export async function POST(req: NextRequest) {
   try {

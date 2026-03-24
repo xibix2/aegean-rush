@@ -188,7 +188,10 @@ model Booking {
   status               BookingStatus @default(pending)
   notes                String?
 
-  // NEW: unit/duration snapshot fields for rentals + hybrid bookings
+  contactName          String?
+  contactEmail         String?
+  contactPhone         String?
+
   reservedUnits        Int           @default(1)
   bookingStartAt       DateTime?
   bookingEndAt         DateTime?
