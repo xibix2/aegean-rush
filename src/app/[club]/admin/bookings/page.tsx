@@ -1,3 +1,4 @@
+//src/app/[club]/admin/bookings/page.tsx
 "use client";
 
 import type React from "react";
@@ -7,17 +8,39 @@ import { formatMoneyCentsClient } from "@/lib/money-client";
 import { readUiPrefsFromDocument } from "@/lib/ui-prefs-client";
 import { useT } from "@/components/I18nProvider";
 
-/* ======================= Types bound to /api/bookings ======================= */
+type BookingMode =
+  | "FIXED_SEAT_EVENT"
+  | "DYNAMIC_RENTAL"
+  | "HYBRID_UNIT_BOOKING";
+
 type APIRow = {
   id: string;
+  ref: string;
   status: string;
+  mode: BookingMode;
+
   partySize: number;
+  reservedUnits?: number | null;
+
   totalPrice: number;
+  unitPriceSnapshot?: number | null;
+
   customerName: string;
   customerEmail: string;
-  startAt: string;
-  endAt: string;
+
+  activityId?: string;
   activityName: string;
+
+  slotStartAt: string;
+  slotEndAt: string;
+
+  bookingStartAt?: string | null;
+  bookingEndAt?: string | null;
+
+  durationMinSnapshot?: number | null;
+  pricingLabelSnapshot?: string | null;
+  guestsPerUnit?: number | null;
+
   createdAt: string;
 };
 
@@ -25,21 +48,33 @@ type APIResponse = { tz: string; bookings: APIRow[] };
 
 type Row = {
   id: string;
+  ref: string;
   status: "PENDING" | "CONFIRMED" | "CANCELLED" | "REFUNDED";
+  mode: BookingMode;
+
   amountCents: number;
   players: number;
+  reservedUnits: number | null;
+
   customerName: string;
   customerEmail: string;
   activityName: string;
-  startAt: string;
-  endAt: string;
+
+  slotStartAt: string;
+  slotEndAt: string;
+  bookingStartAt: string | null;
+  bookingEndAt: string | null;
+
+  durationMinSnapshot: number | null;
+  pricingLabelSnapshot: string | null;
+  guestsPerUnit: number | null;
+
   createdAt: string;
 };
 
 const STATUS_ORDER = ["PENDING", "CONFIRMED", "CANCELLED", "REFUNDED"] as const;
 type StatusFilter = "ALL" | (typeof STATUS_ORDER)[number];
 
-/* ======================= Helpers ======================= */
 function normalizeStatus(s: string | undefined): Row["status"] {
   const up = (s ?? "").toUpperCase();
   if (up === "PAID" || up === "CONFIRMED") return "CONFIRMED";
@@ -47,6 +82,17 @@ function normalizeStatus(s: string | undefined): Row["status"] {
   if (up === "CANCELLED" || up === "CANCELED") return "CANCELLED";
   if (up === "REFUNDED") return "REFUNDED";
   return "PENDING";
+}
+
+function fmtDateTime(iso: string) {
+  return new Date(iso).toLocaleString("en-GB", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
 }
 
 function fmtHM(iso: string) {
@@ -57,6 +103,13 @@ function fmtHM(iso: string) {
   });
 }
 
+function getEffectiveRange(row: Row) {
+  return {
+    start: row.bookingStartAt || row.slotStartAt,
+    end: row.bookingEndAt || row.slotEndAt,
+  };
+}
+
 const statusKeyToI18n = {
   PENDING: "bookings.filters.pending",
   CONFIRMED: "bookings.filters.confirmed",
@@ -64,11 +117,9 @@ const statusKeyToI18n = {
   REFUNDED: "bookings.filters.refunded",
 } as const;
 
-/* =============================== Page ================================== */
 export default function AdminBookingsPage() {
   const t = useT();
   const { club } = useParams<{ club: string }>();
-
   const { currency: currencySymbol } = readUiPrefsFromDocument();
 
   const [mounted, setMounted] = useState(false);
@@ -107,14 +158,27 @@ export default function AdminBookingsPage() {
 
         const mapped: Row[] = (data.bookings || []).map((b) => ({
           id: b.id,
+          ref: b.ref,
           status: normalizeStatus(b.status),
+          mode: b.mode ?? "FIXED_SEAT_EVENT",
+
           amountCents: b.totalPrice ?? 0,
           players: b.partySize ?? 1,
+          reservedUnits: b.reservedUnits ?? null,
+
           customerName: b.customerName ?? "",
           customerEmail: b.customerEmail ?? "",
           activityName: b.activityName ?? "",
-          startAt: b.startAt,
-          endAt: b.endAt,
+
+          slotStartAt: b.slotStartAt,
+          slotEndAt: b.slotEndAt,
+          bookingStartAt: b.bookingStartAt ?? null,
+          bookingEndAt: b.bookingEndAt ?? null,
+
+          durationMinSnapshot: b.durationMinSnapshot ?? null,
+          pricingLabelSnapshot: b.pricingLabelSnapshot ?? null,
+          guestsPerUnit: b.guestsPerUnit ?? null,
+
           createdAt: b.createdAt,
         }));
 
@@ -157,7 +221,8 @@ export default function AdminBookingsPage() {
         (r) =>
           r.customerName.toLowerCase().includes(q) ||
           r.customerEmail.toLowerCase().includes(q) ||
-          r.activityName.toLowerCase().includes(q)
+          r.activityName.toLowerCase().includes(q) ||
+          r.ref.toLowerCase().includes(q)
       );
     }
 
@@ -182,7 +247,7 @@ export default function AdminBookingsPage() {
   }, [filtered]);
 
   return (
-    <main className="max-w-6xl mx-auto p-6 space-y-6">
+    <main className="max-w-7xl mx-auto p-6 space-y-6">
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -222,10 +287,16 @@ export default function AdminBookingsPage() {
 
           <button
             onClick={() => setSortDir((d) => (d === "desc" ? "asc" : "desc"))}
-            title={sortDir === "desc" ? t("bookings.sortNewest") : t("bookings.sortOldest")}
+            title={
+              sortDir === "desc"
+                ? t("bookings.sortNewest")
+                : t("bookings.sortOldest")
+            }
             className="h-10 rounded-lg u-border u-surface px-3 text-sm transition hover:u-surface-2 focus:outline-none focus:ring-1 focus:ring-[var(--accent-400)]"
           >
-            {sortDir === "desc" ? t("bookings.sortNewest") : t("bookings.sortOldest")}
+            {sortDir === "desc"
+              ? t("bookings.sortNewest")
+              : t("bookings.sortOldest")}
           </button>
 
           <button
@@ -291,80 +362,91 @@ export default function AdminBookingsPage() {
       <section className="overflow-hidden rounded-2xl u-border u-surface backdrop-blur-md glow-soft">
         <div className="overflow-x-auto">
           <table className="w-full table-auto text-sm">
-            <colgroup>
-              <col />
-              <col style={{ width: "10%" }} />
-              <col style={{ width: "26%" }} />
-              <col style={{ width: "12%" }} />
-              <col style={{ width: "16%" }} />
-              <col style={{ width: "16%" }} />
-              <col style={{ width: "5%" }} />
-              <col style={{ width: "5%" }} />
-            </colgroup>
-
             <thead className="sticky top-0 z-10 sticky-head">
               <tr>
                 <Th>{t("bookings.table.created")}</Th>
                 <Th>{t("bookings.table.status")}</Th>
+                <Th>Mode</Th>
                 <Th>{t("bookings.table.activity")}</Th>
-                <Th>{t("bookings.table.time")}</Th>
+                <Th>Booked for</Th>
                 <Th>{t("bookings.table.name")}</Th>
-                <Th>{t("bookings.table.email")}</Th>
-                <Th className="text-center">{t("bookings.table.players")}</Th>
-                <Th className="text-right pr-3">{mounted ? currencySymbol : "\u00A0"}</Th>
+                <Th>Details</Th>
+                <Th className="text-right pr-3">
+                  {mounted ? currencySymbol : "\u00A0"}
+                </Th>
               </tr>
             </thead>
 
             <tbody className="transition-opacity">
-              {filtered.map((r) => (
-                <tr key={r.id} className="border-t u-border hover:u-surface-2 transition">
-                  <Td className="whitespace-nowrap opacity-90">
-                    {new Date(r.createdAt).toLocaleString("en-GB", {
-                      year: "numeric",
-                      month: "2-digit",
-                      day: "2-digit",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      hour12: false,
-                    })}
-                  </Td>
+              {filtered.map((r) => {
+                const range = getEffectiveRange(r);
 
-                  <Td>
-                    <StatusPill status={r.status} label={t(statusKeyToI18n[r.status])} />
-                  </Td>
+                return (
+                  <tr
+                    key={r.id}
+                    className="border-t u-border hover:u-surface-2 transition"
+                  >
+                    <Td className="whitespace-nowrap opacity-90">
+                      <div>{fmtDateTime(r.createdAt)}</div>
+                      <div className="mt-1 text-[11px] opacity-60">#{r.ref}</div>
+                    </Td>
 
-                  <Td>
-                    <span className="truncate block" title={r.activityName}>
-                      {r.activityName || "—"}
-                    </span>
-                  </Td>
+                    <Td>
+                      <StatusPill
+                        status={r.status}
+                        label={t(statusKeyToI18n[r.status])}
+                      />
+                    </Td>
 
-                  <Td className="whitespace-nowrap">
-                    {fmtHM(r.startAt)}–{fmtHM(r.endAt)}
-                  </Td>
+                    <Td>
+                      <ModePill mode={r.mode} />
+                    </Td>
 
-                  <Td>
-                    <span className="block break-words" title={r.customerName}>
-                      {r.customerName || "—"}
-                    </span>
-                  </Td>
+                    <Td>
+                      <div className="font-medium">{r.activityName || "—"}</div>
+                      {r.pricingLabelSnapshot && (
+                        <div className="mt-1 text-[12px] opacity-65">
+                          {r.pricingLabelSnapshot}
+                        </div>
+                      )}
+                    </Td>
 
-                  <Td>
-                    <span className="block truncate" title={r.customerEmail}>
-                      {r.customerEmail || "—"}
-                    </span>
-                  </Td>
+                    <Td className="whitespace-nowrap">
+                      <div className="font-medium">
+                        {fmtHM(range.start)}–{fmtHM(range.end)}
+                      </div>
+                      {r.mode !== "FIXED_SEAT_EVENT" &&
+                        r.bookingStartAt &&
+                        r.bookingEndAt && (
+                          <div className="mt-1 text-[11px] opacity-60">
+                            actual booked range
+                          </div>
+                        )}
+                    </Td>
 
-                  <Td className="text-center">{r.players}</Td>
-                  <Td className="text-right pr-3">
-                    {mounted
-                      ? formatMoneyCentsClient(r.amountCents, {
-                          currency: currencySymbol,
-                        })
-                      : ""}
-                  </Td>
-                </tr>
-              ))}
+                    <Td>
+                      <div className="font-medium break-words">
+                        {r.customerName || "—"}
+                      </div>
+                      <div className="mt-1 text-[12px] opacity-65 break-all">
+                        {r.customerEmail || "—"}
+                      </div>
+                    </Td>
+
+                    <Td>
+                      <BookingDetailsCell row={r} />
+                    </Td>
+
+                    <Td className="text-right pr-3 whitespace-nowrap font-medium">
+                      {mounted
+                        ? formatMoneyCentsClient(r.amountCents, {
+                            currency: currencySymbol,
+                          })
+                        : ""}
+                    </Td>
+                  </tr>
+                );
+              })}
 
               {filtered.length === 0 && !loading && (
                 <tr>
@@ -381,7 +463,43 @@ export default function AdminBookingsPage() {
   );
 }
 
-/* ====================== Presentational helpers ======================== */
+function BookingDetailsCell({ row }: { row: Row }) {
+  if (row.mode === "FIXED_SEAT_EVENT") {
+    return (
+      <div className="space-y-1">
+        <div>{row.players} guest{row.players === 1 ? "" : "s"}</div>
+      </div>
+    );
+  }
+
+  if (row.mode === "DYNAMIC_RENTAL") {
+    return (
+      <div className="space-y-1">
+        {row.reservedUnits != null && <div>{row.reservedUnits} unit{row.reservedUnits === 1 ? "" : "s"}</div>}
+        {row.durationMinSnapshot != null && (
+          <div className="text-[12px] opacity-70">{row.durationMinSnapshot} min</div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-1">
+      <div>{row.players} guest{row.players === 1 ? "" : "s"}</div>
+      {row.reservedUnits != null && (
+        <div>{row.reservedUnits} unit{row.reservedUnits === 1 ? "" : "s"}</div>
+      )}
+      {row.guestsPerUnit != null && (
+        <div className="text-[12px] opacity-70">
+          {row.guestsPerUnit} guests / unit
+        </div>
+      )}
+      {row.durationMinSnapshot != null && (
+        <div className="text-[12px] opacity-70">{row.durationMinSnapshot} min</div>
+      )}
+    </div>
+  );
+}
 
 function Badge({ children }: { children: React.ReactNode }) {
   return (
@@ -425,6 +543,31 @@ function StatusPill({ status, label }: { status: Row["status"]; label: string })
   return (
     <span className={`inline-block rounded-full border px-2 py-0.5 text-xs font-medium ${cls}`}>
       {label}
+    </span>
+  );
+}
+
+function ModePill({ mode }: { mode: BookingMode }) {
+  const map: Record<BookingMode, { label: string; cls: string }> = {
+    FIXED_SEAT_EVENT: {
+      label: "Fixed event",
+      cls: "border-violet-400/30 bg-violet-400/10 text-violet-200",
+    },
+    DYNAMIC_RENTAL: {
+      label: "Rental",
+      cls: "border-sky-400/30 bg-sky-400/10 text-sky-200",
+    },
+    HYBRID_UNIT_BOOKING: {
+      label: "Hybrid",
+      cls: "border-teal-400/30 bg-teal-400/10 text-teal-200",
+    },
+  };
+
+  const item = map[mode];
+
+  return (
+    <span className={`inline-block rounded-full border px-2 py-0.5 text-xs font-medium ${item.cls}`}>
+      {item.label}
     </span>
   );
 }

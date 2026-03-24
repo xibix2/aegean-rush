@@ -1,3 +1,4 @@
+//src/app/[club]/admin/activities/page.tsx
 import { headers } from "next/headers";
 import prisma from "@/lib/prisma";
 import ActivityCarousel from "@/components/ui/ActivityCarousel";

@@ -1,3 +1,4 @@
+//components/admin/ActivitiesStatsClient
 "use client";
 
 import { useT } from "@/components/I18nProvider";

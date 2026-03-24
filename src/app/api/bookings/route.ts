@@ -1,3 +1,4 @@
+//src/app/api/bookings/route.ts
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
@@ -9,7 +10,7 @@ export const runtime = "nodejs";
 export const revalidate = 0;
 
 const Query = z.object({
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), // YYYY-MM-DD (local)
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   tz: z.string().optional(),
 });
 
@@ -20,19 +21,19 @@ export async function GET(req: Request) {
       date: url.searchParams.get("date") || "",
       tz: url.searchParams.get("tz") || undefined,
     });
+
     if (!parsed.success) {
       return NextResponse.json(
         { error: "date=YYYY-MM-DD is required" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
-    const tenant = await requireTenant(); // header -> cookie
-    await requireClubAdmin(tenant.id); // 🔒 admin-only
+    const tenant = await requireTenant();
+    await requireClubAdmin(tenant.id);
 
     const { date, tz: tzParam } = parsed.data;
 
-    // ---------- NEW: resolve timezone from CLUB settings first ----------
     const club = await prisma.club.findUnique({
       where: { id: tenant.id },
       select: {
@@ -51,18 +52,18 @@ export async function GET(req: Request) {
       tz = await getActiveTz();
     }
 
-    // Compute local-day boundaries → UTC (DST-safe)
     const startUtc = localStartOfDayUTC(date, tz);
 
     const [Y, M, D] = date.split("-").map(Number);
     const nextLocal = new Date(Date.UTC(Y, M - 1, D));
     nextLocal.setUTCDate(nextLocal.getUTCDate() + 1);
+
     const nextIso = `${nextLocal.getUTCFullYear()}-${String(
-      nextLocal.getUTCMonth() + 1,
+      nextLocal.getUTCMonth() + 1
     ).padStart(2, "0")}-${String(nextLocal.getUTCDate()).padStart(2, "0")}`;
+
     const endUtc = localStartOfDayUTC(nextIso, tz);
 
-    // 1) Pull all slots for the day (SCOPED BY TENANT via Activity)
     const slots = await prisma.timeSlot.findMany({
       where: {
         startAt: { gte: startUtc, lt: endUtc },
@@ -72,7 +73,14 @@ export async function GET(req: Request) {
         id: true,
         startAt: true,
         endAt: true,
-        activity: { select: { name: true } },
+        activity: {
+          select: {
+            id: true,
+            name: true,
+            mode: true,
+            guestsPerUnit: true,
+          },
+        },
         bookings: {
           select: {
             id: true,
@@ -81,6 +89,13 @@ export async function GET(req: Request) {
             partySize: true,
             totalPrice: true,
             customerId: true,
+
+            reservedUnits: true,
+            bookingStartAt: true,
+            bookingEndAt: true,
+            durationMinSnapshot: true,
+            pricingLabelSnapshot: true,
+            unitPriceSnapshot: true,
           },
           orderBy: { createdAt: "desc" },
         },
@@ -88,13 +103,12 @@ export async function GET(req: Request) {
       orderBy: { startAt: "asc" },
     });
 
-    // 2) Gather customer ids and fetch customers (same tenant)
     const customerIds = Array.from(
       new Set(
         slots
           .flatMap((s) => s.bookings.map((b) => b.customerId))
-          .filter(Boolean),
-      ),
+          .filter(Boolean)
+      )
     ) as string[];
 
     const customers = customerIds.length
@@ -106,39 +120,56 @@ export async function GET(req: Request) {
 
     const customerMap = new Map(customers.map((c) => [c.id, c]));
 
-    // 3) Flatten into rows
     const rows = slots.flatMap((s) =>
       s.bookings.map((b) => {
         const c = b.customerId ? customerMap.get(b.customerId) : undefined;
+
         return {
           id: b.id,
           ref: b.id.slice(0, 10),
+
           status: b.status,
-          partySize: b.partySize,
-          totalPrice: b.totalPrice, // cents
+          mode: s.activity?.mode ?? "FIXED_SEAT_EVENT",
+
+          partySize: b.partySize ?? 1,
+          reservedUnits: b.reservedUnits ?? null,
+
+          totalPrice: b.totalPrice ?? 0,
+          unitPriceSnapshot: b.unitPriceSnapshot ?? null,
+
           customerName: c?.name ?? "",
           customerEmail: c?.email ?? "",
-          startAt: s.startAt,
-          endAt: s.endAt,
+
+          activityId: s.activity?.id ?? "",
           activityName: s.activity?.name ?? "",
+
+          slotStartAt: s.startAt,
+          slotEndAt: s.endAt,
+
+          bookingStartAt: b.bookingStartAt ?? null,
+          bookingEndAt: b.bookingEndAt ?? null,
+
+          durationMinSnapshot: b.durationMinSnapshot ?? null,
+          pricingLabelSnapshot: b.pricingLabelSnapshot ?? null,
+
+          guestsPerUnit: s.activity?.guestsPerUnit ?? null,
+
           createdAt: b.createdAt,
         };
-      }),
+      })
     );
 
-    // newest first
     rows.sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt));
-
-    // Optional debug log in your server logs if you want:
-    // console.log("[/api/bookings]", { tenant: tenant.id, date, tz, slots: slots.length, rows: rows.length });
 
     return NextResponse.json({ tz, bookings: rows });
   } catch (e: any) {
     const msg = e?.message || "Server error";
-    if (msg === "Unauthorized")
+    if (msg === "Unauthorized") {
       return NextResponse.json({ error: msg }, { status: 401 });
-    if (msg.includes("Forbidden"))
+    }
+    if (msg.includes("Forbidden")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     const status = msg.startsWith("Tenant not found") ? 400 : 500;
     return NextResponse.json({ error: msg }, { status });
   }
