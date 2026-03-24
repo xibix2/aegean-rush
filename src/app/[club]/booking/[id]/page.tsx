@@ -1,4 +1,3 @@
-// src/app/[club]/booking/[id]/page.tsx
 import prisma from "@/lib/prisma";
 import { cookies } from "next/headers";
 import { requireTenant } from "@/lib/tenant";
@@ -7,13 +6,15 @@ import BookingClient from "./BookingClient";
 export default async function BookingPage({
   params,
 }: {
-  params: { club: string; id: string };
+  params: Promise<{ club: string; id: string }>;
 }) {
-  const tenant = await requireTenant(params.club);
+  const { club, id } = await params;
+
+  const tenant = await requireTenant(club);
 
   const booking = await prisma.booking.findFirst({
     where: {
-      id: params.id,
+      id,
       timeSlot: {
         activity: {
           clubId: tenant.id,

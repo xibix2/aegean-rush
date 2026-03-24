@@ -1,9 +1,9 @@
-// src/app/[club]/booking/[id]/BookingClient.tsx
 "use client";
 
 import { format } from "date-fns";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Card, CardTitle, CardSubtle } from "@/components/ui/Card";
 import { useT } from "@/components/I18nProvider";
@@ -52,6 +52,7 @@ export default function BookingClient({
   booking: BookingPayload;
 }) {
   const t = useT();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const urlStatus = (searchParams.get("status") || "").toLowerCase();
 
@@ -87,18 +88,50 @@ export default function BookingClient({
   const actualEnd = new Date(booking.bookingEndAt);
 
   const rawStatus = booking.status.toLowerCase();
-  const isPaidFromDb =
+
+  const isDbPaid =
     rawStatus === "paid" ||
     rawStatus === "confirmed" ||
     rawStatus === "succeeded";
-  const isPaidFromUrl = urlStatus === "success";
-  const isCancelled = rawStatus === "cancelled" || urlStatus === "cancelled";
-  const isPaid = !isCancelled && (isPaidFromDb || isPaidFromUrl);
+
+  const isDbCancelled =
+    rawStatus === "cancelled" || rawStatus === "canceled";
+
+  const isPending = rawStatus === "pending";
+  const isUrlSuccess = urlStatus === "success";
+  const isUrlCancelled = urlStatus === "cancelled";
+
+  // If Stripe redirects back with success but webhook hasn't updated yet,
+  // refresh the server component a few times instead of showing cancelled.
+  useEffect(() => {
+    if (!(isUrlSuccess && isPending)) return;
+
+    let attempts = 0;
+    const maxAttempts = 8;
+
+    const timer = setInterval(() => {
+      attempts += 1;
+      router.refresh();
+
+      if (attempts >= maxAttempts) {
+        clearInterval(timer);
+      }
+    }, 1500);
+
+    return () => clearInterval(timer);
+  }, [isUrlSuccess, isPending, router]);
+
+  // DB status is the source of truth.
+  const isPaid = isDbPaid;
+  const isCancelled = isDbCancelled || (isUrlCancelled && !isDbPaid);
 
   const statusLabel = (() => {
     if (isPaid) return t("booking.paid") ?? "Paid";
     if (isCancelled) return t("booking.cancelled") ?? "Cancelled";
-    if (rawStatus === "pending") return t("booking.pending") ?? "Pending";
+    if (isPending && isUrlSuccess) {
+      return t("booking.processing") ?? "Processing";
+    }
+    if (isPending) return t("booking.pending") ?? "Pending";
     return booking.status;
   })();
 
