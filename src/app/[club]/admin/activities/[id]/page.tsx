@@ -114,12 +114,12 @@ async function updateActivityAction(
   const tenant = await requireTenant(tenantSlug);
   await requireClubAdmin(tenant.id);
 
-  const existing = await prisma.activity.findUnique({
-    where: { id },
-    select: { id: true, clubId: true },
+  const existing = await prisma.activity.findFirst({
+    where: { id, clubId: tenant.id },
+    select: { id: true },
   });
 
-  if (!existing || existing.clubId !== tenant.id) {
+  if (!existing) {
     throw new Error("Activity not found for tenant");
   }
 
@@ -214,8 +214,8 @@ async function updateActivityAction(
     }
   });
 
-  revalidatePath(`/${tenantSlug}/admin/activities/${id}`);
   revalidatePath(`/${tenantSlug}/admin/activities`);
+  revalidatePath(`/${tenantSlug}/admin/activities/${id}`);
   revalidatePath(`/${tenantSlug}/timetable`);
 }
 
@@ -225,12 +225,12 @@ async function deleteActivityAction(tenantSlug: string, id: string) {
   const tenant = await requireTenant(tenantSlug);
   await requireClubAdmin(tenant.id);
 
-  const existing = await prisma.activity.findUnique({
-    where: { id },
-    select: { id: true, clubId: true },
+  const existing = await prisma.activity.findFirst({
+    where: { id, clubId: tenant.id },
+    select: { id: true },
   });
 
-  if (!existing || existing.clubId !== tenant.id) {
+  if (!existing) {
     throw new Error("Activity not found for tenant");
   }
 
@@ -253,8 +253,16 @@ export default async function ActivityDetailPage({
   const tenant = await requireTenant(params.club);
   await requireClubAdmin(tenant.id);
 
-  const a = await prisma.activity.findUnique({
-    where: { id: params.id },
+  const id = params?.id;
+  if (!id) {
+    notFound();
+  }
+
+  const a = await prisma.activity.findFirst({
+    where: {
+      id,
+      clubId: tenant.id,
+    },
     include: {
       durationOptions: {
         orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
@@ -262,7 +270,7 @@ export default async function ActivityDetailPage({
     },
   });
 
-  if (!a || a.clubId !== tenant.id) {
+  if (!a) {
     notFound();
   }
 
