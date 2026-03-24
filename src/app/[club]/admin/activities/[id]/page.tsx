@@ -1,4 +1,5 @@
 // src/app/[club]/admin/activities/[id]/page.tsx
+// src/app/[club]/admin/activities/[id]/page.tsx
 import prisma from "@/lib/prisma";
 import { revalidatePath, unstable_noStore as noStore } from "next/cache";
 import { writeFile, mkdir } from "node:fs/promises";
@@ -246,17 +247,18 @@ async function deleteActivityAction(tenantSlug: string, id: string) {
 export default async function ActivityDetailPage({
   params,
 }: {
-  params: { club: string; id: string };
+  params: Promise<{ club: string; id: string }>;
 }) {
   noStore();
 
-  const tenant = await requireTenant(params.club);
-  await requireClubAdmin(tenant.id);
+  const { club, id } = await params;
 
-  const id = params?.id;
-  if (!id) {
+  if (!club || !id) {
     notFound();
   }
+
+  const tenant = await requireTenant(club);
+  await requireClubAdmin(tenant.id);
 
   const a = await prisma.activity.findFirst({
     where: {
@@ -319,8 +321,8 @@ export default async function ActivityDetailPage({
       <ActivityFormClient
         key={a.id}
         activity={activityPayload}
-        updateAction={updateActivityAction.bind(null, params.club, a.id)}
-        deleteAction={deleteActivityAction.bind(null, params.club, a.id)}
+        updateAction={updateActivityAction.bind(null, club, a.id)}
+        deleteAction={deleteActivityAction.bind(null, club, a.id)}
       />
     </main>
   );
