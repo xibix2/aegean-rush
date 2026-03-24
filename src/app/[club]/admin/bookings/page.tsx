@@ -1,6 +1,7 @@
 "use client";
 
 import type React from "react";
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { formatMoneyCentsClient } from "@/lib/money-client";
@@ -29,6 +30,7 @@ type APIRow = {
 
   activityId?: string;
   activityName: string;
+  slotId?: string;
 
   slotStartAt: string;
   slotEndAt: string;
@@ -58,6 +60,7 @@ type Row = {
   customerName: string;
   customerEmail: string;
   activityName: string;
+  slotId: string | null;
 
   slotStartAt: string;
   slotEndAt: string;
@@ -167,6 +170,7 @@ export default function AdminBookingsPage() {
         customerName: b.customerName ?? "",
         customerEmail: b.customerEmail ?? "",
         activityName: b.activityName ?? "",
+        slotId: b.slotId ?? null,
 
         slotStartAt: b.slotStartAt,
         slotEndAt: b.slotEndAt,
@@ -210,12 +214,9 @@ export default function AdminBookingsPage() {
     setErrorMsg("");
 
     try {
-      const res = await fetch(
-        apiPath(`/api/bookings/${row.id}/${action}`),
-        {
-          method: "POST",
-        }
-      );
+      const res = await fetch(apiPath(`/api/bookings/${row.id}/${action}`), {
+        method: "POST",
+      });
 
       if (!res.ok) {
         const data = await res.json().catch(() => null);
@@ -447,11 +448,23 @@ export default function AdminBookingsPage() {
 
                     <Td>
                       <div className="font-medium">{r.activityName || "—"}</div>
-                      {r.pricingLabelSnapshot && (
-                        <div className="mt-1 text-[12px] opacity-65">
-                          {r.pricingLabelSnapshot}
-                        </div>
-                      )}
+
+                      <div className="mt-1 flex flex-wrap items-center gap-2">
+                        {r.pricingLabelSnapshot && (
+                          <span className="text-[12px] opacity-65">
+                            {r.pricingLabelSnapshot}
+                          </span>
+                        )}
+
+                        {club && r.slotId && (
+                          <Link
+                            href={`/${club}/admin/slots/${r.slotId}`}
+                            className="inline-flex items-center rounded-md border border-white/12 bg-white/[0.04] px-2 py-0.5 text-[11px] opacity-80 transition hover:opacity-100 hover:bg-white/[0.07]"
+                          >
+                            Open slot
+                          </Link>
+                        )}
+                      </div>
                     </Td>
 
                     <Td className="whitespace-nowrap">
@@ -555,7 +568,7 @@ function RowActions({
       className="inline-flex h-8 items-center rounded-lg border border-amber-400/25 bg-amber-400/10 px-3 text-xs font-medium text-amber-200 transition hover:bg-amber-400/15 disabled:opacity-50"
     >
       {busy ? "Working…" : "Cancel"}
-    </button>
+      </button>
   );
 }
 
