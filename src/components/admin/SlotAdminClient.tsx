@@ -48,6 +48,8 @@ type BookingPayload = {
 type SlotPayload =
   | {
       id: string;
+      status: "open" | "closed";
+      isClosed: boolean;
       activityName: string;
       activityMode: ActivityMode;
       capacity: number;
@@ -89,6 +91,7 @@ export default function SlotAdminClient({
   const start = new Date(slot.startAtISO);
   const end = new Date(slot.endAtISO);
   const mode = slot.activityMode;
+  const isClosed = !!slot.isClosed;
 
   const paid = useMemo(() => {
     if (mode === "FIXED_SEAT_EVENT") {
@@ -131,7 +134,7 @@ export default function SlotAdminClient({
 
   return (
     <main className="max-w-5xl mx-auto p-6 space-y-6">
-      <header className="flex items-start justify-between">
+      <header className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">
             <span className="bg-gradient-to-r from-white via-pink-200 to-violet-200 bg-clip-text text-transparent">
@@ -144,8 +147,9 @@ export default function SlotAdminClient({
             — {format(start, "eee, d MMM yyyy HH:mm")}–{format(end, "HH:mm")}
           </div>
 
-          <div className="mt-2">
+          <div className="mt-2 flex flex-wrap items-center gap-2">
             <ModeBadge mode={mode} />
+            {isClosed && <ClosedBadge />}
           </div>
 
           <div className="mt-3 flex flex-wrap gap-2 text-xs">
@@ -184,156 +188,148 @@ export default function SlotAdminClient({
         </a>
       </header>
 
+      {isClosed && (
+        <section className="rounded-2xl border border-red-500/25 bg-red-500/10 p-5 shadow-[0_0_35px_-20px_rgba(239,68,68,0.55)]">
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="text-base font-semibold text-red-100">This slot is closed</h2>
+              <p className="mt-1 text-sm text-red-100/80">
+                It has been removed from availability. New bookings are disabled for this slot.
+              </p>
+            </div>
+
+            <span className="inline-flex items-center rounded-full border border-red-400/30 bg-red-400/10 px-3 py-1 text-xs font-medium text-red-200">
+              Closed for booking
+            </span>
+          </div>
+        </section>
+      )}
+
       <section
-        className="rounded-2xl border border-white/10 bg-[--card]/50 backdrop-blur-md p-5 shadow-[0_0_40px_-20px_rgba(255,99,189,0.25)]"
+        className={`rounded-2xl border p-5 backdrop-blur-md shadow-[0_0_40px_-20px_rgba(255,99,189,0.25)] ${
+          isClosed
+            ? "border-red-500/20 bg-red-500/[0.04] opacity-75"
+            : "border-white/10 bg-[--card]/50"
+        }`}
         style={{ ["--card" as any]: "rgba(20,20,30,.55)" }}
       >
-        <h2 className="text-sm font-medium opacity-85 mb-4">
-          {t("admin.slot.addTitle")}
-        </h2>
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h2 className="text-sm font-medium opacity-85">{t("admin.slot.addTitle")}</h2>
+          {isClosed && (
+            <span className="text-xs text-red-200/85">Manual booking disabled while slot is closed</span>
+          )}
+        </div>
 
         <form action={createAdminBooking} className="space-y-4">
-          <input type="hidden" name="slotId" value={slot.id} />
+          <fieldset disabled={isClosed} className="space-y-4 disabled:opacity-60">
+            <input type="hidden" name="slotId" value={slot.id} />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm opacity-80 mb-1" htmlFor="name">
-                {t("admin.slot.customerName")}
-              </label>
-              <input
-                id="name"
-                name="name"
-                required
-                aria-label={t("admin.slot.aria.customerName")}
-                className="w-full h-10 rounded-lg border border-white/10 bg-white/[0.05] px-3 focus:outline-none focus:ring-1 focus:ring-pink-400/50"
-                placeholder={t("admin.slot.namePlaceholder")}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm opacity-80 mb-1" htmlFor="email">
-                {t("admin.slot.customerEmail")}
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                aria-label={t("admin.slot.aria.customerEmail")}
-                className="w-full h-10 rounded-lg border border-white/10 bg-white/[0.05] px-3 focus:outline-none focus:ring-1 focus:ring-pink-400/50"
-                placeholder={t("admin.slot.emailPlaceholder")}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm opacity-80 mb-1" htmlFor="phone">
-                Phone
-              </label>
-              <input
-                id="phone"
-                name="phone"
-                className="w-full h-10 rounded-lg border border-white/10 bg-white/[0.05] px-3 focus:outline-none focus:ring-1 focus:ring-pink-400/50"
-                placeholder="+30..."
-              />
-            </div>
-
-            {mode === "FIXED_SEAT_EVENT" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm opacity-80 mb-1" htmlFor="partySize">
-                  {t("admin.slot.partySize")}
+                <label className="block text-sm opacity-80 mb-1" htmlFor="name">
+                  {t("admin.slot.customerName")}
                 </label>
                 <input
-                  id="partySize"
-                  name="partySize"
-                  type="number"
-                  min={slot.minParty || 1}
-                  max={slot.maxParty || slot.capacity}
-                  defaultValue={Math.max(slot.minParty || 1, 1)}
-                  aria-label={t("admin.slot.aria.partySize")}
-                  className="w-full h-10 rounded-lg border border-white/10 bg-white/[0.05] px-3 focus:outline-none focus:ring-1 focus:ring-pink-400/50"
+                  id="name"
+                  name="name"
+                  required
+                  aria-label={t("admin.slot.aria.customerName")}
+                  className="w-full h-10 rounded-lg border border-white/10 bg-white/[0.05] px-3 focus:outline-none focus:ring-1 focus:ring-pink-400/50 disabled:cursor-not-allowed"
+                  placeholder={t("admin.slot.namePlaceholder")}
                 />
               </div>
-            )}
 
-            {mode !== "FIXED_SEAT_EVENT" && (
               <div>
-                <label className="block text-sm opacity-80 mb-1" htmlFor="startTime">
-                  Start time
+                <label className="block text-sm opacity-80 mb-1" htmlFor="email">
+                  {t("admin.slot.customerEmail")}
                 </label>
                 <input
-                  id="startTime"
-                  name="startTime"
-                  type="datetime-local"
-                  defaultValue={toLocalDateTimeInputValue(start)}
-                  className="w-full h-10 rounded-lg border border-white/10 bg-white/[0.05] px-3 focus:outline-none focus:ring-1 focus:ring-pink-400/50"
+                  id="email"
+                  name="email"
+                  type="email"
+                  aria-label={t("admin.slot.aria.customerEmail")}
+                  className="w-full h-10 rounded-lg border border-white/10 bg-white/[0.05] px-3 focus:outline-none focus:ring-1 focus:ring-pink-400/50 disabled:cursor-not-allowed"
+                  placeholder={t("admin.slot.emailPlaceholder")}
                 />
               </div>
-            )}
-          </div>
+            </div>
 
-          {mode !== "FIXED_SEAT_EVENT" && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label
-                  className="block text-sm opacity-80 mb-1"
-                  htmlFor="durationOptionId"
-                >
-                  Duration option
+                <label className="block text-sm opacity-80 mb-1" htmlFor="phone">
+                  Phone
                 </label>
-                <select
-                  id="durationOptionId"
-                  name="durationOptionId"
-                  defaultValue={firstDurationOption?.id ?? ""}
-                  className="w-full h-10 rounded-lg border border-white/10 bg-white/[0.05] px-3 focus:outline-none focus:ring-1 focus:ring-pink-400/50"
-                >
-                  {slot.durationOptions.map((opt) => (
-                    <option key={opt.id} value={opt.id}>
-                      {opt.label?.trim()
-                        ? `${opt.label} — ${fmtMoney(opt.priceCents)}`
-                        : `${opt.durationMin} min — ${fmtMoney(opt.priceCents)}`}
-                    </option>
-                  ))}
-                </select>
+                <input
+                  id="phone"
+                  name="phone"
+                  className="w-full h-10 rounded-lg border border-white/10 bg-white/[0.05] px-3 focus:outline-none focus:ring-1 focus:ring-pink-400/50 disabled:cursor-not-allowed"
+                  placeholder="+30..."
+                />
               </div>
 
-              {mode === "DYNAMIC_RENTAL" && (
+              {mode === "FIXED_SEAT_EVENT" && (
                 <div>
-                  <label className="block text-sm opacity-80 mb-1" htmlFor="units">
-                    Units
+                  <label className="block text-sm opacity-80 mb-1" htmlFor="partySize">
+                    {t("admin.slot.partySize")}
                   </label>
                   <input
-                    id="units"
-                    name="units"
+                    id="partySize"
+                    name="partySize"
                     type="number"
-                    min={1}
-                    max={slot.maxUnitsPerBooking || slot.capacity}
-                    defaultValue={1}
-                    className="w-full h-10 rounded-lg border border-white/10 bg-white/[0.05] px-3 focus:outline-none focus:ring-1 focus:ring-pink-400/50"
+                    min={slot.minParty || 1}
+                    max={slot.maxParty || slot.capacity}
+                    defaultValue={Math.max(slot.minParty || 1, 1)}
+                    aria-label={t("admin.slot.aria.partySize")}
+                    className="w-full h-10 rounded-lg border border-white/10 bg-white/[0.05] px-3 focus:outline-none focus:ring-1 focus:ring-pink-400/50 disabled:cursor-not-allowed"
                   />
                 </div>
               )}
 
-              {mode === "HYBRID_UNIT_BOOKING" && (
-                <>
-                  <div>
-                    <label className="block text-sm opacity-80 mb-1" htmlFor="guests">
-                      Guests
-                    </label>
-                    <input
-                      id="guests"
-                      name="guests"
-                      type="number"
-                      min={slot.minParty || 1}
-                      max={slot.maxParty || 999}
-                      defaultValue={Math.max(slot.minParty || 1, 1)}
-                      className="w-full h-10 rounded-lg border border-white/10 bg-white/[0.05] px-3 focus:outline-none focus:ring-1 focus:ring-pink-400/50"
-                    />
-                  </div>
+              {mode !== "FIXED_SEAT_EVENT" && (
+                <div>
+                  <label className="block text-sm opacity-80 mb-1" htmlFor="startTime">
+                    Start time
+                  </label>
+                  <input
+                    id="startTime"
+                    name="startTime"
+                    type="datetime-local"
+                    defaultValue={toLocalDateTimeInputValue(start)}
+                    className="w-full h-10 rounded-lg border border-white/10 bg-white/[0.05] px-3 focus:outline-none focus:ring-1 focus:ring-pink-400/50 disabled:cursor-not-allowed"
+                  />
+                </div>
+              )}
+            </div>
 
+            {mode !== "FIXED_SEAT_EVENT" && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label
+                    className="block text-sm opacity-80 mb-1"
+                    htmlFor="durationOptionId"
+                  >
+                    Duration option
+                  </label>
+                  <select
+                    id="durationOptionId"
+                    name="durationOptionId"
+                    defaultValue={firstDurationOption?.id ?? ""}
+                    className="w-full h-10 rounded-lg border border-white/10 bg-white/[0.05] px-3 focus:outline-none focus:ring-1 focus:ring-pink-400/50 disabled:cursor-not-allowed"
+                  >
+                    {slot.durationOptions.map((opt) => (
+                      <option key={opt.id} value={opt.id}>
+                        {opt.label?.trim()
+                          ? `${opt.label} — ${fmtMoney(opt.priceCents)}`
+                          : `${opt.durationMin} min — ${fmtMoney(opt.priceCents)}`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {mode === "DYNAMIC_RENTAL" && (
                   <div>
                     <label className="block text-sm opacity-80 mb-1" htmlFor="units">
-                      Units (optional)
+                      Units
                     </label>
                     <input
                       id="units"
@@ -342,33 +338,72 @@ export default function SlotAdminClient({
                       min={1}
                       max={slot.maxUnitsPerBooking || slot.capacity}
                       defaultValue={1}
-                      className="w-full h-10 rounded-lg border border-white/10 bg-white/[0.05] px-3 focus:outline-none focus:ring-1 focus:ring-pink-400/50"
+                      className="w-full h-10 rounded-lg border border-white/10 bg-white/[0.05] px-3 focus:outline-none focus:ring-1 focus:ring-pink-400/50 disabled:cursor-not-allowed"
                     />
                   </div>
-                </>
-              )}
+                )}
+
+                {mode === "HYBRID_UNIT_BOOKING" && (
+                  <>
+                    <div>
+                      <label className="block text-sm opacity-80 mb-1" htmlFor="guests">
+                        Guests
+                      </label>
+                      <input
+                        id="guests"
+                        name="guests"
+                        type="number"
+                        min={slot.minParty || 1}
+                        max={slot.maxParty || 999}
+                        defaultValue={Math.max(slot.minParty || 1, 1)}
+                        className="w-full h-10 rounded-lg border border-white/10 bg-white/[0.05] px-3 focus:outline-none focus:ring-1 focus:ring-pink-400/50 disabled:cursor-not-allowed"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm opacity-80 mb-1" htmlFor="units">
+                        Units (optional)
+                      </label>
+                      <input
+                        id="units"
+                        name="units"
+                        type="number"
+                        min={1}
+                        max={slot.maxUnitsPerBooking || slot.capacity}
+                        defaultValue={1}
+                        className="w-full h-10 rounded-lg border border-white/10 bg-white/[0.05] px-3 focus:outline-none focus:ring-1 focus:ring-pink-400/50 disabled:cursor-not-allowed"
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            <div className="flex flex-wrap items-center gap-3">
+              <label className="inline-flex items-center gap-2 text-sm opacity-85">
+                <input
+                  type="checkbox"
+                  name="markPaid"
+                  value="yes"
+                  aria-label={t("admin.slot.aria.markPaid")}
+                  className="size-4 rounded border-white/20 bg-white/5"
+                />
+                {t("admin.slot.markPaid")}
+              </label>
+
+              <button
+                aria-label={t("admin.slot.aria.addBooking")}
+                disabled={isClosed}
+                className={`ml-auto inline-flex items-center justify-center rounded-xl px-5 py-2 text-sm font-medium text-white transition ${
+                  isClosed
+                    ? "cursor-not-allowed border border-white/10 bg-white/[0.08] opacity-60"
+                    : "bg-gradient-to-r from-pink-500 via-fuchsia-500 to-purple-600 shadow-[0_0_25px_-8px_rgba(255,99,189,0.5)] hover:scale-[1.02]"
+                }`}
+              >
+                {isClosed ? "Slot closed" : t("admin.slot.addBookingBtn")}
+              </button>
             </div>
-          )}
-
-          <div className="flex flex-wrap items-center gap-3">
-            <label className="inline-flex items-center gap-2 text-sm opacity-85">
-              <input
-                type="checkbox"
-                name="markPaid"
-                value="yes"
-                aria-label={t("admin.slot.aria.markPaid")}
-                className="size-4 rounded border-white/20 bg-white/5"
-              />
-              {t("admin.slot.markPaid")}
-            </label>
-
-            <button
-              aria-label={t("admin.slot.aria.addBooking")}
-              className="ml-auto inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-pink-500 via-fuchsia-500 to-purple-600 px-5 py-2 text-sm font-medium text-white shadow-[0_0_25px_-8px_rgba(255,99,189,0.5)] transition hover:scale-[1.02]"
-            >
-              {t("admin.slot.addBookingBtn")}
-            </button>
-          </div>
+          </fieldset>
         </form>
 
         <div className="mt-3 text-xs opacity-60 space-y-1">
@@ -573,6 +608,14 @@ export default function SlotAdminClient({
         }}
       />
     </main>
+  );
+}
+
+function ClosedBadge() {
+  return (
+    <span className="inline-flex items-center rounded-full border border-red-400/30 bg-red-400/10 px-2.5 py-1 text-[12px] font-medium text-red-200">
+      Closed
+    </span>
   );
 }
 

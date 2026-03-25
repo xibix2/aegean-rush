@@ -17,6 +17,7 @@ type DaySlot = {
   id: string;
   startAt: string;
   endAt: string | null;
+  status: "open" | "closed";
   capacity: number;
   priceCents: number;
   paid: number;
@@ -28,6 +29,8 @@ type DayGroup = {
   activityId: string;
   activityName: string;
   mode: string;
+  totalSlotCount: number;
+  closedSlotCount: number;
   totalCapacity: number;
   totalPaid: number;
   totalPending: number;
@@ -66,6 +69,12 @@ export default function AdminDashboardClient({
   const [cancelling, setCancelling] = useState(false);
   const [cancelError, setCancelError] = useState("");
   const [cancelSuccess, setCancelSuccess] = useState("");
+
+  const [reopenOpen, setReopenOpen] = useState(false);
+  const [reopenTarget, setReopenTarget] = useState<DayGroup | null>(null);
+  const [reopening, setReopening] = useState(false);
+  const [reopenError, setReopenError] = useState("");
+  const [reopenSuccess, setReopenSuccess] = useState("");
 
   const monthAbort = useRef<AbortController | null>(null);
   const dayAbort = useRef<AbortController | null>(null);
@@ -154,6 +163,22 @@ export default function AdminDashboardClient({
     setCancelTarget(null);
     setCancelReason("");
     setCancelError("");
+    setCancelSuccess("");
+  }
+
+  function openReopenModal(group: DayGroup) {
+    setReopenTarget(group);
+    setReopenError("");
+    setReopenSuccess("");
+    setReopenOpen(true);
+  }
+
+  function closeReopenModal() {
+    if (reopening) return;
+    setReopenOpen(false);
+    setReopenTarget(null);
+    setReopenError("");
+    setReopenSuccess("");
   }
 
   async function submitCancelDay() {
@@ -185,7 +210,7 @@ export default function AdminDashboardClient({
       }
 
       setCancelSuccess(
-        `Cancelled ${j?.cancelledCount ?? 0} booking(s)${
+        `Closed ${j?.closedSlotCount ?? 0} slot(s) • cancelled ${j?.cancelledCount ?? 0} booking(s)${
           notifyCustomers ? ` • ${j?.customerCount ?? 0} customer email(s) found` : ""
         }`
       );
@@ -202,6 +227,48 @@ export default function AdminDashboardClient({
       setCancelError(e?.message || "Failed to cancel day");
     } finally {
       setCancelling(false);
+    }
+  }
+
+  async function submitReopenDay() {
+    if (!reopenTarget) return;
+
+    setReopening(true);
+    setReopenError("");
+    setReopenSuccess("");
+
+    try {
+      const res = await fetch(`${base}/api/admin/reopen-day`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(tenantSlug ? { "x-tenant-slug": tenantSlug } : {}),
+        },
+        body: JSON.stringify({
+          date: selectedDate,
+          activityId: reopenTarget.activityId,
+        }),
+      });
+
+      const j = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(j?.error || "Failed to reopen day");
+      }
+
+      setReopenSuccess(`Reopened ${j?.reopenedCount ?? 0} slot(s).`);
+
+      await Promise.all([loadDay(selectedDate), loadMonth()]);
+
+      setTimeout(() => {
+        setReopenOpen(false);
+        setReopenTarget(null);
+        setReopenSuccess("");
+      }, 900);
+    } catch (e: any) {
+      setReopenError(e?.message || "Failed to reopen day");
+    } finally {
+      setReopening(false);
     }
   }
 
@@ -237,6 +304,8 @@ export default function AdminDashboardClient({
 
       <div className="grid gap-6">
         {groups.map((g) => {
+          const hasClosedSlots = g.closedSlotCount > 0;
+
           return (
             <section
               key={g.activityId}
@@ -247,10 +316,15 @@ export default function AdminDashboardClient({
                   <div className="flex flex-wrap items-center gap-2">
                     <div className="font-semibold text-white">{g.activityName}</div>
                     <span className="mode-badge">{modeLabel(g.mode)}</span>
+                    {hasClosedSlots && (
+                      <span className="closed-badge">
+                        {g.closedSlotCount} closed
+                      </span>
+                    )}
                   </div>
 
                   <div className="mt-2 flex flex-wrap gap-2 text-xs">
-                    <span className="chip">{g.slots.length} slots</span>
+                    <span className="chip">{g.totalSlotCount} slots</span>
                     <span className="chip">Cap {g.totalCapacity}</span>
                     <span className="chip">Paid {g.totalPaid}</span>
                     <span className="chip">Pending {g.totalPending}</span>
@@ -266,13 +340,23 @@ export default function AdminDashboardClient({
                     Manage day
                   </a>
 
-                  <button
-                    type="button"
-                    onClick={() => openCancelModal(g)}
-                    className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm text-red-200 transition hover:bg-red-500/15"
-                  >
-                    Cancel day
-                  </button>
+                  {hasClosedSlots ? (
+                    <button
+                      type="button"
+                      onClick={() => openReopenModal(g)}
+                      className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-200 transition hover:bg-emerald-500/15"
+                    >
+                      Reopen day
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => openCancelModal(g)}
+                      className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm text-red-200 transition hover:bg-red-500/15"
+                    >
+                      Cancel day
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -280,19 +364,25 @@ export default function AdminDashboardClient({
                 {g.slots.map((s) => {
                   const start = new Date(s.startAt);
                   const end = s.endAt ? new Date(s.endAt) : null;
+                  const isClosed = s.status === "closed";
 
                   return (
                     <div
                       key={s.id}
-                      className="grid gap-4 rounded-xl border border-white/10 bg-black/30 px-4 py-4 md:grid-cols-[1.2fr_1fr_auto] md:items-center"
+                      className={`grid gap-4 rounded-xl border px-4 py-4 md:grid-cols-[1.2fr_1fr_auto] md:items-center ${
+                        isClosed
+                          ? "border-red-500/20 bg-red-500/[0.06]"
+                          : "border-white/10 bg-black/30"
+                      }`}
                     >
                       <div>
                         <div className="text-lg font-semibold text-white">
                           {format(start, "HH:mm")}
                           {end ? `–${format(end, "HH:mm")}` : ""}
                         </div>
-                        <div className="text-xs text-white/60">
-                          {modeLabel(g.mode)} slot
+                        <div className="text-xs text-white/60 flex items-center gap-2">
+                          <span>{modeLabel(g.mode)} slot</span>
+                          {isClosed && <span className="closed-badge">Closed</span>}
                         </div>
                       </div>
 
@@ -300,7 +390,11 @@ export default function AdminDashboardClient({
                         <span className="chip">Cap {s.capacity}</span>
                         <span className="chip">Paid {s.paid}</span>
                         <span className="chip">Pending {s.pendingFresh}</span>
-                        <span className="chip-accent">{s.remaining} left</span>
+                        {isClosed ? (
+                          <span className="closed-badge">Unavailable</span>
+                        ) : (
+                          <span className="chip-accent">{s.remaining} left</span>
+                        )}
                       </div>
 
                       <div className="flex flex-col items-start gap-2 md:items-end">
@@ -343,7 +437,7 @@ export default function AdminDashboardClient({
             </div>
 
             <div className="mt-4 rounded-xl border border-red-500/20 bg-red-500/8 p-3 text-sm text-red-100">
-              This will cancel all paid and pending bookings for this activity on the selected day.
+              This will close all slots and cancel all paid and pending bookings for this activity on the selected day.
             </div>
 
             <div className="mt-4">
@@ -402,6 +496,65 @@ export default function AdminDashboardClient({
         </div>
       )}
 
+      {reopenOpen && reopenTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+          <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#111111] p-5 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-semibold text-white">Reopen day slots</h3>
+                <p className="mt-1 text-sm text-white/70">
+                  {reopenTarget.activityName} • {format(new Date(`${selectedDate}T00:00:00`), "d MMM yyyy")}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={closeReopenModal}
+                className="rounded-lg border border-white/10 px-3 py-1.5 text-sm text-white/70 hover:bg-white/10"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-sm text-emerald-100">
+              This will reopen the closed slots for this activity on the selected day. Cancelled bookings will stay cancelled.
+            </div>
+
+            {reopenError && (
+              <div className="mt-4 rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-200">
+                {reopenError}
+              </div>
+            )}
+
+            {reopenSuccess && (
+              <div className="mt-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-sm text-emerald-200">
+                {reopenSuccess}
+              </div>
+            )}
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={closeReopenModal}
+                disabled={reopening}
+                className="rounded-lg border border-white/10 px-4 py-2 text-sm text-white/80 hover:bg-white/10 disabled:opacity-50"
+              >
+                Keep closed
+              </button>
+
+              <button
+                type="button"
+                onClick={submitReopenDay}
+                disabled={reopening}
+                className="rounded-lg border border-emerald-500/30 bg-emerald-500/15 px-4 py-2 text-sm font-medium text-emerald-100 hover:bg-emerald-500/20 disabled:opacity-50"
+              >
+                {reopening ? "Reopening..." : "Confirm reopen day"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style jsx>{`
         .chip {
           padding: 4px 10px;
@@ -426,7 +579,16 @@ export default function AdminDashboardClient({
           font-size: 12px;
           line-height: 1;
         }
+        .closed-badge {
+          padding: 4px 10px;
+          border-radius: 999px;
+          background: rgba(239, 68, 68, 0.12);
+          border: 1px solid rgba(239, 68, 68, 0.28);
+          color: rgb(254, 202, 202);
+          font-size: 12px;
+          line-height: 1;
+        }
       `}</style>
     </div>
   );
-}  
+}

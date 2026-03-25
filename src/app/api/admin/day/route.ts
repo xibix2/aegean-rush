@@ -8,6 +8,7 @@ type SlotOut = {
   id: string;
   startAt: string;
   endAt: string | null;
+  status: "open" | "closed";
   capacity: number;
   priceCents: number;
   paid: number;
@@ -19,6 +20,9 @@ type GroupOut = {
   activityId: string;
   activityName: string;
   mode: string;
+
+  totalSlotCount: number;
+  closedSlotCount: number;
 
   totalCapacity: number;
   totalPaid: number;
@@ -67,6 +71,7 @@ export async function GET(req: Request) {
         activityId: true,
         startAt: true,
         endAt: true,
+        status: true,
         capacity: true,
         priceCents: true,
       },
@@ -84,7 +89,7 @@ export async function GET(req: Request) {
       select: {
         id: true,
         name: true,
-        mode: true, // ✅ important
+        mode: true,
       },
     });
 
@@ -122,11 +127,11 @@ export async function GET(req: Request) {
 
     for (const s of slots) {
       const agg = perSlot.get(s.id) ?? { paid: 0, pendingFresh: 0 };
+      const isClosed = s.status === "closed";
 
-      const remaining = Math.max(
-        0,
-        (s.capacity ?? 0) - (agg.paid + agg.pendingFresh)
-      );
+      const remaining = isClosed
+        ? 0
+        : Math.max(0, (s.capacity ?? 0) - (agg.paid + agg.pendingFresh));
 
       const aId = s.activityId;
       const a = activityMap.get(aId);
@@ -136,6 +141,9 @@ export async function GET(req: Request) {
           activityId: aId,
           activityName: a?.name ?? "(unknown)",
           mode: a?.mode ?? "UNKNOWN",
+
+          totalSlotCount: 0,
+          closedSlotCount: 0,
 
           totalCapacity: 0,
           totalPaid: 0,
@@ -148,16 +156,21 @@ export async function GET(req: Request) {
 
       const group = groupsMap.get(aId)!;
 
-      // accumulate totals
-      group.totalCapacity += s.capacity ?? 0;
-      group.totalPaid += agg.paid;
-      group.totalPending += agg.pendingFresh;
-      group.totalRemaining += remaining;
+      group.totalSlotCount += 1;
+      if (isClosed) group.closedSlotCount += 1;
+
+      if (!isClosed) {
+        group.totalCapacity += s.capacity ?? 0;
+        group.totalPaid += agg.paid;
+        group.totalPending += agg.pendingFresh;
+        group.totalRemaining += remaining;
+      }
 
       group.slots.push({
         id: s.id,
         startAt: s.startAt.toISOString(),
         endAt: s.endAt ? s.endAt.toISOString() : null,
+        status: s.status,
         capacity: s.capacity ?? 0,
         priceCents: s.priceCents ?? 0,
         paid: agg.paid,
