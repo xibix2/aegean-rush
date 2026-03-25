@@ -18,7 +18,7 @@ export function HeroSectionClient({ tenantSlug }: { tenantSlug: string }) {
   const activitiesHref = `${base}/activities`;
 
   return (
-    <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#050816] px-6 py-14 text-white shadow-[0_30px_120px_-40px_rgba(0,0,0,0.8)] sm:px-10 md:px-14 md:py-20">
+    <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#050816] px-6 py-16 text-white shadow-[0_30px_120px_-40px_rgba(0,0,0,0.8)] sm:px-10 md:px-14 md:py-24">
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -58,7 +58,6 @@ export function HeroSectionClient({ tenantSlug }: { tenantSlug: string }) {
         }}
       />
 
-      {/* Background layers */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(236,72,153,0.22),transparent_32%),radial-gradient(circle_at_80%_20%,rgba(56,189,248,0.16),transparent_28%),linear-gradient(180deg,#07111f_0%,#050816_58%,#03050d_100%)]" />
 
@@ -112,93 +111,66 @@ export function HeroSectionClient({ tenantSlug }: { tenantSlug: string }) {
         </div>
       </div>
 
-      <div className="relative z-10 mx-auto max-w-6xl">
-        <div className="mx-auto max-w-4xl text-center">
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/6 px-4 py-2 text-xs font-medium tracking-[0.18em] text-white/80 uppercase backdrop-blur-xl">
-            <Sparkles className="size-3.5 text-pink-300" />
-            Aegean thrill experiences
-          </div>
-
-          <h1 className="text-4xl font-semibold leading-[1.02] tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
-            <span className="block">{t("home.hero.title")}</span>
-            <span className="mt-2 block bg-gradient-to-r from-cyan-200 via-white to-pink-300 bg-clip-text text-transparent">
-              Ride the sea. Feel the rush.
-            </span>
-          </h1>
-
-          <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-white/72 sm:text-base md:text-lg">
-            {t("home.hero.subtitle")} Premium Aegean water experiences, instant
-            booking, and the kind of energy people remember.
-          </p>
-
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link
-              href={activitiesHref}
-              className="group relative inline-flex h-12 items-center justify-center overflow-hidden rounded-xl border border-pink-300/20 bg-gradient-to-r from-pink-500 to-fuchsia-500 px-6 font-medium text-white shadow-[0_10px_40px_-12px_rgba(236,72,153,0.75)] transition duration-300 hover:scale-[1.03] hover:shadow-[0_18px_60px_-16px_rgba(236,72,153,0.85)]"
-            >
-              <span
-                className="absolute inset-0 opacity-40"
-                style={{
-                  background:
-                    "linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.45) 50%, transparent 100%)",
-                  animation: "heroShimmer 3.8s linear infinite",
-                }}
-              />
-              <CircleDot className="mr-2 size-4 relative z-10" />
-              <span className="relative z-10">{t("home.hero.cta")}</span>
-            </Link>
-
-            <a
-              href="#meeting-point"
-              className="inline-flex h-12 items-center justify-center rounded-xl border border-white/12 bg-white/6 px-6 font-medium text-white/88 backdrop-blur-xl transition duration-300 hover:scale-[1.02] hover:bg-white/10"
-            >
-              <MapPin className="mr-2 size-4" />
-              Find us
-            </a>
-          </div>
-
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-4 py-2 text-sm text-white/80 backdrop-blur-xl">
-              <CalendarDays className="size-4 text-cyan-300" />
-              {t("home.trust.realTime")}
-            </div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-4 py-2 text-sm text-white/80 backdrop-blur-xl">
-              <ShieldCheck className="size-4 text-pink-300" />
-              {t("home.trust.secureCheckout")}
-            </div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-4 py-2 text-sm text-white/80 backdrop-blur-xl">
-              <Waves className="size-4 text-cyan-300" />
-              Instant confirmation
-            </div>
-          </div>
+      <div className="relative z-10 mx-auto max-w-4xl text-center">
+        <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/6 px-4 py-2 text-xs font-medium tracking-[0.18em] text-white/80 uppercase backdrop-blur-xl">
+          <Sparkles className="size-3.5 text-pink-300" />
+          Aegean thrill experiences
         </div>
 
-        {/* Bottom premium info strip */}
-        <div className="mt-12 grid gap-4 md:grid-cols-3">
-          {[
-            {
-              title: "Sea-driven energy",
-              text: "A homepage that feels like speed, salt air, and sunset adrenaline.",
-            },
-            {
-              title: "Book in seconds",
-              text: "Users should understand the offer fast and move straight to action.",
-            },
-            {
-              title: "Premium first impression",
-              text: "This should feel like a serious destination brand, not a generic template.",
-            },
-          ].map((item, i) => (
-            <div
-              key={i}
-              className="rounded-2xl border border-white/10 bg-white/[0.05] p-5 backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:bg-white/[0.08]"
-            >
-              <div className="mb-2 text-sm font-semibold text-white">
-                {item.title}
-              </div>
-              <div className="text-sm leading-6 text-white/65">{item.text}</div>
-            </div>
-          ))}
+        <h1 className="text-4xl font-semibold leading-[1.02] tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
+          <span className="block">Book your next Aegean experience in seconds.</span>
+          <span className="mt-2 block bg-gradient-to-r from-cyan-200 via-white to-pink-300 bg-clip-text text-transparent">
+            Ride the sea. Feel the rush.
+          </span>
+        </h1>
+
+        <p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-white/72 md:text-lg">
+          Real-time availability. Secure booking. Instant confirmation.
+        </p>
+
+        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <Link
+            href={activitiesHref}
+            className="group relative inline-flex h-12 items-center justify-center overflow-hidden rounded-xl border border-pink-300/20 bg-gradient-to-r from-pink-500 to-fuchsia-500 px-6 font-medium text-white shadow-[0_10px_40px_-12px_rgba(236,72,153,0.75)] transition duration-300 hover:scale-[1.03] hover:shadow-[0_18px_60px_-16px_rgba(236,72,153,0.85)]"
+          >
+            <span
+              className="absolute inset-0 opacity-40"
+              style={{
+                background:
+                  "linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.45) 50%, transparent 100%)",
+                animation: "heroShimmer 3.8s linear infinite",
+              }}
+            />
+            <CircleDot className="relative z-10 mr-2 size-4" />
+            <span className="relative z-10">Explore experiences</span>
+          </Link>
+
+          <a
+            href="#meeting-point"
+            className="inline-flex h-12 items-center justify-center rounded-xl border border-white/12 bg-white/6 px-6 font-medium text-white/88 backdrop-blur-xl transition duration-300 hover:scale-[1.02] hover:bg-white/10"
+          >
+            <MapPin className="mr-2 size-4" />
+            Find us
+          </a>
+        </div>
+
+        <p className="mt-3 text-sm text-white/50">
+          No calls. No waiting. Book instantly.
+        </p>
+
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-4 py-2 text-sm text-white/80 backdrop-blur-xl">
+            <CalendarDays className="size-4 text-cyan-300" />
+            {t("home.trust.realTime")}
+          </div>
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-4 py-2 text-sm text-white/80 backdrop-blur-xl">
+            <ShieldCheck className="size-4 text-pink-300" />
+            {t("home.trust.secureCheckout")}
+          </div>
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-4 py-2 text-sm text-white/80 backdrop-blur-xl">
+            <Waves className="size-4 text-cyan-300" />
+            Instant confirmation
+          </div>
         </div>
       </div>
     </section>
