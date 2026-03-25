@@ -1,3 +1,4 @@
+//src/app/[club]/admin/slots/[slotId]/page.tsx
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import Stripe from "stripe";
@@ -70,10 +71,7 @@ export async function createAdminBooking(formData: FormData) {
   const phone = String(formData.get("phone") || "").trim();
   const markPaid = String(formData.get("markPaid") || "no") === "yes";
 
-  // fixed event input
   const partySize = parseOptionalInt(formData.get("partySize"));
-
-  // rental / hybrid inputs
   const startTime = parseOptionalString(formData.get("startTime"));
   const durationOptionId = parseOptionalString(formData.get("durationOptionId"));
   const units = parseOptionalInt(formData.get("units"));
@@ -105,6 +103,7 @@ export async function createAdminBooking(formData: FormData) {
   });
 
   if (!slot) throw new Error("Time slot not found");
+  if (slot.status !== "open") throw new Error("This slot is closed and cannot accept bookings.");
 
   const quote = getBookingQuoteAndAvailability({
     activity: {
@@ -204,9 +203,7 @@ export async function createAdminBooking(formData: FormData) {
         select: { logoKey: true },
       });
 
-      const startISO = (
-        booking.bookingStartAt ?? slot.startAt
-      ).toISOString();
+      const startISO = (booking.bookingStartAt ?? slot.startAt).toISOString();
 
       const endISO = (
         booking.bookingEndAt ??
@@ -230,10 +227,7 @@ export async function createAdminBooking(formData: FormData) {
         }),
       });
     } catch (err: any) {
-      console.error(
-        "Failed to send admin-created booking email:",
-        err?.message || err
-      );
+      console.error("Failed to send admin-created booking email:", err?.message || err);
     }
   }
 
@@ -424,6 +418,8 @@ export default async function SlotAdminPage({
 
   const slotPayload = {
     id: slot.id,
+    status: slot.status,
+    isClosed: slot.status === "closed",
     activityName: slot.activity.name,
     activityMode: slot.activity.mode,
     capacity: slot.capacity,
@@ -449,9 +445,7 @@ export default async function SlotAdminPage({
       customerEmail: b.contactEmail ?? b.customer?.email ?? null,
       partySize: b.partySize,
       reservedUnits: b.reservedUnits,
-      bookingStartAtISO: (
-        b.bookingStartAt ?? slot.startAt
-      ).toISOString(),
+      bookingStartAtISO: (b.bookingStartAt ?? slot.startAt).toISOString(),
       bookingEndAtISO: (
         b.bookingEndAt ??
         slot.endAt ??

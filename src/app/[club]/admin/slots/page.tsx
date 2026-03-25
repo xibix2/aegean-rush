@@ -18,10 +18,6 @@ export const revalidate = 0;
 export const dynamic = "force-dynamic";
 
 type DayKey = "0" | "1" | "2" | "3" | "4" | "5" | "6";
-type ActivityMode =
-  | "FIXED_SEAT_EVENT"
-  | "DYNAMIC_RENTAL"
-  | "HYBRID_UNIT_BOOKING";
 
 function chunk<T>(arr: T[], size: number) {
   const out: T[][] = [];
@@ -102,6 +98,7 @@ async function generate(tenantSlug: string, formData: FormData) {
     endAt: Date;
     capacity: number;
     priceCents: number;
+    status: "open";
   };
 
   const toCreate: NewSlot[] = [];
@@ -125,11 +122,7 @@ async function generate(tenantSlug: string, formData: FormData) {
       Math.round(Number(formData.get("priceEuro") || 0) * 100)
     );
 
-    for (
-      let cursor = new Date(start);
-      cursor <= addDays(end, 1);
-      cursor = addDays(cursor, 1)
-    ) {
+    for (let cursor = new Date(start); cursor <= addDays(end, 1); cursor = addDays(cursor, 1)) {
       const ymd = toLocalYMD(cursor);
       const dow = String(weekdayInTz(ymd, tz)) as DayKey;
 
@@ -145,6 +138,7 @@ async function generate(tenantSlug: string, formData: FormData) {
           endAt,
           capacity,
           priceCents: priceCents > 0 ? priceCents : activity.basePrice ?? 0,
+          status: "open",
         });
       }
     }
@@ -161,11 +155,7 @@ async function generate(tenantSlug: string, formData: FormData) {
       activity.maxUnitsPerBooking ?? 1
     );
 
-    for (
-      let cursor = new Date(start);
-      cursor <= addDays(end, 1);
-      cursor = addDays(cursor, 1)
-    ) {
+    for (let cursor = new Date(start); cursor <= addDays(end, 1); cursor = addDays(cursor, 1)) {
       const ymd = toLocalYMD(cursor);
       const dow = String(weekdayInTz(ymd, tz)) as DayKey;
 
@@ -184,6 +174,7 @@ async function generate(tenantSlug: string, formData: FormData) {
         endAt,
         capacity: unitsAvailable,
         priceCents: firstDurationOption?.priceCents ?? activity.basePrice ?? 0,
+        status: "open",
       });
     }
   }
@@ -209,6 +200,7 @@ async function generate(tenantSlug: string, formData: FormData) {
             endAt: slot.endAt,
             capacity: slot.capacity,
             priceCents: slot.priceCents,
+            status: "open",
           },
         })
       )
