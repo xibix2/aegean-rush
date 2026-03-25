@@ -165,14 +165,15 @@ model ActivityDurationOption {
 }
 
 model TimeSlot {
-  id         String    @id @default(cuid())
+  id         String     @id @default(cuid())
   activityId String
   startAt    DateTime
   endAt      DateTime?
   capacity   Int
   priceCents Int
+  status     SlotStatus @default(open)
   bookings   Booking[]
-  activity   Activity  @relation(fields: [activityId], references: [id])
+  activity   Activity   @relation(fields: [activityId], references: [id])
 
   @@unique([activityId, startAt])
   @@index([activityId, startAt])

@@ -1,4 +1,3 @@
-// src/app/api/admin/cancel-day/route.ts
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
@@ -44,6 +43,7 @@ export async function POST(req: Request) {
       },
       select: {
         id: true,
+        status: true,
         activity: {
           select: {
             id: true,
@@ -56,6 +56,7 @@ export async function POST(req: Request) {
     if (slots.length === 0) {
       return NextResponse.json({
         ok: true,
+        closedSlotCount: 0,
         cancelledCount: 0,
         customerCount: 0,
         activityName: null,
@@ -74,7 +75,6 @@ export async function POST(req: Request) {
       },
       select: {
         id: true,
-        status: true,
         notes: true,
         customerId: true,
         contactName: true,
@@ -82,16 +82,6 @@ export async function POST(req: Request) {
         contactPhone: true,
       },
     });
-
-    if (bookings.length === 0) {
-      return NextResponse.json({
-        ok: true,
-        cancelledCount: 0,
-        customerCount: 0,
-        activityName,
-        customers: [],
-      });
-    }
 
     const customerIds = Array.from(
       new Set(bookings.map((b) => b.customerId).filter(Boolean))
@@ -118,8 +108,16 @@ export async function POST(req: Request) {
       ? `Cancelled by admin for ${date}. Reason: ${reason}`
       : `Cancelled by admin for ${date}.`;
 
-    await prisma.$transaction(
-      bookings.map((b) =>
+    await prisma.$transaction([
+      prisma.timeSlot.updateMany({
+        where: {
+          id: { in: slotIds },
+        },
+        data: {
+          status: "closed",
+        },
+      }),
+      ...bookings.map((b) =>
         prisma.booking.update({
           where: { id: b.id },
           data: {
@@ -127,8 +125,8 @@ export async function POST(req: Request) {
             notes: b.notes ? `${b.notes}\n\n${cancelNote}` : cancelNote,
           },
         })
-      )
-    );
+      ),
+    ]);
 
     const customers = bookings.map((b) => {
       const dbCustomer = customerMap.get(b.customerId);
@@ -144,9 +142,10 @@ export async function POST(req: Request) {
     return NextResponse.json({
       ok: true,
       notifyCustomers,
+      activityName,
+      closedSlotCount: slotIds.length,
       cancelledCount: bookings.length,
       customerCount: customers.filter((c) => !!c.email).length,
-      activityName,
       customers,
     });
   } catch (e: any) {

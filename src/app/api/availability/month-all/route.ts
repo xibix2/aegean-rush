@@ -6,8 +6,8 @@ type DayAgg = {
   capacity: number;
   paidPlayers: number;
   remaining: number;
-  ratio: number; // 0..1
-  level: 0 | 1 | 2 | 3 | 4; // 0 none, 4 full
+  ratio: number;
+  level: 0 | 1 | 2 | 3 | 4;
   bucket: "none" | "low" | "medium" | "high" | "full";
 };
 
@@ -15,29 +15,34 @@ type DayAgg = {
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const monthStr = searchParams.get("month"); // YYYY-MM
+    const monthStr = searchParams.get("month");
+
     if (!monthStr || !/^\d{4}-\d{2}$/.test(monthStr)) {
-      return NextResponse.json({ error: "Missing or invalid ?month=YYYY-MM" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing or invalid ?month=YYYY-MM" },
+        { status: 400 }
+      );
     }
 
-    // 🔒 tenant scope
-    const tenant = await requireTenant(); // header -> cookie
+    const tenant = await requireTenant();
 
     const [y, m] = monthStr.split("-").map(Number);
     const start = new Date(y, m - 1, 1, 0, 0, 0, 0);
     const end = new Date(y, m, 1, 0, 0, 0, 0);
 
-    // 1) Slots in the month — SCOPED BY TENANT via Activity
     const slots = await prisma.timeSlot.findMany({
       where: {
         startAt: { gte: start, lt: end },
+        status: "open",
         activity: { clubId: tenant.id, active: true },
       },
       orderBy: { startAt: "asc" },
       select: { id: true, startAt: true, capacity: true },
     });
 
-    if (slots.length === 0) return NextResponse.json({ days: {} });
+    if (slots.length === 0) {
+      return NextResponse.json({ days: {} });
+    }
 
     const byDay: Record<string, DayAgg> = {};
     const slotIds: string[] = [];
@@ -45,6 +50,7 @@ export async function GET(req: Request) {
 
     for (const s of slots) {
       const iso = s.startAt.toISOString().slice(0, 10);
+
       if (!byDay[iso]) {
         byDay[iso] = {
           capacity: 0,
@@ -55,12 +61,12 @@ export async function GET(req: Request) {
           bucket: "none",
         };
       }
+
       byDay[iso].capacity += s.capacity ?? 0;
       dayForSlot.set(s.id, iso);
       slotIds.push(s.id);
     }
 
-    // 2) Bookings (paid + pending) on those tenant slots
     const bookings = await prisma.booking.findMany({
       where: {
         timeSlotId: { in: slotIds },
@@ -75,10 +81,10 @@ export async function GET(req: Request) {
       byDay[iso].paidPlayers += b.partySize ?? 0;
     }
 
-    // 3) Compute ratio + bucket
     for (const iso of Object.keys(byDay)) {
       const d = byDay[iso];
       const cap = Math.max(1, d.capacity);
+
       d.remaining = Math.max(0, d.capacity - d.paidPlayers);
       d.ratio = Math.min(1, d.paidPlayers / cap);
 
