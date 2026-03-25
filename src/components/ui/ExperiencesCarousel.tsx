@@ -1,9 +1,14 @@
-// src/components/ui/CourtsCarousel.tsx
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { MapPin, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  MapPin,
+  ChevronLeft,
+  ChevronRight,
+  Waves,
+  CircleDot,
+} from "lucide-react";
 import { formatMoneyCentsClient } from "@/lib/money-client";
 import { useT } from "@/components/I18nProvider";
 
@@ -11,7 +16,7 @@ type Court = {
   id: string;
   name: string;
   description?: string | null;
-  basePrice?: number | null; // cents
+  basePrice?: number | null;
   locationId?: string | null;
   coverImageUrl?: string | null;
 };
@@ -22,16 +27,16 @@ const GAP_PX = 24;
 export default function CourtsCarousel({
   courts,
   tomorrow,
-  tenantSlug, // 👈 NEW
+  tenantSlug,
 }: {
   courts: Court[];
-  tomorrow: string; // "YYYY-MM-DD"
-  tenantSlug?: string; // 👈 NEW (when present, we prefix links with /{slug})
+  tomorrow: string;
+  tenantSlug?: string;
 }) {
   const t = useT();
   if (!courts?.length) return null;
 
-  const tenantBase = tenantSlug ? `/${tenantSlug}` : ""; // 👈 build base once
+  const tenantBase = tenantSlug ? `/${tenantSlug}` : "";
 
   const trackRef = useRef<HTMLDivElement | null>(null);
   const viewportRef = useRef<HTMLDivElement | null>(null);
@@ -49,7 +54,7 @@ export default function CourtsCarousel({
   useEffect(() => {
     const measure = () => {
       setViewportW(viewportRef.current?.clientWidth ?? 0);
-      const anyCard = cardRefs.current.find((el) => !!el);
+      const anyCard = cardRefs.current.find(Boolean);
       if (anyCard) setCardW(anyCard.clientWidth);
     };
     measure();
@@ -70,7 +75,7 @@ export default function CourtsCarousel({
   useEffect(() => {
     const node = trackRef.current;
     if (!node) return;
-    node.style.transition = anim ? `transform 500ms ${EASE}` : "none";
+    node.style.transition = anim ? `transform 650ms ${EASE}` : "none";
     node.style.transform = `translate3d(${translateX}px,0,0)`;
   }, [translateX, anim]);
 
@@ -88,6 +93,7 @@ export default function CourtsCarousel({
 
   const handleTouchStart = (e: React.TouchEvent) =>
     setTouchStartX(e.touches[0].clientX);
+
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (touchStartX == null) return;
     const delta = e.changedTouches[0].clientX - touchStartX;
@@ -100,36 +106,61 @@ export default function CourtsCarousel({
       const img = imgRefs.current[i];
       if (!img) return;
       const rect = e.currentTarget.getBoundingClientRect();
+      const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
+
+      const percentX = (x / rect.width) * 2 - 1;
       const percentY = (y / rect.height) * 2 - 1;
-      const dy = Math.max(-4, Math.min(4, percentY * 4));
-      img.style.transform = `translateY(${dy}px) scale(1.01)`;
+
+      const dx = Math.max(-6, Math.min(6, percentX * 6));
+      const dy = Math.max(-6, Math.min(6, percentY * 6));
+
+      img.style.transform = `scale(1.06) translate(${dx}px, ${dy}px)`;
     };
+
   const onCardMouseLeave = (i: number) => () => {
     const img = imgRefs.current[i];
-    if (img) img.style.transform = "translateY(0) scale(1)";
+    if (img) img.style.transform = "scale(1) translate(0,0)";
   };
 
   return (
     <div
-      className="relative mx-auto max-w-6xl select-none"
+      className="relative mx-auto max-w-7xl select-none"
       tabIndex={0}
       onKeyDown={onKeyDown}
     >
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+@keyframes cardGlowPulse {
+  0%,100% { opacity: .45; transform: scale(1); }
+  50% { opacity: .85; transform: scale(1.03); }
+}
+@keyframes floatBadge {
+  0%,100% { transform: translateY(0px); }
+  50% { transform: translateY(-4px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cc-anim { animation: none !important; }
+}
+          `.trim(),
+        }}
+      />
+
       {!atStart && (
-        <div className="pointer-events-none absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-[--color-background] to-transparent z-10" />
+        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-gradient-to-r from-[#060a14] via-[#060a14]/80 to-transparent" />
       )}
       {!atEnd && (
-        <div className="pointer-events-none absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-[--color-background] to-transparent z-10" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-gradient-to-l from-[#060a14] via-[#060a14]/80 to-transparent" />
       )}
 
       <div
         ref={viewportRef}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
-        className="overflow-hidden px-6 md:px-10 py-10"
+        className="overflow-hidden px-4 py-8 sm:px-6 md:px-10 md:py-10"
         style={
-          { ["--card-w" as any]: "clamp(260px, 28vw, 340px)" } as React.CSSProperties
+          { ["--card-w" as any]: "clamp(280px, 30vw, 380px)" } as React.CSSProperties
         }
       >
         <div
@@ -137,7 +168,7 @@ export default function CourtsCarousel({
           className="flex items-stretch will-change-transform transform-gpu"
           style={{
             gap: `${GAP_PX}px`,
-            transition: anim ? `transform 500ms ${EASE}` : "none",
+            transition: anim ? `transform 650ms ${EASE}` : "none",
             transform: `translate3d(${translateX}px,0,0)`,
           }}
         >
@@ -147,6 +178,7 @@ export default function CourtsCarousel({
               typeof c.basePrice === "number"
                 ? `${formatMoneyCentsClient(c.basePrice)}/hr`
                 : undefined;
+
             const img = c.coverImageUrl ?? null;
 
             return (
@@ -158,56 +190,93 @@ export default function CourtsCarousel({
                 onMouseMove={onCardMouseMove(i)}
                 onMouseLeave={onCardMouseLeave(i)}
                 className={[
-                  "w-[var(--card-w)] flex-shrink-0 rounded-2xl border border-[--color-border] bg-[--color-card] overflow-hidden transition-all duration-500 transform-gpu",
+                  "group relative w-[var(--card-w)] flex-shrink-0 overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/[0.04] backdrop-blur-xl transition-all duration-500 transform-gpu",
                   active
-                    ? "scale-[1.05] -translate-y-1 ring-1 ring-white/5 shadow-2xl"
-                    : "scale-[0.96] opacity-90",
+                    ? "scale-[1.03] -translate-y-2 shadow-[0_30px_90px_-30px_rgba(0,0,0,0.85)]"
+                    : "scale-[0.94] opacity-75",
                 ].join(" ")}
               >
-                {/* Image */}
-                <div className="relative aspect-[16/10] w-full bg-[--color-muted] overflow-hidden">
+                {active && (
+                  <div
+                    className="cc-anim pointer-events-none absolute inset-0 rounded-[1.75rem]"
+                    style={{
+                      animation: "cardGlowPulse 4s ease-in-out infinite",
+                      background:
+                        "linear-gradient(135deg, rgba(236,72,153,0.18), transparent 35%, transparent 65%, rgba(34,211,238,0.14))",
+                    }}
+                  />
+                )}
+
+                <div className="relative aspect-[16/11] w-full overflow-hidden bg-white/5">
                   {img ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      ref={(el) => {
-                        imgRefs.current[i] = el;
-                      }}
-                      src={img}
-                      alt={c.name}
-                      className="h-full w-full object-cover transition-transform duration-300 will-change-transform"
-                      loading="lazy"
-                    />
+                    <>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        ref={(el) => {
+                          imgRefs.current[i] = el;
+                        }}
+                        src={img}
+                        alt={c.name}
+                        className="h-full w-full object-cover transition-transform duration-500 will-change-transform"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.12),transparent_36%)]" />
+                    </>
                   ) : (
-                    <div className="h-full w-full grid place-items-center text-sm opacity-60">
+                    <div className="grid h-full w-full place-items-center bg-[linear-gradient(180deg,#0b1324,#08101d)] text-sm text-white/60">
                       {t("courts.preview")}
+                    </div>
+                  )}
+
+                  <div className="absolute left-4 top-4 flex items-center gap-2">
+                    <span className="cc-anim inline-flex items-center gap-1 rounded-full border border-white/12 bg-black/30 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-white/85 backdrop-blur-md">
+                      <Waves className="size-3.5 text-cyan-300" />
+                      Experience
+                    </span>
+                  </div>
+
+                  {price && (
+                    <div className="absolute right-4 top-4">
+                      <div className="rounded-full border border-pink-300/20 bg-black/35 px-3 py-1.5 text-sm font-medium text-white shadow-lg backdrop-blur-md">
+                        {price}
+                      </div>
                     </div>
                   )}
                 </div>
 
-                <div className="p-5">
+                <div className="relative p-5 md:p-6">
                   <div className="flex items-start justify-between gap-3">
-                    <h3 className="text-lg font-semibold leading-tight">{c.name}</h3>
-                    {price && (
-                      <span className="text-sm opacity-70 whitespace-nowrap">{price}</span>
-                    )}
-                  </div>
-                  <p className="mt-1 text-sm opacity-75 line-clamp-2">
-                    {c.description || t(" ")}
-                  </p>
-                  <div className="mt-3 text-sm opacity-70 inline-flex items-center gap-1.5">
-                    <MapPin className="size-4" />
-                    {c.locationId || t("courts.defaultLocation")}
+                    <h3 className="text-xl font-semibold leading-tight text-white">
+                      {c.name}
+                    </h3>
                   </div>
 
-                  {/* Tenant-aware timetable link */}
-                  <div className="mt-5">
+                  <p className="mt-2 min-h-[48px] text-sm leading-6 text-white/68 line-clamp-2">
+                    {c.description || "Premium Aegean sea experience with instant booking."}
+                  </p>
+
+                  <div className="mt-4 inline-flex items-center gap-2 text-sm text-white/70">
+                    <MapPin className="size-4 text-pink-300" />
+                    <span>{c.locationId || t("courts.defaultLocation")}</span>
+                  </div>
+
+                  <div className="mt-6 flex items-center gap-3">
                     <Link
                       href={`${tenantBase}/timetable?activityId=${encodeURIComponent(
                         c.id
                       )}&date=${encodeURIComponent(tomorrow)}&partySize=1`}
-                      className="btn-accent inline-flex h-11 items-center gap-2 px-6"
+                      className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-pink-500 to-fuchsia-500 px-5 text-sm font-medium text-white shadow-[0_14px_40px_-16px_rgba(236,72,153,0.8)] transition duration-300 hover:scale-[1.03] hover:shadow-[0_20px_50px_-16px_rgba(236,72,153,0.95)]"
                     >
+                      <CircleDot className="size-4" />
                       <span>{t("courts.selectBtn")}</span>
+                    </Link>
+
+                    <Link
+                      href={`${tenantBase}/activities`}
+                      className="inline-flex h-11 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] px-4 text-sm font-medium text-white/82 backdrop-blur-md transition hover:bg-white/[0.08]"
+                    >
+                      Explore
                     </Link>
                   </div>
                 </div>
@@ -217,47 +286,46 @@ export default function CourtsCarousel({
         </div>
       </div>
 
-      {/* Pagination dots */}
-      <div className="mt-4 flex justify-center gap-2">
+      <div className="mt-2 flex justify-center gap-2">
         {courts.map((_, i) => (
           <button
             key={i}
             onClick={() => setIndex(i)}
-            className={`h-2 rounded-full transition-all duration-300 ${
-              i === index ? "w-4 bg-[--accent-500]" : "w-2 bg-white/30 hover:bg-white/60"
+            className={`h-2.5 rounded-full transition-all duration-300 ${
+              i === index
+                ? "w-8 bg-gradient-to-r from-pink-400 to-cyan-300"
+                : "w-2.5 bg-white/20 hover:bg-white/45"
             }`}
             aria-label={`Go to slide ${i + 1}`}
           />
         ))}
       </div>
 
-      {/* Nav arrows */}
       {courts.length > 1 && (
         <>
           <button
             type="button"
             onClick={goPrev}
             disabled={atStart}
-            className={`absolute left-6 top-[45%] -translate-y-1/2 z-20 rounded-full p-2 backdrop-blur-md
-              ${
-                atStart
-                  ? "bg-black/20 text-white/50 cursor-not-allowed"
-                  : "bg-black/40 text-white hover:bg-black/55 focus:outline-none focus-visible:ring-2 focus-visible:ring-[--accent-400]/60"
-              }`}
+            className={`absolute left-2 top-[42%] z-20 -translate-y-1/2 rounded-full border border-white/10 p-3 backdrop-blur-xl transition md:left-4 ${
+              atStart
+                ? "cursor-not-allowed bg-white/5 text-white/30"
+                : "bg-black/35 text-white hover:scale-105 hover:bg-black/55"
+            }`}
             aria-label={t("courts.prev")}
           >
             <ChevronLeft className="size-5" />
           </button>
+
           <button
             type="button"
             onClick={goNext}
             disabled={atEnd}
-            className={`absolute right-6 top-[45%] -translate-y-1/2 z-20 rounded-full p-2 backdrop-blur-md
-              ${
-                atEnd
-                  ? "bg-black/20 text-white/50 cursor-not-allowed"
-                  : "bg-black/40 text-white hover:bg-black/55 focus:outline-none focus-visible:ring-2 focus-visible:ring-[--accent-400]/60"
-              }`}
+            className={`absolute right-2 top-[42%] z-20 -translate-y-1/2 rounded-full border border-white/10 p-3 backdrop-blur-xl transition md:right-4 ${
+              atEnd
+                ? "cursor-not-allowed bg-white/5 text-white/30"
+                : "bg-black/35 text-white hover:scale-105 hover:bg-black/55"
+            }`}
             aria-label={t("courts.next")}
           >
             <ChevronRight className="size-5" />
