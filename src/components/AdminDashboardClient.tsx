@@ -44,6 +44,7 @@ export default function AdminDashboardClient({
 }) {
   const base = tenantSlug ? `/${tenantSlug}` : "";
   const todayIso = new Date().toISOString().slice(0, 10);
+
   const [selectedDate, setSelectedDate] = useState(initialDate || todayIso);
   const [monthStr, setMonthStr] = useState((initialDate || todayIso).slice(0, 7));
 
@@ -56,10 +57,18 @@ export default function AdminDashboardClient({
   const [groups, setGroups] = useState<DayGroup[]>([]);
   const [loadingDay, setLoadingDay] = useState(false);
 
+  const [currency, setCurrency] = useState<string>("€");
+
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [cancelTarget, setCancelTarget] = useState<DayGroup | null>(null);
+  const [cancelReason, setCancelReason] = useState("");
+  const [notifyCustomers, setNotifyCustomers] = useState(true);
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState("");
+  const [cancelSuccess, setCancelSuccess] = useState("");
+
   const monthAbort = useRef<AbortController | null>(null);
   const dayAbort = useRef<AbortController | null>(null);
-
-  const [currency, setCurrency] = useState<string>("€");
 
   useEffect(() => {
     const prefs = readUiPrefsFromDocument();
@@ -130,6 +139,72 @@ export default function AdminDashboardClient({
     setMonthStr(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
   };
 
+  function openCancelModal(group: DayGroup) {
+    setCancelTarget(group);
+    setCancelReason("");
+    setNotifyCustomers(true);
+    setCancelError("");
+    setCancelSuccess("");
+    setCancelOpen(true);
+  }
+
+  function closeCancelModal() {
+    if (cancelling) return;
+    setCancelOpen(false);
+    setCancelTarget(null);
+    setCancelReason("");
+    setCancelError("");
+  }
+
+  async function submitCancelDay() {
+    if (!cancelTarget) return;
+
+    setCancelling(true);
+    setCancelError("");
+    setCancelSuccess("");
+
+    try {
+      const res = await fetch(`${base}/api/admin/cancel-day`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(tenantSlug ? { "x-tenant-slug": tenantSlug } : {}),
+        },
+        body: JSON.stringify({
+          date: selectedDate,
+          activityId: cancelTarget.activityId,
+          reason: cancelReason,
+          notifyCustomers,
+        }),
+      });
+
+      const j = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(j?.error || "Failed to cancel day");
+      }
+
+      setCancelSuccess(
+        `Cancelled ${j?.cancelledCount ?? 0} booking(s)${
+          notifyCustomers ? ` • ${j?.customerCount ?? 0} customer email(s) found` : ""
+        }`
+      );
+
+      await Promise.all([loadDay(selectedDate), loadMonth()]);
+
+      setTimeout(() => {
+        setCancelOpen(false);
+        setCancelTarget(null);
+        setCancelReason("");
+        setCancelSuccess("");
+      }, 900);
+    } catch (e: any) {
+      setCancelError(e?.message || "Failed to cancel day");
+    } finally {
+      setCancelling(false);
+    }
+  }
+
   return (
     <div className="space-y-8">
       <MonthCalendar
@@ -167,7 +242,7 @@ export default function AdminDashboardClient({
               key={g.activityId}
               className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]"
             >
-              <div className="flex items-center justify-between gap-4 border-b border-white/10 px-5 py-4">
+              <div className="flex flex-col gap-4 border-b border-white/10 px-5 py-4 md:flex-row md:items-center md:justify-between">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <div className="font-semibold text-white">{g.activityName}</div>
@@ -183,13 +258,21 @@ export default function AdminDashboardClient({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <a
                     href={`${base}/admin/slots?date=${selectedDate}&activityId=${g.activityId}`}
                     className="btn-accent px-4 py-2 text-sm"
                   >
                     Manage day
                   </a>
+
+                  <button
+                    type="button"
+                    onClick={() => openCancelModal(g)}
+                    className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm text-red-200 transition hover:bg-red-500/15"
+                  >
+                    Cancel day
+                  </button>
                 </div>
               </div>
 
@@ -238,6 +321,86 @@ export default function AdminDashboardClient({
           );
         })}
       </div>
+
+      {cancelOpen && cancelTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+          <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#111111] p-5 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-semibold text-white">Cancel day bookings</h3>
+                <p className="mt-1 text-sm text-white/70">
+                  {cancelTarget.activityName} • {format(new Date(`${selectedDate}T00:00:00`), "d MMM yyyy")}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={closeCancelModal}
+                className="rounded-lg border border-white/10 px-3 py-1.5 text-sm text-white/70 hover:bg-white/10"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-red-500/20 bg-red-500/8 p-3 text-sm text-red-100">
+              This will cancel all paid and pending bookings for this activity on the selected day.
+            </div>
+
+            <div className="mt-4">
+              <label className="mb-2 block text-sm text-white/85">Reason for customers</label>
+              <textarea
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                rows={4}
+                placeholder="Bad weather, strong wind, emergency, equipment issue..."
+                className="w-full rounded-xl border border-white/10 bg-black/30 px-3 py-3 text-sm text-white outline-none placeholder:text-white/35 focus:border-white/20"
+              />
+            </div>
+
+            <label className="mt-4 flex items-center gap-3 text-sm text-white/85">
+              <input
+                type="checkbox"
+                checked={notifyCustomers}
+                onChange={(e) => setNotifyCustomers(e.target.checked)}
+                className="h-4 w-4 rounded border-white/20 bg-black/30"
+              />
+              Notify customers
+            </label>
+
+            {cancelError && (
+              <div className="mt-4 rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-200">
+                {cancelError}
+              </div>
+            )}
+
+            {cancelSuccess && (
+              <div className="mt-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-sm text-emerald-200">
+                {cancelSuccess}
+              </div>
+            )}
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={closeCancelModal}
+                disabled={cancelling}
+                className="rounded-lg border border-white/10 px-4 py-2 text-sm text-white/80 hover:bg-white/10 disabled:opacity-50"
+              >
+                Keep bookings
+              </button>
+
+              <button
+                type="button"
+                onClick={submitCancelDay}
+                disabled={cancelling}
+                className="rounded-lg border border-red-500/30 bg-red-500/15 px-4 py-2 text-sm font-medium text-red-100 hover:bg-red-500/20 disabled:opacity-50"
+              >
+                {cancelling ? "Cancelling..." : "Confirm cancel day"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style jsx>{`
         .chip {
