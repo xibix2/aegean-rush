@@ -210,8 +210,12 @@ export default function AdminDashboardClient({
       }
 
       setCancelSuccess(
-        `Closed ${j?.closedSlotCount ?? 0} slot(s) • cancelled ${j?.cancelledCount ?? 0} booking(s)${
-          notifyCustomers ? ` • ${j?.customerCount ?? 0} customer email(s) found` : ""
+        `Closed ${j?.closedSlotCount ?? 0} slot(s) • cancelled ${j?.cancelledCount ?? 0} pending booking(s) • refunded ${j?.refundedCount ?? 0} paid booking(s)${
+          notifyCustomers
+            ? ` • sent ${j?.emailedCount ?? 0} email(s)${
+                (j?.emailErrorCount ?? 0) > 0 ? ` • ${j?.emailErrorCount ?? 0} failed` : ""
+              }`
+            : ""
         }`
       );
 

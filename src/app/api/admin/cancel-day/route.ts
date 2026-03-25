@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
+import Stripe from "stripe";
 import { requireTenant } from "@/lib/tenant";
 import { requireClubAdmin } from "@/lib/admin-guard";
+import { resend, FROM } from "@/lib/email";
+import BookingCancelledEmail from "@/emails/BookingCancelled";
 
 export const runtime = "nodejs";
 export const revalidate = 0;
@@ -13,6 +16,12 @@ const Body = z.object({
   reason: z.string().trim().max(1000).optional().default(""),
   notifyCustomers: z.boolean().optional().default(false),
 });
+
+function getStripe() {
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key) throw new Error("Missing STRIPE_SECRET_KEY");
+  return new Stripe(key);
+}
 
 export async function POST(req: Request) {
   try {
@@ -58,6 +67,10 @@ export async function POST(req: Request) {
         ok: true,
         closedSlotCount: 0,
         cancelledCount: 0,
+        refundedCount: 0,
+        stripeRefundedCount: 0,
+        emailedCount: 0,
+        emailErrorCount: 0,
         customerCount: 0,
         activityName: null,
         customers: [],
@@ -75,11 +88,19 @@ export async function POST(req: Request) {
       },
       select: {
         id: true,
+        status: true,
         notes: true,
         customerId: true,
         contactName: true,
         contactEmail: true,
         contactPhone: true,
+        payment: {
+          select: {
+            id: true,
+            providerIntentId: true,
+            status: true,
+          },
+        },
       },
     });
 
@@ -108,25 +129,76 @@ export async function POST(req: Request) {
       ? `Cancelled by admin for ${date}. Reason: ${reason}`
       : `Cancelled by admin for ${date}.`;
 
-    await prisma.$transaction([
-      prisma.timeSlot.updateMany({
-        where: {
-          id: { in: slotIds },
-        },
-        data: {
-          status: "closed",
-        },
-      }),
-      ...bookings.map((b) =>
-        prisma.booking.update({
+    const stripe = getStripe();
+
+    let cancelledCount = 0;
+    let refundedCount = 0;
+    let stripeRefundedCount = 0;
+
+    for (const b of bookings) {
+      if (b.status === "pending") {
+        await prisma.booking.update({
           where: { id: b.id },
           data: {
             status: "cancelled",
             notes: b.notes ? `${b.notes}\n\n${cancelNote}` : cancelNote,
           },
-        })
-      ),
-    ]);
+        });
+        cancelledCount += 1;
+        continue;
+      }
+
+      const rawPI = b.payment?.providerIntentId ?? null;
+      const hasStripePI = !!rawPI && rawPI.startsWith("pi_");
+
+      if (hasStripePI) {
+        await stripe.refunds.create({ payment_intent: rawPI });
+
+        if (b.payment?.id) {
+          await prisma.payment.update({
+            where: { id: b.payment.id },
+            data: { status: "refunded" },
+          });
+        }
+
+        await prisma.booking.update({
+          where: { id: b.id },
+          data: {
+            status: "refunded",
+            notes: b.notes ? `${b.notes}\n\n${cancelNote}` : cancelNote,
+          },
+        });
+
+        refundedCount += 1;
+        stripeRefundedCount += 1;
+      } else {
+        if (b.payment?.id) {
+          await prisma.payment.update({
+            where: { id: b.payment.id },
+            data: { status: "refunded" },
+          });
+        }
+
+        await prisma.booking.update({
+          where: { id: b.id },
+          data: {
+            status: "refunded",
+            notes: b.notes ? `${b.notes}\n\n${cancelNote}` : cancelNote,
+          },
+        });
+
+        refundedCount += 1;
+      }
+    }
+
+    await prisma.timeSlot.updateMany({
+      where: {
+        id: { in: slotIds },
+      },
+      data: {
+        status: "closed",
+      },
+    });
 
     const customers = bookings.map((b) => {
       const dbCustomer = customerMap.get(b.customerId);
@@ -139,13 +211,57 @@ export async function POST(req: Request) {
       };
     });
 
+    let emailedCount = 0;
+    let emailErrorCount = 0;
+
+    if (notifyCustomers && customers.length > 0) {
+      const club = await prisma.club.findUnique({
+        where: { id: tenant.id },
+        select: {
+          logoKey: true,
+          primaryHex: true,
+        },
+      });
+
+      for (const customer of customers) {
+        if (!customer.email) continue;
+
+        try {
+          await resend.emails.send({
+            from: FROM,
+            to: customer.email,
+            subject: `${tenant.name}: booking cancelled for ${activityName ?? "activity"}`,
+            react: BookingCancelledEmail({
+              clubName: tenant.name,
+              activity: activityName ?? "Activity",
+              dateLabel: date,
+              reason: reason || undefined,
+              logoUrl: club?.logoKey ?? undefined,
+              brandPrimary: club?.primaryHex ?? tenant.primaryHex ?? undefined,
+            }),
+          });
+          emailedCount += 1;
+        } catch (err: any) {
+          emailErrorCount += 1;
+          console.error(
+            `Failed to send cancel-day email for booking ${customer.bookingId}:`,
+            err?.message || err
+          );
+        }
+      }
+    }
+
     return NextResponse.json({
       ok: true,
       notifyCustomers,
       activityName,
       closedSlotCount: slotIds.length,
-      cancelledCount: bookings.length,
+      cancelledCount,
+      refundedCount,
+      stripeRefundedCount,
       customerCount: customers.filter((c) => !!c.email).length,
+      emailedCount,
+      emailErrorCount,
       customers,
     });
   } catch (e: any) {
