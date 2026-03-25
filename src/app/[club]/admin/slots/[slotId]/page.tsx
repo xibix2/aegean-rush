@@ -1,4 +1,3 @@
-// src/app/[club]/admin/slots/[slotId]/page.tsx
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import Stripe from "stripe";
@@ -8,6 +7,7 @@ import { requireTenant } from "@/lib/tenant";
 import { requireClubAdmin } from "@/lib/admin-guard";
 import { resend, FROM } from "@/lib/email";
 import BookingConfirmed from "@/emails/BookingConfirmed";
+import { getBookingQuoteAndAvailability } from "@/lib/booking-engine";
 
 export const revalidate = 0;
 export const dynamic = "force-dynamic";
@@ -37,6 +37,20 @@ function getStripe(): Stripe {
 type CancelPayload = FormData | { bookingId: string; slotId?: string | null };
 type RefundPayload = FormData | { bookingId: string; slotId?: string | null };
 
+function parseOptionalInt(value: FormDataEntryValue | null) {
+  if (value == null) return undefined;
+  const s = String(value).trim();
+  if (!s) return undefined;
+  const n = Number(s);
+  return Number.isFinite(n) ? n : undefined;
+}
+
+function parseOptionalString(value: FormDataEntryValue | null) {
+  if (value == null) return undefined;
+  const s = String(value).trim();
+  return s || undefined;
+}
+
 /* =========================
    Server Actions
    ========================= */
@@ -51,53 +65,122 @@ export async function createAdminBooking(formData: FormData) {
   const slotId = String(formData.get("slotId") || "");
   if (!slotId) throw new Error("Missing slotId");
 
-  const email = String(formData.get("email") || "");
-  const name = String(formData.get("name") || "Guest");
-  const partySize = Number(formData.get("partySize") || 1);
+  const email = String(formData.get("email") || "").trim();
+  const name = String(formData.get("name") || "Guest").trim() || "Guest";
+  const phone = String(formData.get("phone") || "").trim();
   const markPaid = String(formData.get("markPaid") || "no") === "yes";
+
+  // fixed event input
+  const partySize = parseOptionalInt(formData.get("partySize"));
+
+  // rental / hybrid inputs
+  const startTime = parseOptionalString(formData.get("startTime"));
+  const durationOptionId = parseOptionalString(formData.get("durationOptionId"));
+  const units = parseOptionalInt(formData.get("units"));
+  const guests = parseOptionalInt(formData.get("guests"));
 
   const slot = await prisma.timeSlot.findFirst({
     where: { id: slotId, activity: { clubId: tenant.id } },
     include: {
-      activity: true,
-      bookings: { select: { status: true, partySize: true, createdAt: true } },
+      activity: {
+        include: {
+          durationOptions: {
+            where: { isActive: true },
+            orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+          },
+        },
+      },
+      bookings: {
+        select: {
+          id: true,
+          status: true,
+          partySize: true,
+          reservedUnits: true,
+          bookingStartAt: true,
+          bookingEndAt: true,
+          createdAt: true,
+        },
+      },
     },
   });
 
   if (!slot) throw new Error("Time slot not found");
 
-  const now = new Date();
-  const held = slot.bookings.reduce((sum, b) => {
-    const freshPending =
-      b.status === DB.PENDING &&
-      (now.getTime() - new Date(b.createdAt).getTime()) / 60000 < 30;
+  const quote = getBookingQuoteAndAvailability({
+    activity: {
+      id: slot.activity.id,
+      name: slot.activity.name,
+      mode: slot.activity.mode,
+      minParty: slot.activity.minParty,
+      maxParty: slot.activity.maxParty,
+      basePrice: slot.activity.basePrice,
+      guestsPerUnit: slot.activity.guestsPerUnit,
+      maxUnitsPerBooking: slot.activity.maxUnitsPerBooking,
+      slotIntervalMin: slot.activity.slotIntervalMin,
+      durationOptions: slot.activity.durationOptions.map((d) => ({
+        id: d.id,
+        label: d.label,
+        durationMin: d.durationMin,
+        priceCents: d.priceCents,
+        isActive: d.isActive,
+        sortOrder: d.sortOrder,
+      })),
+    },
+    slot: {
+      id: slot.id,
+      activityId: slot.activityId,
+      startAt: slot.startAt,
+      endAt: slot.endAt,
+      capacity: slot.capacity,
+      priceCents: slot.priceCents,
+    },
+    existingBookings: slot.bookings,
+    partySize,
+    startTime,
+    durationOptionId,
+    units,
+    guests,
+  });
 
-    const isPaid = b.status === DB.CONFIRMED;
-    return sum + (isPaid || freshPending ? b.partySize : 0);
-  }, 0);
-
-  const remaining = Math.max(0, slot.capacity - held);
-  if (remaining < partySize) throw new Error("Not enough seats left");
+  if (!quote.isValid) {
+    throw new Error(quote.errors[0] || "Invalid booking request");
+  }
 
   const customerEmail = email || `walkin+${Date.now()}@example.com`;
 
   const customer = await prisma.customer.upsert({
     where: { clubId_email: { clubId: tenant.id, email: customerEmail } },
-    update: {},
-    create: { clubId: tenant.id, email: customerEmail, name },
+    update: {
+      name,
+      phone: phone || null,
+    },
+    create: {
+      clubId: tenant.id,
+      email: customerEmail,
+      name,
+      phone: phone || null,
+    },
   });
-
-  const unit = slot.priceCents ?? slot.activity.basePrice ?? 0;
-  const total = unit * partySize;
 
   const booking = await prisma.booking.create({
     data: {
       customerId: customer.id,
       activityId: slot.activityId,
       timeSlotId: slot.id,
-      partySize,
-      totalPrice: total,
+      partySize: quote.partySize,
+      totalPrice: quote.totalPrice,
       status: markPaid ? DB.CONFIRMED : DB.PENDING,
+
+      contactName: name,
+      contactEmail: email || null,
+      contactPhone: phone || null,
+
+      reservedUnits: quote.reservedUnits,
+      bookingStartAt: quote.bookingStartAt,
+      bookingEndAt: quote.bookingEndAt,
+      durationMinSnapshot: quote.durationMin,
+      unitPriceSnapshot: quote.unitPrice,
+      pricingLabelSnapshot: quote.pricingLabel,
     },
   });
 
@@ -107,7 +190,7 @@ export async function createAdminBooking(formData: FormData) {
         bookingId: booking.id,
         provider: "stripe",
         providerIntentId: `admin_manual_${booking.id}`,
-        amount: total,
+        amount: quote.totalPrice,
         currency: (tenant.currency || "EUR").toUpperCase(),
         status: "succeeded",
       },
@@ -121,8 +204,12 @@ export async function createAdminBooking(formData: FormData) {
         select: { logoKey: true },
       });
 
-      const startISO = slot.startAt.toISOString();
+      const startISO = (
+        booking.bookingStartAt ?? slot.startAt
+      ).toISOString();
+
       const endISO = (
+        booking.bookingEndAt ??
         slot.endAt ??
         new Date(slot.startAt.getTime() + slot.activity.durationMin * 60000)
       ).toISOString();
@@ -135,8 +222,8 @@ export async function createAdminBooking(formData: FormData) {
           activity: slot.activity.name,
           startISO,
           endISO,
-          partySize,
-          totalCents: total,
+          partySize: booking.partySize,
+          totalCents: booking.totalPrice,
           clubName: tenant.name,
           logoUrl: club?.logoKey ?? undefined,
           brandPrimary: tenant.primaryHex ?? undefined,
@@ -151,6 +238,7 @@ export async function createAdminBooking(formData: FormData) {
   }
 
   revalidatePath(`${base}/admin/slots/${slotId}`);
+  revalidatePath(`${base}/admin/bookings`);
 }
 
 export async function cancelBookingAction(input: CancelPayload) {
@@ -188,6 +276,7 @@ export async function cancelBookingAction(input: CancelPayload) {
   }
 
   if (slotId) revalidatePath(`${base}/admin/slots/${slotId}`);
+  revalidatePath(`${base}/admin/bookings`);
 }
 
 export async function refundBookingAction(input: RefundPayload) {
@@ -224,6 +313,7 @@ export async function refundBookingAction(input: RefundPayload) {
     });
 
     if (slotId) revalidatePath(`${base}/admin/slots/${slotId}`);
+    revalidatePath(`${base}/admin/bookings`);
     return;
   }
 
@@ -251,6 +341,7 @@ export async function refundBookingAction(input: RefundPayload) {
     });
 
     if (slotId) revalidatePath(`${base}/admin/slots/${slotId}`);
+    revalidatePath(`${base}/admin/bookings`);
     return;
   }
 
@@ -270,6 +361,7 @@ export async function refundBookingAction(input: RefundPayload) {
   });
 
   if (slotId) revalidatePath(`${base}/admin/slots/${slotId}`);
+  revalidatePath(`${base}/admin/bookings`);
 }
 
 /* =========================
@@ -303,7 +395,14 @@ export default async function SlotAdminPage({
   const slot = await prisma.timeSlot.findFirst({
     where: { id: slotId, activity: { clubId: tenant.id } },
     include: {
-      activity: true,
+      activity: {
+        include: {
+          durationOptions: {
+            where: { isActive: true },
+            orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+          },
+        },
+      },
       bookings: {
         orderBy: { createdAt: "desc" },
         include: { customer: true, payment: true },
@@ -326,7 +425,19 @@ export default async function SlotAdminPage({
   const slotPayload = {
     id: slot.id,
     activityName: slot.activity.name,
+    activityMode: slot.activity.mode,
     capacity: slot.capacity,
+    minParty: slot.activity.minParty,
+    maxParty: slot.activity.maxParty,
+    guestsPerUnit: slot.activity.guestsPerUnit,
+    maxUnitsPerBooking: slot.activity.maxUnitsPerBooking,
+    slotIntervalMin: slot.activity.slotIntervalMin,
+    durationOptions: slot.activity.durationOptions.map((d) => ({
+      id: d.id,
+      label: d.label,
+      durationMin: d.durationMin,
+      priceCents: d.priceCents,
+    })),
     startAtISO: slot.startAt.toISOString(),
     endAtISO: (
       slot.endAt ??
@@ -334,9 +445,20 @@ export default async function SlotAdminPage({
     ).toISOString(),
     bookings: slot.bookings.map((b) => ({
       id: b.id,
-      customerName: b.customer?.name ?? null,
-      customerEmail: b.customer?.email ?? null,
+      customerName: b.contactName ?? b.customer?.name ?? null,
+      customerEmail: b.contactEmail ?? b.customer?.email ?? null,
       partySize: b.partySize,
+      reservedUnits: b.reservedUnits,
+      bookingStartAtISO: (
+        b.bookingStartAt ?? slot.startAt
+      ).toISOString(),
+      bookingEndAtISO: (
+        b.bookingEndAt ??
+        slot.endAt ??
+        new Date(slot.startAt.getTime() + slot.activity.durationMin * 60000)
+      ).toISOString(),
+      durationMinSnapshot: b.durationMinSnapshot,
+      pricingLabelSnapshot: b.pricingLabelSnapshot,
       status: b.status,
       totalPrice: b.totalPrice,
       createdAtISO: b.createdAt.toISOString(),

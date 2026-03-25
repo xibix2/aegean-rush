@@ -1,4 +1,3 @@
-//components/admin/ActivitiesStatsClient
 "use client";
 
 import { useT } from "@/components/I18nProvider";
@@ -7,14 +6,16 @@ export function ActivitiesStatsClient({
   total,
   active,
   inactive,
-  avgDuration,
-  avgCapacity,
+  fixedCount,
+  rentalCount,
+  hybridCount,
 }: {
   total: number;
   active: number;
   inactive: number;
-  avgDuration: number;
-  avgCapacity: number;
+  fixedCount: number;
+  rentalCount: number;
+  hybridCount: number;
 }) {
   const t = useT();
 
@@ -22,12 +23,14 @@ export function ActivitiesStatsClient({
     { label: t("admin.activities.stats.total"), value: total },
     { label: t("admin.activities.stats.active"), value: active },
     { label: t("admin.activities.stats.inactive"), value: inactive },
-    { label: t("admin.activities.stats.avgDuration"), value: `${avgDuration} ${t("admin.activities.stats.min")}` },
+    { label: "Fixed events", value: fixedCount },
+    { label: "Rentals", value: rentalCount },
+    { label: "Hybrid", value: hybridCount },
   ];
 
   return (
     <div className="relative mt-16">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6 text-center">
         {stats.map((stat) => (
           <div
             key={stat.label}

@@ -1,6 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
+import { useMemo } from "react";
 import { useT } from "@/components/I18nProvider";
 
 /** DB mapping for consistent state logic */
@@ -11,11 +12,28 @@ const DB = {
   REFUNDED: "refunded",
 } as const;
 
+type ActivityMode =
+  | "FIXED_SEAT_EVENT"
+  | "DYNAMIC_RENTAL"
+  | "HYBRID_UNIT_BOOKING";
+
+type DurationOptionPayload = {
+  id: string;
+  label: string | null;
+  durationMin: number;
+  priceCents: number;
+};
+
 type BookingPayload = {
   id: string;
   customerName: string | null;
   customerEmail: string | null;
   partySize: number;
+  reservedUnits: number;
+  bookingStartAtISO: string;
+  bookingEndAtISO: string;
+  durationMinSnapshot: number | null;
+  pricingLabelSnapshot: string | null;
   status: string;
   totalPrice: number;
   createdAtISO: string;
@@ -31,7 +49,14 @@ type SlotPayload =
   | {
       id: string;
       activityName: string;
+      activityMode: ActivityMode;
       capacity: number;
+      minParty: number;
+      maxParty: number;
+      guestsPerUnit: number | null;
+      maxUnitsPerBooking: number | null;
+      slotIntervalMin: number | null;
+      durationOptions: DurationOptionPayload[];
       startAtISO: string;
       endAtISO: string;
       bookings: BookingPayload[];
@@ -63,27 +88,49 @@ export default function SlotAdminClient({
 
   const start = new Date(slot.startAtISO);
   const end = new Date(slot.endAtISO);
+  const mode = slot.activityMode;
 
-  const paid = slot.bookings
-    .filter((b) => b.status === DB.CONFIRMED)
-    .reduce((s, b) => s + b.partySize, 0);
+  const paid = useMemo(() => {
+    if (mode === "FIXED_SEAT_EVENT") {
+      return slot.bookings
+        .filter((b) => b.status === DB.CONFIRMED)
+        .reduce((s, b) => s + b.partySize, 0);
+    }
 
-  const freshPending = slot.bookings
-    .filter((b) => {
-      if (b.status !== DB.PENDING) return false;
-      const mins = (Date.now() - new Date(b.createdAtISO).getTime()) / 60000;
-      return mins < 30;
-    })
-    .reduce((s, b) => s + b.partySize, 0);
+    return slot.bookings
+      .filter((b) => b.status === DB.CONFIRMED)
+      .reduce((s, b) => s + (b.reservedUnits || 0), 0);
+  }, [slot.bookings, mode]);
+
+  const freshPending = useMemo(() => {
+    if (mode === "FIXED_SEAT_EVENT") {
+      return slot.bookings
+        .filter((b) => {
+          if (b.status !== DB.PENDING) return false;
+          const mins = (Date.now() - new Date(b.createdAtISO).getTime()) / 60000;
+          return mins < 30;
+        })
+        .reduce((s, b) => s + b.partySize, 0);
+    }
+
+    return slot.bookings
+      .filter((b) => {
+        if (b.status !== DB.PENDING) return false;
+        const mins = (Date.now() - new Date(b.createdAtISO).getTime()) / 60000;
+        return mins < 30;
+      })
+      .reduce((s, b) => s + (b.reservedUnits || 0), 0);
+  }, [slot.bookings, mode]);
 
   const remaining = Math.max(0, slot.capacity - paid - freshPending);
 
   const fmtMoney = (cents: number | null | undefined) =>
     `${currency}${(((cents ?? 0) as number) / 100).toFixed(2)}`;
 
+  const firstDurationOption = slot.durationOptions[0];
+
   return (
     <main className="max-w-5xl mx-auto p-6 space-y-6">
-      {/* Header */}
       <header className="flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">
@@ -91,21 +138,36 @@ export default function SlotAdminClient({
               {t("admin.slot.title")}
             </span>
           </h1>
+
           <div className="mt-2 text-sm opacity-85">
             <span className="opacity-75">{slot.activityName}</span>{" "}
             — {format(start, "eee, d MMM yyyy HH:mm")}–{format(end, "HH:mm")}
           </div>
 
-          {/* Quick stats */}
+          <div className="mt-2">
+            <ModeBadge mode={mode} />
+          </div>
+
           <div className="mt-3 flex flex-wrap gap-2 text-xs">
-            <StatPill label={t("admin.slot.statsCapacity")} value={slot.capacity} />
-            <StatPill label={t("admin.slot.statsPaid")} value={paid} tone="emerald" />
             <StatPill
-              label={t("admin.slot.statsPendingFresh")}
+              label={mode === "FIXED_SEAT_EVENT" ? "Capacity" : "Units capacity"}
+              value={slot.capacity}
+            />
+            <StatPill
+              label={mode === "FIXED_SEAT_EVENT" ? "Paid" : "Paid units"}
+              value={paid}
+              tone="emerald"
+            />
+            <StatPill
+              label={mode === "FIXED_SEAT_EVENT" ? "Pending (fresh)" : "Pending units"}
               value={freshPending}
               tone="amber"
             />
-            <StatPill label={t("admin.slot.statsRemaining")} value={remaining} tone="pink" />
+            <StatPill
+              label={mode === "FIXED_SEAT_EVENT" ? "Remaining" : "Remaining units"}
+              value={remaining}
+              tone="pink"
+            />
           </div>
 
           <div
@@ -122,7 +184,6 @@ export default function SlotAdminClient({
         </a>
       </header>
 
-      {/* Add booking (admin) */}
       <section
         className="rounded-2xl border border-white/10 bg-[--card]/50 backdrop-blur-md p-5 shadow-[0_0_40px_-20px_rgba(255,99,189,0.25)]"
         style={{ ["--card" as any]: "rgba(20,20,30,.55)" }}
@@ -131,62 +192,165 @@ export default function SlotAdminClient({
           {t("admin.slot.addTitle")}
         </h2>
 
-        <form
-          action={createAdminBooking}
-          className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end"
-        >
+        <form action={createAdminBooking} className="space-y-4">
           <input type="hidden" name="slotId" value={slot.id} />
 
-          {/* Customer name */}
-          <div className="md:col-span-2">
-            <label className="block text-sm opacity-80 mb-1" htmlFor="name">
-              {t("admin.slot.customerName")}
-            </label>
-            <input
-              id="name"
-              name="name"
-              required
-              aria-label={t("admin.slot.aria.customerName")}
-              className="w-full h-10 rounded-lg border border-white/10 bg-white/[0.05] px-3 focus:outline-none focus:ring-1 focus:ring-pink-400/50"
-              placeholder={t("admin.slot.namePlaceholder")}
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm opacity-80 mb-1" htmlFor="name">
+                {t("admin.slot.customerName")}
+              </label>
+              <input
+                id="name"
+                name="name"
+                required
+                aria-label={t("admin.slot.aria.customerName")}
+                className="w-full h-10 rounded-lg border border-white/10 bg-white/[0.05] px-3 focus:outline-none focus:ring-1 focus:ring-pink-400/50"
+                placeholder={t("admin.slot.namePlaceholder")}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm opacity-80 mb-1" htmlFor="email">
+                {t("admin.slot.customerEmail")}
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                aria-label={t("admin.slot.aria.customerEmail")}
+                className="w-full h-10 rounded-lg border border-white/10 bg-white/[0.05] px-3 focus:outline-none focus:ring-1 focus:ring-pink-400/50"
+                placeholder={t("admin.slot.emailPlaceholder")}
+              />
+            </div>
           </div>
 
-          {/* Customer email */}
-          <div className="md:col-span-2">
-            <label className="block text-sm opacity-80 mb-1" htmlFor="email">
-              {t("admin.slot.customerEmail")}
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              aria-label={t("admin.slot.aria.customerEmail")}
-              className="w-full h-10 rounded-lg border border-white/10 bg-white/[0.05] px-3 focus:outline-none focus:ring-1 focus:ring-pink-400/50"
-              placeholder={t("admin.slot.emailPlaceholder")}
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm opacity-80 mb-1" htmlFor="phone">
+                Phone
+              </label>
+              <input
+                id="phone"
+                name="phone"
+                className="w-full h-10 rounded-lg border border-white/10 bg-white/[0.05] px-3 focus:outline-none focus:ring-1 focus:ring-pink-400/50"
+                placeholder="+30..."
+              />
+            </div>
+
+            {mode === "FIXED_SEAT_EVENT" && (
+              <div>
+                <label className="block text-sm opacity-80 mb-1" htmlFor="partySize">
+                  {t("admin.slot.partySize")}
+                </label>
+                <input
+                  id="partySize"
+                  name="partySize"
+                  type="number"
+                  min={slot.minParty || 1}
+                  max={slot.maxParty || slot.capacity}
+                  defaultValue={Math.max(slot.minParty || 1, 1)}
+                  aria-label={t("admin.slot.aria.partySize")}
+                  className="w-full h-10 rounded-lg border border-white/10 bg-white/[0.05] px-3 focus:outline-none focus:ring-1 focus:ring-pink-400/50"
+                />
+              </div>
+            )}
+
+            {mode !== "FIXED_SEAT_EVENT" && (
+              <div>
+                <label className="block text-sm opacity-80 mb-1" htmlFor="startTime">
+                  Start time
+                </label>
+                <input
+                  id="startTime"
+                  name="startTime"
+                  type="datetime-local"
+                  defaultValue={toLocalDateTimeInputValue(start)}
+                  className="w-full h-10 rounded-lg border border-white/10 bg-white/[0.05] px-3 focus:outline-none focus:ring-1 focus:ring-pink-400/50"
+                />
+              </div>
+            )}
           </div>
 
-          {/* Party size */}
-          <div>
-            <label className="block text-sm opacity-80 mb-1" htmlFor="partySize">
-              {t("admin.slot.partySize")}
-            </label>
-            <input
-              id="partySize"
-              name="partySize"
-              type="number"
-              min={1}
-              max={slot.capacity}
-              defaultValue={1}
-              aria-label={t("admin.slot.aria.partySize")}
-              className="w-full h-10 rounded-lg border border-white/10 bg-white/[0.05] px-3 focus:outline-none focus:ring-1 focus:ring-pink-400/50"
-            />
-          </div>
+          {mode !== "FIXED_SEAT_EVENT" && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label
+                  className="block text-sm opacity-80 mb-1"
+                  htmlFor="durationOptionId"
+                >
+                  Duration option
+                </label>
+                <select
+                  id="durationOptionId"
+                  name="durationOptionId"
+                  defaultValue={firstDurationOption?.id ?? ""}
+                  className="w-full h-10 rounded-lg border border-white/10 bg-white/[0.05] px-3 focus:outline-none focus:ring-1 focus:ring-pink-400/50"
+                >
+                  {slot.durationOptions.map((opt) => (
+                    <option key={opt.id} value={opt.id}>
+                      {opt.label?.trim()
+                        ? `${opt.label} — ${fmtMoney(opt.priceCents)}`
+                        : `${opt.durationMin} min — ${fmtMoney(opt.priceCents)}`}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-          {/* Paid checkbox + button */}
-          <div className="md:col-span-5 flex flex-wrap items-center gap-3">
+              {mode === "DYNAMIC_RENTAL" && (
+                <div>
+                  <label className="block text-sm opacity-80 mb-1" htmlFor="units">
+                    Units
+                  </label>
+                  <input
+                    id="units"
+                    name="units"
+                    type="number"
+                    min={1}
+                    max={slot.maxUnitsPerBooking || slot.capacity}
+                    defaultValue={1}
+                    className="w-full h-10 rounded-lg border border-white/10 bg-white/[0.05] px-3 focus:outline-none focus:ring-1 focus:ring-pink-400/50"
+                  />
+                </div>
+              )}
+
+              {mode === "HYBRID_UNIT_BOOKING" && (
+                <>
+                  <div>
+                    <label className="block text-sm opacity-80 mb-1" htmlFor="guests">
+                      Guests
+                    </label>
+                    <input
+                      id="guests"
+                      name="guests"
+                      type="number"
+                      min={slot.minParty || 1}
+                      max={slot.maxParty || 999}
+                      defaultValue={Math.max(slot.minParty || 1, 1)}
+                      className="w-full h-10 rounded-lg border border-white/10 bg-white/[0.05] px-3 focus:outline-none focus:ring-1 focus:ring-pink-400/50"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm opacity-80 mb-1" htmlFor="units">
+                      Units (optional)
+                    </label>
+                    <input
+                      id="units"
+                      name="units"
+                      type="number"
+                      min={1}
+                      max={slot.maxUnitsPerBooking || slot.capacity}
+                      defaultValue={1}
+                      className="w-full h-10 rounded-lg border border-white/10 bg-white/[0.05] px-3 focus:outline-none focus:ring-1 focus:ring-pink-400/50"
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          <div className="flex flex-wrap items-center gap-3">
             <label className="inline-flex items-center gap-2 text-sm opacity-85">
               <input
                 type="checkbox"
@@ -207,10 +371,23 @@ export default function SlotAdminClient({
           </div>
         </form>
 
-        <p className="text-xs opacity-60 mt-3">{t("admin.slot.capNote")}</p>
+        <div className="mt-3 text-xs opacity-60 space-y-1">
+          {mode === "FIXED_SEAT_EVENT" ? (
+            <p>{t("admin.slot.capNote")}</p>
+          ) : (
+            <>
+              <p>
+                This slot is a daily/window container. Admin bookings use the same
+                overlap and availability rules as customer checkout.
+              </p>
+              <p>
+                Remaining shown above is unit-based for rental and hybrid activities.
+              </p>
+            </>
+          )}
+        </div>
       </section>
 
-      {/* Bookings list */}
       <section
         className="rounded-2xl border border-white/10 bg-[--card]/50 backdrop-blur-md p-5 shadow-[0_0_40px_-20px_rgba(255,99,189,0.25)]"
         style={{ ["--card" as any]: "rgba(20,20,30,.55)" }}
@@ -227,8 +404,7 @@ export default function SlotAdminClient({
             const isCancelled = status === DB.CANCELLED;
             const isRefunded = status === DB.REFUNDED;
 
-            // Behaviour rules
-            const canCancel = isPending || isPaid; // once cancelled/refunded, false
+            const canCancel = isPending || isPaid;
             const canRefund = isPaid && !isCancelled && !isRefunded;
 
             const pi =
@@ -246,7 +422,6 @@ export default function SlotAdminClient({
                 key={b.id}
                 className="rounded-xl border border-white/10 bg-white/[0.03] p-4 grid md:grid-cols-3 gap-4 hover:bg-white/[0.05] transition"
               >
-                {/* Customer */}
                 <div className="text-sm">
                   <div className="font-medium">{b.customerName ?? "—"}</div>
                   <div className="opacity-75">{b.customerEmail ?? "—"}</div>
@@ -255,7 +430,6 @@ export default function SlotAdminClient({
                   </div>
                 </div>
 
-                {/* Meta */}
                 <div className="text-sm grid gap-1">
                   <div className="flex items-center gap-2">
                     <b className="opacity-85">{t("admin.slot.meta.status")}:</b>
@@ -267,24 +441,54 @@ export default function SlotAdminClient({
                       tRefunded={t("admin.slot.pillRefunded")}
                     />
                   </div>
+
                   <div>
-                    <b className="opacity-85">{t("admin.slot.meta.party")}:</b>{" "}
-                    {b.partySize}
+                    <b className="opacity-85">
+                      {mode === "FIXED_SEAT_EVENT"
+                        ? t("admin.slot.meta.party")
+                        : mode === "DYNAMIC_RENTAL"
+                        ? "Units"
+                        : "Guests / Units"}
+                      :
+                    </b>{" "}
+                    {mode === "FIXED_SEAT_EVENT"
+                      ? b.partySize
+                      : mode === "DYNAMIC_RENTAL"
+                      ? b.reservedUnits
+                      : `${b.partySize} / ${b.reservedUnits}`}
                   </div>
+
+                  <div>
+                    <b className="opacity-85">Booked for:</b>{" "}
+                    {format(new Date(b.bookingStartAtISO), "HH:mm")}–
+                    {format(new Date(b.bookingEndAtISO), "HH:mm")}
+                  </div>
+
+                  {b.pricingLabelSnapshot && (
+                    <div>
+                      <b className="opacity-85">Label:</b> {b.pricingLabelSnapshot}
+                    </div>
+                  )}
+
+                  {!b.pricingLabelSnapshot && b.durationMinSnapshot != null && (
+                    <div>
+                      <b className="opacity-85">Duration:</b> {b.durationMinSnapshot} min
+                    </div>
+                  )}
+
                   <div>
                     <b className="opacity-85">{t("admin.slot.meta.total")}:</b>{" "}
                     {fmtMoney(b.totalPrice)}
                   </div>
+
                   <div className="text-xs opacity-60 break-all">
                     <b className="opacity-85">{t("admin.slot.meta.pi")}:</b>{" "}
                     {b.payment.providerIntentId ?? "—"}
                   </div>
                 </div>
 
-                {/* Actions */}
                 <div className="md:ml-auto w-full md:max-w-[320px]">
                   <div className="grid grid-cols-2 gap-2">
-                    {/* Open (single button, always shown) */}
                     <a
                       href={`/admin/bookings?view=&focus=${b.id}`}
                       title={t("admin.slot.openInBookings")}
@@ -296,7 +500,6 @@ export default function SlotAdminClient({
                       {t("admin.slot.openInBookings")}
                     </a>
 
-                    {/* Cancel (disabled when cancelled or refunded) */}
                     <form action={cancelBookingAction} className="contents">
                       <input type="hidden" name="bookingId" value={b.id} />
                       <input type="hidden" name="slotId" value={slot.id} />
@@ -315,7 +518,6 @@ export default function SlotAdminClient({
                       </button>
                     </form>
 
-                    {/* Refund (enabled only when paid, disabled after cancel/refund) */}
                     {!isRefunded ? (
                       <form action={refundBookingAction} className="col-span-2">
                         <input type="hidden" name="bookingId" value={b.id} />
@@ -363,7 +565,6 @@ export default function SlotAdminClient({
         </div>
       </section>
 
-      {/* Keyframes */}
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -375,9 +576,29 @@ export default function SlotAdminClient({
   );
 }
 
-/* =========================
-   UI helpers
-   ========================= */
+function ModeBadge({ mode }: { mode: ActivityMode }) {
+  const meta =
+    mode === "DYNAMIC_RENTAL"
+      ? {
+          label: "Rental",
+          cls: "border-sky-400/30 bg-sky-400/10 text-sky-200",
+        }
+      : mode === "HYBRID_UNIT_BOOKING"
+      ? {
+          label: "Hybrid",
+          cls: "border-teal-400/30 bg-teal-400/10 text-teal-200",
+        }
+      : {
+          label: "Fixed event",
+          cls: "border-violet-400/30 bg-violet-400/10 text-violet-200",
+        };
+
+  return (
+    <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[12px] font-medium ${meta.cls}`}>
+      {meta.label}
+    </span>
+  );
+}
 
 function StatPill({
   label,
@@ -439,4 +660,11 @@ function StatusPill({
       {label}
     </span>
   );
+}
+
+function toLocalDateTimeInputValue(date: Date) {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
+    date.getHours()
+  )}:${pad(date.getMinutes())}`;
 }

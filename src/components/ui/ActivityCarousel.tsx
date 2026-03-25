@@ -1,11 +1,22 @@
-//components/ui/ActivityCarousel
 "use client";
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { Plus, Clock, Users, MapPin } from "lucide-react";
+import { Plus, Clock, Users, MapPin, Waves, Ticket, Route } from "lucide-react";
 import { formatMoneyCentsClient } from "@/lib/money-client";
 import { getT } from "@/components/I18nProvider";
+
+type ActivityMode =
+  | "FIXED_SEAT_EVENT"
+  | "DYNAMIC_RENTAL"
+  | "HYBRID_UNIT_BOOKING";
+
+type DurationOption = {
+  id: string;
+  label?: string | null;
+  durationMin: number;
+  priceCents: number;
+};
 
 type Activity = {
   id: string;
@@ -15,8 +26,13 @@ type Activity = {
   coverImageUrl?: string | null;
   slug?: string | null;
   durationMin?: number | null;
+  minParty?: number | null;
   maxParty?: number | null;
   locationId?: string | null;
+  mode?: ActivityMode | null;
+  guestsPerUnit?: number | null;
+  maxUnitsPerBooking?: number | null;
+  durationOptions?: DurationOption[];
 };
 
 type TFn = (key: string) => string;
@@ -35,6 +51,113 @@ function getCookie(name: string): string | null {
   if (typeof document === "undefined") return null;
   const m = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
   return m ? decodeURIComponent(m[1]) : null;
+}
+
+function modeMeta(mode?: ActivityMode | null) {
+  if (mode === "DYNAMIC_RENTAL") {
+    return {
+      label: "Rental",
+      icon: Waves,
+      cls: "border-sky-400/30 bg-sky-400/10 text-sky-200",
+    };
+  }
+
+  if (mode === "HYBRID_UNIT_BOOKING") {
+    return {
+      label: "Hybrid",
+      icon: Route,
+      cls: "border-teal-400/30 bg-teal-400/10 text-teal-200",
+    };
+  }
+
+  return {
+    label: "Fixed event",
+    icon: Ticket,
+    cls: "border-violet-400/30 bg-violet-400/10 text-violet-200",
+  };
+}
+
+function buildMetaRows(a: Activity, t: TFn) {
+  const mode = a.mode ?? "FIXED_SEAT_EVENT";
+
+  if (mode === "FIXED_SEAT_EVENT") {
+    return [
+      typeof a.durationMin === "number"
+        ? {
+            icon: Clock,
+            text: `${a.durationMin} ${t("carousel.min")}`,
+          }
+        : null,
+      typeof a.maxParty === "number"
+        ? {
+            icon: Users,
+            text: `${a.maxParty} seats`,
+          }
+        : null,
+      (a.locationId || a.slug)
+        ? {
+            icon: MapPin,
+            text: a.locationId || a.slug || "",
+          }
+        : null,
+    ].filter(Boolean) as { icon: any; text: string }[];
+  }
+
+  if (mode === "DYNAMIC_RENTAL") {
+    const durationCount = a.durationOptions?.length ?? 0;
+    return [
+      a.maxUnitsPerBooking
+        ? {
+            icon: Users,
+            text: `${a.maxUnitsPerBooking} max units / booking`,
+          }
+        : null,
+      durationCount > 0
+        ? {
+            icon: Clock,
+            text: `${durationCount} duration option${durationCount === 1 ? "" : "s"}`,
+          }
+        : typeof a.durationMin === "number"
+        ? {
+            icon: Clock,
+            text: `${a.durationMin} ${t("carousel.min")}`,
+          }
+        : null,
+      (a.locationId || a.slug)
+        ? {
+            icon: MapPin,
+            text: a.locationId || a.slug || "",
+          }
+        : null,
+    ].filter(Boolean) as { icon: any; text: string }[];
+  }
+
+  const durationCount = a.durationOptions?.length ?? 0;
+  return [
+    a.guestsPerUnit
+      ? {
+          icon: Users,
+          text: `${a.guestsPerUnit} guests / unit`,
+        }
+      : null,
+    a.maxUnitsPerBooking
+      ? {
+          icon: Users,
+          text: `${a.maxUnitsPerBooking} max units`,
+        }
+      : null,
+    durationCount > 0
+      ? {
+          icon: Clock,
+          text: `${durationCount} duration option${durationCount === 1 ? "" : "s"}`,
+        }
+      : typeof a.durationMin === "number"
+      ? {
+          icon: Clock,
+          text: `${a.durationMin} ${t("carousel.min")}`,
+        }
+      : null,
+  ].filter(Boolean) as { icon: any; text: string }[];
 }
 
 export default function ActivityCarousel({
@@ -165,7 +288,11 @@ export default function ActivityCarousel({
   };
 
   return (
-    <div className="relative mx-auto max-w-6xl" role="region" aria-label={t("carousel.aria")}>
+    <div
+      className="relative mx-auto max-w-6xl"
+      role="region"
+      aria-label={t("carousel.aria")}
+    >
       {!atStart && (
         <div className="pointer-events-none absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-[--color-background] to-transparent rounded-l-2xl z-10" />
       )}
@@ -287,9 +414,15 @@ export default function ActivityCarousel({
 
                     <div className="p-5">
                       <div className="flex items-start justify-between gap-3">
-                        <h3 className="text-lg font-semibold leading-tight line-clamp-1">
-                          {a.name}
-                        </h3>
+                        <div className="min-w-0">
+                          <div className="mb-2">
+                            <ModeBadge mode={a.mode ?? "FIXED_SEAT_EVENT"} />
+                          </div>
+                          <h3 className="text-lg font-semibold leading-tight line-clamp-1">
+                            {a.name}
+                          </h3>
+                        </div>
+
                         {typeof price === "string" && (
                           <span className="text-sm opacity-70 whitespace-nowrap">
                             {price}
@@ -297,25 +430,16 @@ export default function ActivityCarousel({
                         )}
                       </div>
 
-                      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-[12px] opacity-85">
-                        {typeof a.durationMin === "number" && (
-                          <span className="inline-flex items-center gap-1">
-                            <Clock className="h-3.5 w-3.5 opacity-80" />
-                            {a.durationMin} {t("carousel.min")}
-                          </span>
-                        )}
-                        {typeof a.maxParty === "number" && (
-                          <span className="inline-flex items-center gap-1">
-                            <Users className="h-3.5 w-3.5 opacity-80" />
-                            {a.maxParty} {t("carousel.spots")}
-                          </span>
-                        )}
-                        {(a.locationId || a.slug) && (
-                          <span className="inline-flex items-center gap-1">
-                            <MapPin className="h-3.5 w-3.5 opacity-80" />
-                            {a.locationId || a.slug}
-                          </span>
-                        )}
+                      <div className="mt-3 flex flex-col gap-2 text-[12px] opacity-85">
+                        {buildMetaRows(a, t).map((item, idx) => {
+                          const Icon = item.icon;
+                          return (
+                            <span key={idx} className="inline-flex items-center gap-1.5">
+                              <Icon className="h-3.5 w-3.5 opacity-80" />
+                              <span className="line-clamp-1">{item.text}</span>
+                            </span>
+                          );
+                        })}
                       </div>
                     </div>
                   </Link>
@@ -354,5 +478,19 @@ export default function ActivityCarousel({
         </>
       )}
     </div>
+  );
+}
+
+function ModeBadge({ mode }: { mode: ActivityMode }) {
+  const meta = modeMeta(mode);
+  const Icon = meta.icon;
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium ${meta.cls}`}
+    >
+      <Icon className="h-3 w-3" />
+      {meta.label}
+    </span>
   );
 }

@@ -1,4 +1,3 @@
-//src/app/[club]/admin/activities/page.tsx
 import { headers } from "next/headers";
 import prisma from "@/lib/prisma";
 import ActivityCarousel from "@/components/ui/ActivityCarousel";
@@ -30,8 +29,22 @@ export default async function ActivitiesPage() {
       slug: true,
       active: true,
       durationMin: true,
+      minParty: true,
       maxParty: true,
       locationId: true,
+      mode: true,
+      guestsPerUnit: true,
+      maxUnitsPerBooking: true,
+      durationOptions: {
+        where: { isActive: true },
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+        select: {
+          id: true,
+          label: true,
+          durationMin: true,
+          priceCents: true,
+        },
+      },
     },
   });
 
@@ -39,17 +52,17 @@ export default async function ActivitiesPage() {
   const active = activities.filter((a) => a.active).length;
   const inactive = total - active;
 
-  const avgDuration = total
-    ? Math.round(
-        activities.reduce((sum, a) => sum + (a.durationMin ?? 0), 0) / total
-      )
-    : 0;
+  const fixedCount = activities.filter(
+    (a) => a.mode === "FIXED_SEAT_EVENT"
+  ).length;
 
-  const avgCapacity = total
-    ? Math.round(
-        activities.reduce((sum, a) => sum + (a.maxParty ?? 0), 0) / total
-      )
-    : 0;
+  const rentalCount = activities.filter(
+    (a) => a.mode === "DYNAMIC_RENTAL"
+  ).length;
+
+  const hybridCount = activities.filter(
+    (a) => a.mode === "HYBRID_UNIT_BOOKING"
+  ).length;
 
   return (
     <div className="relative mx-auto max-w-6xl px-6 pb-28">
@@ -63,8 +76,9 @@ export default async function ActivitiesPage() {
         total={total}
         active={active}
         inactive={inactive}
-        avgDuration={avgDuration}
-        avgCapacity={avgCapacity}
+        fixedCount={fixedCount}
+        rentalCount={rentalCount}
+        hybridCount={hybridCount}
       />
     </div>
   );
