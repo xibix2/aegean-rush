@@ -1,42 +1,45 @@
 "use client";
 
 import { useT } from "@/components/I18nProvider";
+import { Waves, Sparkles } from "lucide-react";
 
 export function CourtsHeaderClient() {
   const t = useT();
 
   return (
-    <>
-      {/* ambient stage light */}
-      <div
-        className="pointer-events-none absolute left-1/2 top-6 h-28 w-[72%] -translate-x-1/2 rounded-full"
-        aria-hidden="true"
+    <div className="relative flex flex-col items-center text-center">
+      {/* ambient glow */}
+      <div className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 h-40 w-[80%] blur-3xl opacity-40"
         style={{
           background:
-            "radial-gradient(60% 100% at 50% 50%, color-mix(in oklab, var(--accent-500) 24%, transparent), color-mix(in oklab, var(--accent-400) 18%, transparent) 45%, transparent 70%)",
-          animation: "hb-ambient 10s ease-in-out infinite",
-          filter: "blur(48px)",
+            "radial-gradient(circle, rgba(236,72,153,0.25) 0%, rgba(56,189,248,0.15) 40%, transparent 70%)",
         }}
       />
 
-      <div className="relative inline-flex flex-col items-center z-10">
-        <h2
-          className="text-3xl md:text-[32px] font-semibold tracking-tight t-anim"
-          style={{ animation: "adminTitlePulse 6s ease-in-out infinite" }}
-          aria-label={t("home.courts.label")}
-        >
-          <span className="text-accent-gradient">{t("home.courts.title")}</span>
-        </h2>
-        <div
-          className="mt-2 h-[3px] w-28 md:w-32 lg:w-36 rounded-full"
-          style={{
-            background:
-              "linear-gradient(90deg, transparent, var(--accent-500), transparent)",
-            boxShadow:
-              "0 0 18px color-mix(in oklab, var(--accent-500), transparent 70%)",
-          }}
-        />
+      {/* top label */}
+      <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-4 py-1.5 text-xs uppercase tracking-[0.18em] text-white/70 backdrop-blur-xl">
+        <Sparkles className="size-3.5 text-pink-300" />
+        Featured experiences
       </div>
-    </>
+
+      {/* title */}
+      <h2 className="text-3xl md:text-4xl font-semibold tracking-tight leading-tight">
+        <span className="bg-gradient-to-r from-white via-cyan-200 to-pink-300 bg-clip-text text-transparent">
+          {t("home.courts.title")}
+        </span>
+      </h2>
+
+      {/* subtitle */}
+      <p className="mt-3 max-w-xl text-sm md:text-base text-white/70 leading-relaxed">
+        Discover high-energy Aegean experiences. Book instantly and get straight into the action.
+      </p>
+
+      {/* divider */}
+      <div className="mt-6 flex items-center gap-3 opacity-70">
+        <div className="h-[2px] w-10 bg-gradient-to-r from-transparent to-pink-400" />
+        <Waves className="size-4 text-cyan-300" />
+        <div className="h-[2px] w-10 bg-gradient-to-l from-transparent to-cyan-400" />
+      </div>
+    </div>
   );
 }

@@ -58,6 +58,8 @@ export default async function ExperiencesSection(props?: { tenantSlug?: string }
       name: true,
       description: true,
       basePrice: true,
+      mode: true,
+      durationMin: true,
       locationId: true,
       coverImageUrl: true,
     },
@@ -65,17 +67,12 @@ export default async function ExperiencesSection(props?: { tenantSlug?: string }
 
   return (
     <section className="relative">
-      <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute left-1/2 top-0 h-40 w-40 -translate-x-1/2 rounded-full bg-fuchsia-500/10 blur-3xl" />
-        <div className="absolute right-10 top-10 h-28 w-28 rounded-full bg-cyan-400/10 blur-3xl" />
-      </div>
-
       {!experiences.length ? (
         <div className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-8 backdrop-blur-xl">
           <EmptyState />
         </div>
       ) : (
-        <div className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-4 sm:p-6 md:p-8 backdrop-blur-xl shadow-[0_20px_80px_-40px_rgba(0,0,0,0.65)]">
+        <div className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-3 sm:p-4 md:p-5 backdrop-blur-xl shadow-[0_20px_80px_-40px_rgba(0,0,0,0.65)]">
           <ExperiencesCarousel
             courts={experiences}
             tomorrow={tomorrowYMD()}
