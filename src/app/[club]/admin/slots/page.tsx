@@ -1,4 +1,3 @@
-// src/app/[club]/admin/slots/page.tsx
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -229,6 +228,10 @@ export default async function GenerateSlotsPage({
 
   const sp = searchParams ?? {};
   const created = Number(sp.created ?? NaN);
+  const selectedDate =
+    typeof sp.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(sp.date)
+      ? sp.date
+      : new Date().toISOString().slice(0, 10);
 
   const activities = await prisma.activity.findMany({
     where: { clubId: tenant.id },
@@ -256,6 +259,86 @@ export default async function GenerateSlotsPage({
     },
   });
 
+  const dayStart = new Date(`${selectedDate}T00:00:00`);
+  const dayEnd = new Date(`${selectedDate}T00:00:00`);
+  dayEnd.setDate(dayEnd.getDate() + 1);
+
+  const slots = await prisma.timeSlot.findMany({
+    where: {
+      startAt: { gte: dayStart, lt: dayEnd },
+      activity: { clubId: tenant.id },
+    },
+    orderBy: [{ activityId: "asc" }, { startAt: "asc" }],
+    select: {
+      id: true,
+      startAt: true,
+      endAt: true,
+      status: true,
+      capacity: true,
+      priceCents: true,
+      activity: {
+        select: {
+          id: true,
+          name: true,
+          mode: true,
+        },
+      },
+      bookings: {
+        where: {
+          status: { in: ["paid", "pending"] },
+        },
+        select: {
+          id: true,
+          status: true,
+          partySize: true,
+          reservedUnits: true,
+        },
+      },
+    },
+  });
+
+  const slotRows = slots.map((slot) => {
+    const paid = slot.bookings
+      .filter((b) => b.status === "paid")
+      .reduce(
+        (sum, b) =>
+          sum +
+          (slot.activity.mode === "FIXED_SEAT_EVENT"
+            ? b.partySize ?? 0
+            : b.reservedUnits ?? 0),
+        0
+      );
+
+    const pending = slot.bookings
+      .filter((b) => b.status === "pending")
+      .reduce(
+        (sum, b) =>
+          sum +
+          (slot.activity.mode === "FIXED_SEAT_EVENT"
+            ? b.partySize ?? 0
+            : b.reservedUnits ?? 0),
+        0
+      );
+
+    return {
+      id: slot.id,
+      activityId: slot.activity.id,
+      activityName: slot.activity.name,
+      activityMode: slot.activity.mode,
+      startAtISO: slot.startAt.toISOString(),
+      endAtISO: slot.endAt ? slot.endAt.toISOString() : null,
+      status: slot.status,
+      capacity: slot.capacity,
+      priceCents: slot.priceCents,
+      paid,
+      pending,
+      remaining:
+        slot.status === "closed"
+          ? 0
+          : Math.max(0, (slot.capacity ?? 0) - paid - pending),
+    };
+  });
+
   const today = new Date();
   const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
   const fmt = (d: Date) => d.toISOString().split("T")[0];
@@ -271,9 +354,11 @@ export default async function GenerateSlotsPage({
   return (
     <SlotGeneratorClient
       activities={activities}
+      slots={slotRows}
+      selectedDate={selectedDate}
       created={Number.isFinite(created) ? created : undefined}
       defaults={defaults}
-      backHref={`/${params.club}/admin/slots`}
+      backHref={`/${params.club}/admin`}
       action={generate.bind(null, params.club)}
     />
   );

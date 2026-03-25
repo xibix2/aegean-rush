@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { format } from "date-fns";
 import { useT } from "@/components/I18nProvider";
 
 type ActivityMode =
@@ -28,8 +29,25 @@ type Activity = {
   durationOptions: ActivityDurationOption[];
 };
 
+type SlotRow = {
+  id: string;
+  activityId: string;
+  activityName: string;
+  activityMode: ActivityMode;
+  startAtISO: string;
+  endAtISO: string | null;
+  status: "open" | "closed";
+  capacity: number;
+  priceCents: number;
+  paid: number;
+  pending: number;
+  remaining: number;
+};
+
 type Props = {
   activities: Activity[];
+  slots: SlotRow[];
+  selectedDate: string;
   created?: number;
   defaults: {
     from: string;
@@ -49,6 +67,8 @@ function formatEuroFromCents(cents: number | null | undefined) {
 
 export default function SlotGeneratorClient({
   activities,
+  slots,
+  selectedDate,
   created,
   defaults,
   backHref,
@@ -57,6 +77,7 @@ export default function SlotGeneratorClient({
   const t = useT();
 
   const [selectedActivityId, setSelectedActivityId] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "open" | "closed">("all");
 
   const selectedActivity = useMemo<Activity | null>(
     () => activities.find((a) => a.id === selectedActivityId) ?? null,
@@ -117,23 +138,51 @@ export default function SlotGeneratorClient({
     [activities]
   );
 
-  const handleDurationChange = (val: string) => {
-    const n = Number(val);
-    setDurationMin(Number.isFinite(n) && n > 0 ? n : 0);
-  };
-
   const handleCapacityChange = (val: string) => {
     const n = Number(val);
     setCapacity(Number.isFinite(n) && n > 0 ? n : 1);
   };
 
-  const handlePriceChange = (val: string) => {
-    const n = Number(val.replace(",", "."));
-    setPriceEuro(Number.isFinite(n) && n >= 0 ? n : 0);
-  };
+  const filteredSlots = useMemo(() => {
+    return slots.filter((slot) => {
+      if (statusFilter !== "all" && slot.status !== statusFilter) return false;
+      if (selectedActivityId && slot.activityId !== selectedActivityId) return false;
+      return true;
+    });
+  }, [slots, statusFilter, selectedActivityId]);
+
+  const groupedSlots = useMemo(() => {
+    const map = new Map<string, { activityName: string; activityMode: ActivityMode; rows: SlotRow[] }>();
+
+    for (const slot of filteredSlots) {
+      if (!map.has(slot.activityId)) {
+        map.set(slot.activityId, {
+          activityName: slot.activityName,
+          activityMode: slot.activityMode,
+          rows: [],
+        });
+      }
+      map.get(slot.activityId)!.rows.push(slot);
+    }
+
+    return Array.from(map.entries()).map(([activityId, value]) => ({
+      activityId,
+      ...value,
+    }));
+  }, [filteredSlots]);
+
+  const summary = useMemo(() => {
+    const openCount = slots.filter((s) => s.status === "open").length;
+    const closedCount = slots.filter((s) => s.status === "closed").length;
+    return {
+      total: slots.length,
+      open: openCount,
+      closed: closedCount,
+    };
+  }, [slots]);
 
   return (
-    <main className="mx-auto max-w-4xl p-6 space-y-6">
+    <main className="mx-auto max-w-6xl p-6 space-y-6">
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -145,12 +194,10 @@ export default function SlotGeneratorClient({
 
       <div className="space-y-2">
         <h1 className="text-3xl md:text-[32px] font-semibold tracking-tight">
-          <span className="text-accent-gradient">
-            {t("slots.generator.title")}
-          </span>
+          <span className="text-accent-gradient">{t("slots.generator.title")}</span>
         </h1>
         <p className="text-sm opacity-70">
-          Create availability in a way that matches how each activity is sold.
+          Create availability and scan daily slot status quickly.
         </p>
       </div>
 
@@ -173,6 +220,163 @@ export default function SlotGeneratorClient({
         </div>
       )}
 
+      <section className="rounded-2xl u-border bg-[--color-card] p-5 md:p-6 glow-soft space-y-4">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-white">Day operations</h2>
+            <p className="text-sm opacity-70">
+              {format(new Date(`${selectedDate}T00:00:00`), "eeee, d MMM yyyy")}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-2 text-xs">
+            <span className="rounded-full u-border u-surface px-3 py-1.5">
+              Total {summary.total}
+            </span>
+            <span className="rounded-full border border-emerald-400/25 bg-emerald-400/10 px-3 py-1.5 text-emerald-200">
+              Open {summary.open}
+            </span>
+            <span className="rounded-full border border-red-400/25 bg-red-400/10 px-3 py-1.5 text-red-200">
+              Closed {summary.closed}
+            </span>
+          </div>
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-[minmax(220px,1fr)_auto]">
+          <label className="text-sm">
+            Filter by activity
+            <select
+              value={selectedActivityId}
+              onChange={(e) => handleActivityChange(e.target.value)}
+              className="mt-1 w-full rounded-lg u-border u-surface px-3 py-2 outline-none focus:ring-2 focus:ring-[var(--accent-500)]/40"
+            >
+              <option value="">All activities</option>
+              {activities.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <div>
+            <div className="text-sm mb-1">Status</div>
+            <div className="flex flex-wrap gap-2">
+              {(["all", "open", "closed"] as const).map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setStatusFilter(value)}
+                  className={`rounded-full px-3 py-2 text-sm border transition ${
+                    statusFilter === value
+                      ? "border-pink-400/35 bg-pink-400/10 text-pink-100"
+                      : "u-border u-surface opacity-85 hover:opacity-100"
+                  }`}
+                >
+                  {value === "all" ? "All" : value === "open" ? "Open" : "Closed"}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {groupedSlots.length === 0 ? (
+          <div className="rounded-xl u-border u-surface px-4 py-4 text-sm opacity-75">
+            No slots match the current filters.
+          </div>
+        ) : (
+          <div className="grid gap-4">
+            {groupedSlots.map((group) => (
+              <div key={group.activityId} className="rounded-2xl u-border u-surface overflow-hidden">
+                <div className="border-b border-white/10 px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <div className="font-medium">{group.activityName}</div>
+                    <span className="rounded-full px-2.5 py-1 text-xs u-border u-surface opacity-85">
+                      {group.activityMode === "FIXED_SEAT_EVENT"
+                        ? "Fixed event"
+                        : group.activityMode === "DYNAMIC_RENTAL"
+                        ? "Rental"
+                        : "Hybrid"}
+                    </span>
+                  </div>
+
+                  <div className="text-xs opacity-75">
+                    {group.rows.length} slot{group.rows.length === 1 ? "" : "s"}
+                  </div>
+                </div>
+
+                <div className="grid gap-3 p-4">
+                  {group.rows.map((slot) => {
+                    const start = new Date(slot.startAtISO);
+                    const end = slot.endAtISO ? new Date(slot.endAtISO) : null;
+                    const isClosed = slot.status === "closed";
+
+                    return (
+                      <div
+                        key={slot.id}
+                        className={`grid gap-4 rounded-xl border px-4 py-4 md:grid-cols-[1.1fr_1fr_auto] md:items-center ${
+                          isClosed
+                            ? "border-red-500/20 bg-red-500/[0.06]"
+                            : "border-white/10 bg-black/20"
+                        }`}
+                      >
+                        <div>
+                          <div className="text-lg font-semibold">
+                            {format(start, "HH:mm")}
+                            {end ? `–${format(end, "HH:mm")}` : ""}
+                          </div>
+                          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
+                            {isClosed ? (
+                              <span className="rounded-full border border-red-400/25 bg-red-400/10 px-2.5 py-1 text-red-200">
+                                Closed
+                              </span>
+                            ) : (
+                              <span className="rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2.5 py-1 text-emerald-200">
+                                Open
+                              </span>
+                            )}
+                            <span className="opacity-65">ID: {slot.id.slice(0, 8)}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2 text-xs">
+                          <span className="rounded-full u-border u-surface px-2.5 py-1">
+                            Cap {slot.capacity}
+                          </span>
+                          <span className="rounded-full u-border u-surface px-2.5 py-1">
+                            Paid {slot.paid}
+                          </span>
+                          <span className="rounded-full u-border u-surface px-2.5 py-1">
+                            Pending {slot.pending}
+                          </span>
+                          {!isClosed && (
+                            <span className="rounded-full border border-pink-400/25 bg-pink-400/10 px-2.5 py-1 text-pink-100">
+                              Left {slot.remaining}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex flex-col items-start gap-2 md:items-end">
+                          <div className="text-sm opacity-75">
+                            € {formatEuroFromCents(slot.priceCents)}
+                          </div>
+                          <a
+                            href={`/admin/slots/${slot.id}`}
+                            className="inline-flex h-10 items-center justify-center rounded-xl px-4 text-sm u-border u-surface hover:opacity-90 transition"
+                          >
+                            Open slot
+                          </a>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
       <form
         action={action}
         lang="en-GB"
@@ -193,6 +397,15 @@ export default function SlotGeneratorClient({
         />
 
         <div className="relative z-10 space-y-5">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold text-white">Generate slots</h2>
+              <p className="text-sm opacity-70">
+                Create or regenerate availability for selected activities.
+              </p>
+            </div>
+          </div>
+
           <div className="grid md:grid-cols-2 gap-3">
             <label className="text-sm">
               {t("slots.generator.activity")}
@@ -381,7 +594,7 @@ export default function SlotGeneratorClient({
               This generator will create scheduled departures using the activity’s
               default duration, seat price, and guest capacity.
             </div>
-          ) : ( 
+          ) : (
             <div className="grid md:grid-cols-2 gap-3">
               <label className="text-sm">
                 Units available
