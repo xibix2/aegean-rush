@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useT } from "@/components/I18nProvider";
 
 type ActivityMode =
@@ -75,9 +76,18 @@ export default function SlotGeneratorClient({
   action,
 }: Props) {
   const t = useT();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
-  const [selectedActivityId, setSelectedActivityId] = useState<string>("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "open" | "closed">("all");
+  const initialActivityId = searchParams.get("activityId") || "";
+  const initialStatus =
+    searchParams.get("status") === "open" || searchParams.get("status") === "closed"
+      ? (searchParams.get("status") as "open" | "closed")
+      : "all";
+
+  const [selectedActivityId, setSelectedActivityId] = useState<string>(initialActivityId);
+  const [statusFilter, setStatusFilter] = useState<"all" | "open" | "closed">(initialStatus);
 
   const selectedActivity = useMemo<Activity | null>(
     () => activities.find((a) => a.id === selectedActivityId) ?? null,
@@ -110,9 +120,36 @@ export default function SlotGeneratorClient({
     ? "Hybrid"
     : null;
 
+  const pushFiltersToUrl = useCallback(
+    (next: {
+      date?: string;
+      activityId?: string;
+      status?: "all" | "open" | "closed";
+    }) => {
+      const params = new URLSearchParams(searchParams.toString());
+
+      const nextDate = next.date ?? selectedDate;
+      const nextActivityId = next.activityId ?? selectedActivityId;
+      const nextStatus = next.status ?? statusFilter;
+
+      params.set("date", nextDate);
+
+      if (nextActivityId) params.set("activityId", nextActivityId);
+      else params.delete("activityId");
+
+      if (nextStatus !== "all") params.set("status", nextStatus);
+      else params.delete("status");
+
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    },
+    [pathname, router, searchParams, selectedDate, selectedActivityId, statusFilter]
+  );
+
   const handleActivityChange = useCallback(
     (value: string) => {
       setSelectedActivityId(value);
+      pushFiltersToUrl({ activityId: value });
+
       const act = activities.find((a) => a.id === value) ?? null;
       if (!act) return;
 
@@ -135,13 +172,46 @@ export default function SlotGeneratorClient({
           : 0
       );
     },
-    [activities]
+    [activities, pushFiltersToUrl]
   );
 
   const handleCapacityChange = (val: string) => {
     const n = Number(val);
     setCapacity(Number.isFinite(n) && n > 0 ? n : 1);
   };
+
+  const handleStatusChange = (value: "all" | "open" | "closed") => {
+    setStatusFilter(value);
+    pushFiltersToUrl({ status: value });
+  };
+
+  const handleDateChange = (value: string) => {
+    pushFiltersToUrl({ date: value });
+  };
+
+  useEffect(() => {
+    const act = activities.find((a) => a.id === selectedActivityId) ?? null;
+    if (!act) return;
+
+    const firstOption = act.durationOptions?.[0] ?? null;
+
+    if (act.mode === "FIXED_SEAT_EVENT") {
+      setDurationMin(act.durationMin ?? 60);
+      setCapacity(act.maxParty ?? 4);
+      setPriceEuro(act.basePrice != null ? act.basePrice / 100 : 0);
+      return;
+    }
+
+    setCapacity(act.maxUnitsPerBooking ?? 1);
+    setDurationMin(firstOption?.durationMin ?? act.durationMin ?? 60);
+    setPriceEuro(
+      firstOption?.priceCents != null
+        ? firstOption.priceCents / 100
+        : act.basePrice != null
+        ? act.basePrice / 100
+        : 0
+    );
+  }, [activities, selectedActivityId]);
 
   const filteredSlots = useMemo(() => {
     return slots.filter((slot) => {
@@ -242,7 +312,17 @@ export default function SlotGeneratorClient({
           </div>
         </div>
 
-        <div className="grid gap-3 md:grid-cols-[minmax(220px,1fr)_auto]">
+        <div className="grid gap-3 md:grid-cols-[180px_minmax(220px,1fr)_auto]">
+          <label className="text-sm">
+            Date
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => handleDateChange(e.target.value)}
+              className="mt-1 w-full rounded-lg u-border u-surface px-3 py-2 outline-none focus:ring-2 focus:ring-[var(--accent-500)]/40"
+            />
+          </label>
+
           <label className="text-sm">
             Filter by activity
             <select
@@ -266,7 +346,7 @@ export default function SlotGeneratorClient({
                 <button
                   key={value}
                   type="button"
-                  onClick={() => setStatusFilter(value)}
+                  onClick={() => handleStatusChange(value)}
                   className={`rounded-full px-3 py-2 text-sm border transition ${
                     statusFilter === value
                       ? "border-pink-400/35 bg-pink-400/10 text-pink-100"
