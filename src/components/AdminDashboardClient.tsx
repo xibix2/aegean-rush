@@ -28,8 +28,8 @@ type DaySlot = {
 type DayGroup = { activityId: string; activityName: string; slots: DaySlot[] };
 
 export default function AdminDashboardClient({
-  initialDate, // "YYYY-MM-DD"
-  tenantSlug,  // 👈 optional; when present, scope API + links to /{tenantSlug}
+  initialDate,
+  tenantSlug,
 }: {
   initialDate?: string;
   tenantSlug?: string;
@@ -39,7 +39,7 @@ export default function AdminDashboardClient({
   const base = tenantSlug ? `/${tenantSlug}` : "";
   const todayIso = new Date().toISOString().slice(0, 10);
   const [selectedDate, setSelectedDate] = useState(initialDate || todayIso);
-  const [monthStr, setMonthStr] = useState((initialDate || todayIso).slice(0, 7)); // "YYYY-MM"
+  const [monthStr, setMonthStr] = useState((initialDate || todayIso).slice(0, 7));
 
   const [year, month] = useMemo(
     () => monthStr.split("-").map(Number) as [number, number],
@@ -48,32 +48,24 @@ export default function AdminDashboardClient({
 
   const [heat, setHeat] = useState<Record<string, HeatDay>>({});
   const [groups, setGroups] = useState<DayGroup[]>([]);
-  const [loadingHeat, setLoadingHeat] = useState(false);
   const [loadingDay, setLoadingDay] = useState(false);
 
-  // Abort controllers to prevent late state updates
   const monthAbort = useRef<AbortController | null>(null);
   const dayAbort = useRef<AbortController | null>(null);
 
-  // --- UI prefs (accent + currency symbol) ---
   const [currency, setCurrency] = useState<string>("€");
+
   useEffect(() => {
     const prefs = readUiPrefsFromDocument();
     setCurrency(prefs.currency || "€");
   }, []);
 
-  // Helper to format cents with the chosen currency symbol (lightweight)
   const money = (cents: number | null | undefined) => {
     const n = (cents ?? 0) / 100;
-    const num = new Intl.NumberFormat(undefined, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(n);
-    return `${currency}${num}`;
+    return `${currency}${n.toFixed(2)}`;
   };
 
   async function loadMonth() {
-    setLoadingHeat(true);
     monthAbort.current?.abort();
     const ac = new AbortController();
     monthAbort.current = ac;
@@ -86,11 +78,7 @@ export default function AdminDashboardClient({
       });
       const j = res.ok ? await res.json() : { days: {} };
       setHeat(j.days || {});
-    } catch (e: any) {
-      if (e?.name !== "AbortError") setHeat({});
-    } finally {
-      setLoadingHeat(false);
-    }
+    } catch {}
   }
 
   async function loadDay(iso: string) {
@@ -107,8 +95,8 @@ export default function AdminDashboardClient({
       });
       const j = res.ok ? await res.json() : { activities: [] };
       setGroups(j.activities || []);
-    } catch (e: any) {
-      if (e?.name !== "AbortError") setGroups([]);
+    } catch {
+      setGroups([]);
     } finally {
       setLoadingDay(false);
     }
@@ -117,13 +105,11 @@ export default function AdminDashboardClient({
   useEffect(() => {
     loadMonth();
     return () => monthAbort.current?.abort();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [monthStr, tenantSlug]);
 
   useEffect(() => {
     loadDay(selectedDate);
     return () => dayAbort.current?.abort();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate, tenantSlug]);
 
   const shiftMonth = (delta: number) => {
@@ -133,43 +119,6 @@ export default function AdminDashboardClient({
 
   return (
     <div className="space-y-8">
-      {/* Local micro-styles; purely visual */}
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-@keyframes adminFade { 0%{opacity:0; transform:translateY(6px)} 100%{opacity:1; transform:none} }
-@keyframes adminShimmer { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
-@keyframes adminGlowLine { 0%,100%{opacity:.55; transform:translateX(-50%) scaleX(.9)} 50%{opacity:.95; transform:translateX(-50%) scaleX(1)} }
-@media (prefers-reduced-motion: reduce){ .adm-anim { animation: none !important; } }
-          `.trim(),
-        }}
-      />
-
-      {/* Header above the calendar (accent-aware) */}
-      <div className="text-center adm-anim" style={{ animation: "adminFade .35s ease-out" }}>
-        <div className="relative inline-flex flex-col items-center">
-          <div className="relative inline-flex flex-col items-center z-10">
-            <h2
-              className="text-3xl md:text-[30px] font-semibold tracking-tight t-anim"
-              style={{ animation: "adminTitlePulse 6s ease-in-out infinite" }}
-            >
-              <span className="text-accent-gradient">{t("admin.dashboard.scheduleTitle")}</span>
-            </h2>
-          </div>
-          <div
-            className="mt-2 ml-38 h-[3px] w-40 rounded-full"
-            style={{
-              background:
-                "linear-gradient(90deg, rgba(0,0,0,0), var(--accent-600), var(--accent-500), var(--accent-600), rgba(0,0,0,0))",
-              animation: "adminGlowLine 4s ease-in-out infinite",
-            }}
-          />
-          {!!loadingHeat && (
-            <p className="mt-2 text-xs opacity-70">{t("admin.dashboard.updatingMonth")}</p>
-          )}
-        </div>
-      </div>
-
       {/* Calendar */}
       <MonthCalendar
         year={year}
@@ -180,156 +129,128 @@ export default function AdminDashboardClient({
         onNextMonth={() => shiftMonth(1)}
       />
 
-      {/* Controls row for the selected date */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="relative inline-flex flex-col items-start">
-          <div className="relative inline-flex flex-col items-center z-10">
-            <h2
-              className="text-3xl md:text-[24px] font-semibold tracking-tight t-anim"
-              style={{ animation: "adminTitlePulse 6s ease-in-out infinite" }}
-            >
-              <span className="text-accent-gradient">
-                {format(new Date(`${selectedDate}T00:00:00`), "eeee, d MMM yyyy")}
-              </span>
-            </h2>
-          </div>
-          <span
-            className="mt-1 ml-2 inline-block h-[2px] w-54 rounded-full"
-            style={{
-              background:
-                "linear-gradient(90deg, rgba(0,0,0,0), var(--accent-500), var(--accent-400), var(--accent-500), rgba(0,0,0,0))",
-            }}
-          />
-        </div>
+      {/* Date header */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-semibold text-white">
+          {format(new Date(`${selectedDate}T00:00:00`), "eeee, d MMM yyyy")}
+        </h2>
 
         <input
           type="date"
-          aria-label={t("admin.dashboard.aria.datePicker")}
-          className="rounded-lg border border-[--color-border] bg-black/20 px-3 py-2 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-500)]/50"
+          className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm"
           value={selectedDate}
           onChange={(e) => setSelectedDate(e.target.value)}
         />
       </div>
 
-      {/* Day loading / empty state */}
-      {loadingDay && (
-        <div
-          className="rounded-2xl border border-[--color-border] p-5 adm-anim"
-          style={{ animation: "adminFade .25s ease-out" }}
-        >
-          <div
-            className="h-4 w-40 rounded bg-[linear-gradient(90deg,#1f1f1f,#2a2a2a,#1f1f1f)] bg-[length:200%_100%]"
-            style={{ animation: "adminShimmer 1.2s ease-in-out infinite" }}
-          />
-          <div
-            className="mt-4 h-12 rounded bg-[linear-gradient(90deg,#1f1f1f,#2a2a2a,#1f1f1f)] bg-[length:200%_100%]"
-            style={{ animation: "adminShimmer 1.2s ease-in-out infinite" }}
-          />
-        </div>
-      )}
-
+      {/* Empty */}
       {groups.length === 0 && !loadingDay && (
-        <div className="rounded-2xl border border-[--color-border] p-6 text-sm text-center opacity-85">
-          {t("admin.dashboard.noSlotsOnDate")}
+        <div className="rounded-xl border border-white/10 p-6 text-center text-sm text-white/70">
+          No activity for this day
         </div>
       )}
 
-      {/* Groups / activities of the selected day */}
-      <div className="grid gap-5">
-        {groups.map((g, gi) => (
-          <section
-            key={g.activityId}
-            className="relative overflow-hidden rounded-2xl border border-[--color-border] bg-[--color-card] adm-anim"
-            style={{ animation: `adminFade .4s ease-out ${gi * 0.03}s both` as any }}
-          >
-            {/* subtle accent edge (accent-aware) */}
-            <div
-              className="pointer-events-none absolute inset-0 rounded-2xl"
-              aria-hidden
-              style={{
-                background:
-                  "linear-gradient(90deg, color-mix(in_oklab,var(--accent-600),transparent_65%), color-mix(in_oklab,var(--accent-500),transparent_70%), color-mix(in_oklab,var(--accent-600),transparent_65%))",
-                padding: 1,
-                WebkitMask: "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
-                WebkitMaskComposite: "xor",
-                maskComposite: "exclude",
-              }}
-            />
+      {/* Activities */}
+      <div className="grid gap-6">
+        {groups.map((g) => {
+          const totalPaid = g.slots.reduce((a, s) => a + s.paid, 0);
+          const totalPending = g.slots.reduce((a, s) => a + s.pendingFresh, 0);
+          const totalLeft = g.slots.reduce((a, s) => a + s.remaining, 0);
 
-            <header className="relative z-10 px-4 py-3 border-b border-[--color-border] flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span
-                  aria-hidden
-                  className="inline-block size-2 rounded-full"
-                  style={{
-                    background:
-                      "radial-gradient(circle at 30% 30%, var(--accent-400) 0%, var(--accent-600) 70%)",
-                    boxShadow: "0 0 14px 1px color-mix(in_oklab,var(--accent-500),transparent 65%)",
-                  }}
-                />
-                <div className="font-medium tracking-tight">{g.activityName}</div>
+          return (
+            <section
+              key={g.activityId}
+              className="rounded-2xl border border-white/10 bg-white/[0.03]"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+                <div>
+                  <div className="font-semibold text-white">{g.activityName}</div>
+
+                  <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                    <span className="chip">{g.slots.length} slots</span>
+                    <span className="chip">Paid {totalPaid}</span>
+                    <span className="chip">Pending {totalPending}</span>
+                    <span className="chip-accent">{totalLeft} left</span>
+                  </div>
+                </div>
+
+                <a
+                  href={`${base}/admin/slots?date=${selectedDate}&activityId=${g.activityId}`}
+                  className="btn-accent px-4 py-2 text-sm"
+                >
+                  Manage day
+                </a>
               </div>
 
-              <a
-                href={`${base}/admin/slots?date=${selectedDate}&activityId=${g.activityId}`}
-                className="inline-flex h-11 items-center justify-center px-5 text-sm font-medium btn-accent"
-              >
-                {t("admin.dashboard.manageSlots")}
-              </a>
-            </header>
+              {/* Slots */}
+              <div className="grid gap-3 p-4">
+                {g.slots.map((s) => {
+                  const start = new Date(s.startAt);
+                  const end = s.endAt ? new Date(s.endAt) : null;
 
-            <div className="relative z-10 p-4 grid gap-3">
-              {g.slots.map((s) => {
-                const start = new Date(s.startAt);
-                const end = s.endAt ? new Date(s.endAt) : null;
-                const unit = s.priceCents ?? 0;
-                const soldOut = s.remaining === 0;
-
-                return (
-                  <div
-                    key={s.id}
-                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3
-                               rounded-xl border border-[--color-border] px-3 py-3
-                               bg-white/[0.02] hover:bg-white/[0.03] transition"
-                  >
-                    <div>
-                      <div className="mr-18 font-medium">
-                        ▸ {format(start, "HH:mm")}
-                        {end ? <>–{format(end, "HH:mm")}</> : null}
+                  return (
+                    <div
+                      key={s.id}
+                      className="grid gap-4 rounded-xl border border-white/10 bg-black/30 px-4 py-4 md:grid-cols-[1.2fr_1fr_auto] md:items-center"
+                    >
+                      {/* Time */}
+                      <div>
+                        <div className="text-lg font-semibold text-white">
+                          {format(start, "HH:mm")}
+                          {end ? `–${format(end, "HH:mm")}` : ""}
+                        </div>
+                        <div className="text-xs text-white/60">
+                          Operational slot
+                        </div>
                       </div>
-                      <div className="mt-1 text-xs opacity-70">
-                        {t("admin.dashboard.cap")} {s.capacity} • {t("admin.dashboard.paid")} {s.paid} • {t("admin.dashboard.pendingFresh")} {s.pendingFresh}
+
+                      {/* Stats */}
+                      <div className="flex flex-wrap gap-2 text-xs">
+                        <span className="chip">Cap {s.capacity}</span>
+                        <span className="chip">Paid {s.paid}</span>
+                        <span className="chip">Pending {s.pendingFresh}</span>
+                        <span className="chip-accent">{s.remaining} left</span>
+                      </div>
+
+                      {/* Right */}
+                      <div className="flex flex-col items-start gap-2 md:items-end">
+                        <div className="text-sm text-white/70">
+                          {money(s.priceCents)} / person
+                        </div>
+
+                        <a
+                          href={`${base}/admin/slots/${s.id}`}
+                          className="rounded-lg border border-white/10 px-4 py-2 text-sm text-white hover:bg-white/10"
+                        >
+                          Open slot
+                        </a>
                       </div>
                     </div>
-
-                    <div className="text-right">
-                      <div className="text-xs opacity-75">
-                        {money(unit)} {t("admin.dashboard.perPerson")}
-                      </div>
-                      <div className={`text-sm font-medium ${soldOut ? "text-red-400" : "text-white"}`}>
-                        {soldOut ? t("admin.dashboard.soldOut") : `${s.remaining} ${t("admin.dashboard.left")}`}
-                      </div>
-
-                      {/* Go to specific slot details page (tenant-aware) */}
-                      <a
-                        href={`${base}/admin/slots/${s.id}`}
-                        title={t("admin.dashboard.edit")}
-                        className="inline-flex h-10.5 items-center justify-center px-6 text-sm font-medium btn-accent"
-                      >
-                        {t("admin.dashboard.edit")}
-                      </a>
-                    </div>
-                  </div>
-                );
-              })}
-
-              {g.slots.length === 0 && (
-                <div className="text-sm opacity-75">{t("admin.dashboard.noSlotsForActivity")}</div>
-              )}
-            </div>
-          </section>
-        ))}
+                  );
+                })}
+              </div>
+            </section>
+          );
+        })}
       </div>
+
+      {/* Utility styles */}
+      <style jsx>{`
+        .chip {
+          padding: 4px 10px;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .chip-accent {
+          padding: 4px 10px;
+          border-radius: 999px;
+          background: rgba(236, 72, 153, 0.15);
+          border: 1px solid rgba(236, 72, 153, 0.3);
+          color: white;
+        }
+      `}</style>
     </div>
   );
 }
