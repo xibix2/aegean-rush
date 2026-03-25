@@ -1,11 +1,10 @@
-// src/components/admin/AdminDashboardClient.tsx
+// src/components/AdminDashboardClient.tsx
 "use client";
 
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import MonthCalendar from "@/components/MonthCalendar";
 import { format } from "date-fns";
 import { readUiPrefsFromDocument } from "@/lib/ui-prefs-client";
-import { useT } from "@/components/I18nProvider";
 
 type HeatDay = {
   capacity: number;
@@ -25,7 +24,16 @@ type DaySlot = {
   remaining: number;
 };
 
-type DayGroup = { activityId: string; activityName: string; slots: DaySlot[] };
+type DayGroup = {
+  activityId: string;
+  activityName: string;
+  mode: string;
+  totalCapacity: number;
+  totalPaid: number;
+  totalPending: number;
+  totalRemaining: number;
+  slots: DaySlot[];
+};
 
 export default function AdminDashboardClient({
   initialDate,
@@ -34,8 +42,6 @@ export default function AdminDashboardClient({
   initialDate?: string;
   tenantSlug?: string;
 }) {
-  const t = useT();
-
   const base = tenantSlug ? `/${tenantSlug}` : "";
   const todayIso = new Date().toISOString().slice(0, 10);
   const [selectedDate, setSelectedDate] = useState(initialDate || todayIso);
@@ -63,6 +69,13 @@ export default function AdminDashboardClient({
   const money = (cents: number | null | undefined) => {
     const n = (cents ?? 0) / 100;
     return `${currency}${n.toFixed(2)}`;
+  };
+
+  const modeLabel = (mode: string) => {
+    if (mode === "FIXED_SEAT_EVENT") return "Fixed event";
+    if (mode === "DYNAMIC_RENTAL") return "Rental";
+    if (mode === "HYBRID_UNIT_BOOKING") return "Hybrid";
+    return mode;
   };
 
   async function loadMonth() {
@@ -119,7 +132,6 @@ export default function AdminDashboardClient({
 
   return (
     <div className="space-y-8">
-      {/* Calendar */}
       <MonthCalendar
         year={year}
         month={month}
@@ -129,61 +141,58 @@ export default function AdminDashboardClient({
         onNextMonth={() => shiftMonth(1)}
       />
 
-      {/* Date header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <h2 className="text-2xl font-semibold text-white">
           {format(new Date(`${selectedDate}T00:00:00`), "eeee, d MMM yyyy")}
         </h2>
 
         <input
           type="date"
-          className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm"
+          className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm text-white"
           value={selectedDate}
           onChange={(e) => setSelectedDate(e.target.value)}
         />
       </div>
 
-      {/* Empty */}
       {groups.length === 0 && !loadingDay && (
         <div className="rounded-xl border border-white/10 p-6 text-center text-sm text-white/70">
           No activity for this day
         </div>
       )}
 
-      {/* Activities */}
       <div className="grid gap-6">
         {groups.map((g) => {
-          const totalPaid = g.slots.reduce((a, s) => a + s.paid, 0);
-          const totalPending = g.slots.reduce((a, s) => a + s.pendingFresh, 0);
-          const totalLeft = g.slots.reduce((a, s) => a + s.remaining, 0);
-
           return (
             <section
               key={g.activityId}
-              className="rounded-2xl border border-white/10 bg-white/[0.03]"
+              className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]"
             >
-              {/* Header */}
-              <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+              <div className="flex items-center justify-between gap-4 border-b border-white/10 px-5 py-4">
                 <div>
-                  <div className="font-semibold text-white">{g.activityName}</div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="font-semibold text-white">{g.activityName}</div>
+                    <span className="mode-badge">{modeLabel(g.mode)}</span>
+                  </div>
 
                   <div className="mt-2 flex flex-wrap gap-2 text-xs">
                     <span className="chip">{g.slots.length} slots</span>
-                    <span className="chip">Paid {totalPaid}</span>
-                    <span className="chip">Pending {totalPending}</span>
-                    <span className="chip-accent">{totalLeft} left</span>
+                    <span className="chip">Cap {g.totalCapacity}</span>
+                    <span className="chip">Paid {g.totalPaid}</span>
+                    <span className="chip">Pending {g.totalPending}</span>
+                    <span className="chip-accent">{g.totalRemaining} left</span>
                   </div>
                 </div>
 
-                <a
-                  href={`${base}/admin/slots?date=${selectedDate}&activityId=${g.activityId}`}
-                  className="btn-accent px-4 py-2 text-sm"
-                >
-                  Manage day
-                </a>
+                <div className="flex items-center gap-2">
+                  <a
+                    href={`${base}/admin/slots?date=${selectedDate}&activityId=${g.activityId}`}
+                    className="btn-accent px-4 py-2 text-sm"
+                  >
+                    Manage day
+                  </a>
+                </div>
               </div>
 
-              {/* Slots */}
               <div className="grid gap-3 p-4">
                 {g.slots.map((s) => {
                   const start = new Date(s.startAt);
@@ -194,18 +203,16 @@ export default function AdminDashboardClient({
                       key={s.id}
                       className="grid gap-4 rounded-xl border border-white/10 bg-black/30 px-4 py-4 md:grid-cols-[1.2fr_1fr_auto] md:items-center"
                     >
-                      {/* Time */}
                       <div>
                         <div className="text-lg font-semibold text-white">
                           {format(start, "HH:mm")}
                           {end ? `–${format(end, "HH:mm")}` : ""}
                         </div>
                         <div className="text-xs text-white/60">
-                          Operational slot
+                          {modeLabel(g.mode)} slot
                         </div>
                       </div>
 
-                      {/* Stats */}
                       <div className="flex flex-wrap gap-2 text-xs">
                         <span className="chip">Cap {s.capacity}</span>
                         <span className="chip">Paid {s.paid}</span>
@@ -213,15 +220,12 @@ export default function AdminDashboardClient({
                         <span className="chip-accent">{s.remaining} left</span>
                       </div>
 
-                      {/* Right */}
                       <div className="flex flex-col items-start gap-2 md:items-end">
-                        <div className="text-sm text-white/70">
-                          {money(s.priceCents)} / person
-                        </div>
+                        <div className="text-sm text-white/70">{money(s.priceCents)} / person</div>
 
                         <a
                           href={`${base}/admin/slots/${s.id}`}
-                          className="rounded-lg border border-white/10 px-4 py-2 text-sm text-white hover:bg-white/10"
+                          className="rounded-lg border border-white/10 px-4 py-2 text-sm text-white transition hover:bg-white/10"
                         >
                           Open slot
                         </a>
@@ -235,13 +239,13 @@ export default function AdminDashboardClient({
         })}
       </div>
 
-      {/* Utility styles */}
       <style jsx>{`
         .chip {
           padding: 4px 10px;
           border-radius: 999px;
           background: rgba(255, 255, 255, 0.05);
           border: 1px solid rgba(255, 255, 255, 0.08);
+          color: rgba(255, 255, 255, 0.92);
         }
         .chip-accent {
           padding: 4px 10px;
@@ -249,6 +253,15 @@ export default function AdminDashboardClient({
           background: rgba(236, 72, 153, 0.15);
           border: 1px solid rgba(236, 72, 153, 0.3);
           color: white;
+        }
+        .mode-badge {
+          padding: 4px 10px;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          color: rgba(255, 255, 255, 0.78);
+          font-size: 12px;
+          line-height: 1;
         }
       `}</style>
     </div>
