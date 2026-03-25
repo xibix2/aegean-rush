@@ -22,7 +22,7 @@ export async function GET(req: Request) {
     if (!activityId || !monthStr || !/^\d{4}-\d{2}$/.test(monthStr)) {
       return NextResponse.json(
         { error: "Missing or invalid activityId/month" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -45,16 +45,14 @@ export async function GET(req: Request) {
     });
 
     if (!activity) {
-      return NextResponse.json(
-        { error: "Activity not found" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Activity not found" }, { status: 404 });
     }
 
     const slots = await prisma.timeSlot.findMany({
       where: {
         startAt: { gte: start, lt: end },
         activityId: activity.id,
+        status: "open",
       },
       orderBy: { startAt: "asc" },
       select: {

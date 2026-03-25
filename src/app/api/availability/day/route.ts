@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
     if (!activityId || !date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       return NextResponse.json(
         { error: "Missing activityId or date (YYYY-MM-DD)" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -95,7 +95,7 @@ export async function GET(req: NextRequest) {
     if (!activity) {
       return NextResponse.json(
         { error: "Activity not found for tenant" },
-        { status: 404 },
+        { status: 404 }
       );
     }
 
@@ -103,6 +103,7 @@ export async function GET(req: NextRequest) {
       where: {
         startAt: { gte: dayStart, lt: dayEnd },
         activityId: activity.id,
+        status: "open",
       },
       orderBy: { startAt: "asc" },
       select: {
@@ -199,7 +200,9 @@ export async function GET(req: NextRequest) {
         return {
           id: slot.id,
           kind:
-            activity.mode === ActivityMode.DYNAMIC_RENTAL ? ("rental" as const) : ("hybrid" as const),
+            activity.mode === ActivityMode.DYNAMIC_RENTAL
+              ? ("rental" as const)
+              : ("hybrid" as const),
           start: slot.startAt.toISOString(),
           end: slot.endAt ? slot.endAt.toISOString() : null,
           capacity: slot.capacity,
@@ -238,7 +241,9 @@ export async function GET(req: NextRequest) {
       return {
         id: slot.id,
         kind:
-          activity.mode === ActivityMode.DYNAMIC_RENTAL ? ("rental" as const) : ("hybrid" as const),
+          activity.mode === ActivityMode.DYNAMIC_RENTAL
+            ? ("rental" as const)
+            : ("hybrid" as const),
         start: slot.startAt.toISOString(),
         end: slot.endAt ? slot.endAt.toISOString() : null,
         capacity: slot.capacity,
