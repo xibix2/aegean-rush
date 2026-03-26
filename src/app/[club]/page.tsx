@@ -8,6 +8,7 @@ import { HeroSectionClient } from "@/components/home/HeroSectionClient";
 import { CourtsHeaderClient } from "@/components/home/CourtsHeaderClient";
 import { GallerySectionClient } from "@/components/home/GallerySectionClient";
 import { HowItWorksSectionClient } from "@/components/home/HowItWorksSectionClient";
+import { WhyChooseUsSectionClient } from "@/components/home/WhyChooseUsSectionClient";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -164,24 +165,12 @@ export default async function ClubHome({
 
           case "WHY_CHOOSE_US":
             return (
-              <section
+              <WhyChooseUsSectionClient
                 key={section.id}
-                className="rounded-[2rem] border border-white/10 bg-white/[0.03] px-6 py-12 text-center backdrop-blur-xl"
-              >
-                <div className="mx-auto max-w-3xl">
-                  <p className="text-sm uppercase tracking-[0.22em] text-white/45">
-                    Why choose us
-                  </p>
-                  <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white md:text-4xl">
-                    {section.title || "Why choose us"}
-                  </h2>
-                  {section.subtitle ? (
-                    <p className="mx-auto mt-4 max-w-2xl text-white/65">
-                      {section.subtitle}
-                    </p>
-                  ) : null}
-                </div>
-              </section>
+                title={section.title}
+                subtitle={section.subtitle}
+                items={section.featureItems}
+              />
             );
 
           case "LOCATION":
