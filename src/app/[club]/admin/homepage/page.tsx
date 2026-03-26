@@ -3,6 +3,9 @@ import { Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { requireTenant } from "@/lib/tenant";
 import { revalidatePath } from "next/cache";
+import { writeFile, mkdir } from "node:fs/promises";
+import path from "node:path";
+import CoverPicker from "@/components/ui/CoverPicker";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -21,6 +24,24 @@ const SECTION_LABELS: Record<string, string> = {
   FAQ: "FAQ",
   FINAL_CTA: "Final CTA",
 };
+
+async function saveImageFile(file: File | null): Promise<string | null> {
+  if (!file || file.size === 0) return null;
+
+  const isDev = process.env.NODE_ENV !== "production";
+  const ext = path.extname(file.name || "upload.jpg") || ".jpg";
+  const filename = `${Date.now()}_${Math.random().toString(36).slice(2)}${ext}`;
+  const buf = Buffer.from(await file.arrayBuffer());
+
+  if (isDev) {
+    const uploadsDir = path.join(process.cwd(), "public", "uploads");
+    await mkdir(uploadsDir, { recursive: true });
+    await writeFile(path.join(uploadsDir, filename), buf);
+    return `/uploads/${filename}`;
+  }
+
+  return null;
+}
 
 export default async function AdminHomepagePage({ params }: PageProps) {
   const { club } = await params;
@@ -151,11 +172,11 @@ export default async function AdminHomepagePage({ params }: PageProps) {
 
     const slug = String(formData.get("clubSlug") || "");
     const sectionId = String(formData.get("sectionId") || "");
-    const imageUrl = normalizeText(formData.get("imageUrl"));
     const altText = normalizeText(formData.get("altText"));
     const caption = normalizeText(formData.get("caption"));
+    const uploaded = (formData.get("imageFile") as File) || null;
 
-    if (!slug || !sectionId || !imageUrl) return;
+    if (!slug || !sectionId) return;
 
     const verifiedTenant = await requireTenant(slug);
 
@@ -169,6 +190,9 @@ export default async function AdminHomepagePage({ params }: PageProps) {
     });
 
     if (!section) return;
+
+    const imageUrl = await saveImageFile(uploaded);
+    if (!imageUrl) return;
 
     const lastImage = await prisma.homepageGalleryImage.findFirst({
       where: { sectionId: section.id },
@@ -195,11 +219,11 @@ export default async function AdminHomepagePage({ params }: PageProps) {
 
     const slug = String(formData.get("clubSlug") || "");
     const imageId = String(formData.get("imageId") || "");
-    const imageUrl = normalizeText(formData.get("imageUrl"));
     const altText = normalizeText(formData.get("altText"));
     const caption = normalizeText(formData.get("caption"));
+    const replaceFile = (formData.get("replaceFile") as File) || null;
 
-    if (!slug || !imageId || !imageUrl) return;
+    if (!slug || !imageId) return;
 
     const verifiedTenant = await requireTenant(slug);
 
@@ -211,15 +235,20 @@ export default async function AdminHomepagePage({ params }: PageProps) {
           type: "GALLERY",
         },
       },
-      select: { id: true },
+      select: {
+        id: true,
+        imageUrl: true,
+      },
     });
 
     if (!image) return;
 
+    const uploadedUrl = await saveImageFile(replaceFile);
+
     await prisma.homepageGalleryImage.update({
       where: { id: image.id },
       data: {
-        imageUrl,
+        imageUrl: uploadedUrl || image.imageUrl,
         altText,
         caption,
       },
@@ -570,7 +599,7 @@ export default async function AdminHomepagePage({ params }: PageProps) {
                   <div className="mb-4">
                     <h3 className="text-lg font-semibold text-white">Gallery images</h3>
                     <p className="mt-1 text-sm text-white/55">
-                      Add image URLs for now. We can connect proper uploads next.
+                      Upload gallery photos directly from your device.
                     </p>
                   </div>
 
@@ -586,7 +615,7 @@ export default async function AdminHomepagePage({ params }: PageProps) {
                               Image #{imageIndex + 1}
                             </p>
                             <p className="text-xs text-white/45">
-                              Reorder, edit, or remove this gallery image.
+                              Reorder, replace, edit, or remove this gallery image.
                             </p>
                           </div>
 
@@ -630,30 +659,43 @@ export default async function AdminHomepagePage({ params }: PageProps) {
                           </div>
                         </div>
 
+                        <div className="mb-4 overflow-hidden rounded-2xl border border-white/10 bg-black/30">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={image.imageUrl}
+                            alt={image.altText || image.caption || `Gallery image ${imageIndex + 1}`}
+                            className="h-56 w-full object-cover"
+                          />
+                        </div>
+
                         <form action={saveGalleryImage} className="space-y-4">
                           <input type="hidden" name="clubSlug" value={tenant.slug} />
                           <input type="hidden" name="imageId" value={image.id} />
 
-                          <Field
-                            label="Image URL"
-                            name="imageUrl"
-                            defaultValue={image.imageUrl}
-                            placeholder="https://..."
-                          />
+                          <div className="grid gap-4 lg:grid-cols-[1fr_300px]">
+                            <div className="grid gap-4">
+                              <div className="grid gap-4 md:grid-cols-2">
+                                <Field
+                                  label="Alt text"
+                                  name="altText"
+                                  defaultValue={image.altText || ""}
+                                  placeholder="Boat at the marina"
+                                />
+                                <Field
+                                  label="Caption"
+                                  name="caption"
+                                  defaultValue={image.caption || ""}
+                                  placeholder="Golden hour by the water"
+                                />
+                              </div>
+                            </div>
 
-                          <div className="grid gap-4 md:grid-cols-2">
-                            <Field
-                              label="Alt text"
-                              name="altText"
-                              defaultValue={image.altText || ""}
-                              placeholder="Boat at the marina"
-                            />
-                            <Field
-                              label="Caption"
-                              name="caption"
-                              defaultValue={image.caption || ""}
-                              placeholder="Golden hour by the water"
-                            />
+                            <div className="flex flex-col gap-2">
+                              <label className="text-sm font-medium text-white/80">
+                                Replace image
+                              </label>
+                              <CoverPicker name="replaceFile" size={220} />
+                            </div>
                           </div>
 
                           <button
@@ -669,30 +711,35 @@ export default async function AdminHomepagePage({ params }: PageProps) {
                     <div className="rounded-2xl border border-dashed border-white/10 bg-black/20 p-4 md:p-5">
                       <h4 className="text-base font-semibold text-white">Add new image</h4>
                       <p className="mt-1 text-sm text-white/55">
-                        Add a new image to this club’s gallery section.
+                        Upload a new image to this club’s gallery section.
                       </p>
 
                       <form action={addGalleryImage} className="mt-4 space-y-4">
                         <input type="hidden" name="clubSlug" value={tenant.slug} />
                         <input type="hidden" name="sectionId" value={section.id} />
 
-                        <Field
-                          label="Image URL"
-                          name="imageUrl"
-                          placeholder="https://..."
-                        />
+                        <div className="grid gap-4 lg:grid-cols-[1fr_300px]">
+                          <div className="grid gap-4">
+                            <div className="grid gap-4 md:grid-cols-2">
+                              <Field
+                                label="Alt text"
+                                name="altText"
+                                placeholder="Jet skis lined up near the beach"
+                              />
+                              <Field
+                                label="Caption"
+                                name="caption"
+                                placeholder="Fast rides, clear water, summer energy"
+                              />
+                            </div>
+                          </div>
 
-                        <div className="grid gap-4 md:grid-cols-2">
-                          <Field
-                            label="Alt text"
-                            name="altText"
-                            placeholder="Jet skis lined up near the beach"
-                          />
-                          <Field
-                            label="Caption"
-                            name="caption"
-                            placeholder="Fast rides, clear water, summer energy"
-                          />
+                          <div className="flex flex-col gap-2">
+                            <label className="text-sm font-medium text-white/80">
+                              Upload image
+                            </label>
+                            <CoverPicker name="imageFile" size={220} />
+                          </div>
                         </div>
 
                         <button
