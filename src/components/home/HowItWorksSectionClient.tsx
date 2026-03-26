@@ -20,19 +20,38 @@ type HowItWorksSectionClientProps = {
 function getIcon(icon: string | null, index: number) {
   const value = (icon || "").toLowerCase();
 
-  if (value.includes("activity") || value.includes("compass")) {
+  if (value.includes("activity") || value.includes("experience") || value.includes("compass")) {
     return Compass;
   }
-  if (value.includes("calendar") || value.includes("date") || value.includes("time")) {
+  if (
+    value.includes("calendar") ||
+    value.includes("date") ||
+    value.includes("time")
+  ) {
     return CalendarDays;
   }
-  if (value.includes("pay") || value.includes("check") || value.includes("done")) {
+  if (
+    value.includes("pay") ||
+    value.includes("check") ||
+    value.includes("done") ||
+    value.includes("book")
+  ) {
     return CircleCheckBig;
   }
 
   if (index === 0) return Compass;
   if (index === 1) return CalendarDays;
   return CircleCheckBig;
+}
+
+function getStepGlow(index: number) {
+  if (index === 0) {
+    return "radial-gradient(circle, rgba(236,72,153,0.18) 0%, transparent 72%)";
+  }
+  if (index === 1) {
+    return "radial-gradient(circle, rgba(56,189,248,0.18) 0%, transparent 72%)";
+  }
+  return "radial-gradient(circle, rgba(168,85,247,0.18) 0%, transparent 72%)";
 }
 
 export function HowItWorksSectionClient({
@@ -46,15 +65,15 @@ export function HowItWorksSectionClient({
       : [
           {
             id: "1",
-            title: "Pick activity",
-            description: "Choose the experience that fits your mood.",
-            icon: "compass",
+            title: "Choose your experience",
+            description: "Browse the activities and pick the one that fits your mood.",
+            icon: "experience",
             sortOrder: 0,
           },
           {
             id: "2",
-            title: "Pick date & time",
-            description: "See real availability and choose your slot instantly.",
+            title: "Pick your time",
+            description: "Choose your date and time with real-time availability.",
             icon: "calendar",
             sortOrder: 1,
           },
@@ -80,8 +99,22 @@ export function HowItWorksSectionClient({
   0%,100% { opacity: .12; transform: translateY(0px); }
   50% { opacity: .22; transform: translateY(-10px); }
 }
+@keyframes hiwCardIn {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes hiwShimmer {
+  0% { transform: translateX(-120%) skewX(-18deg); opacity: 0; }
+  20% { opacity: .08; }
+  50% { opacity: .14; }
+  100% { transform: translateX(140%) skewX(-18deg); opacity: 0; }
+}
 @media (prefers-reduced-motion: reduce) {
-  .hiw-anim { animation: none !important; }
+  .hiw-anim,
+  .hiw-card {
+    animation: none !important;
+    transition: none !important;
+  }
 }
           `.trim(),
         }}
@@ -125,56 +158,68 @@ export function HowItWorksSectionClient({
 
           <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-white/65 md:text-base">
             {subtitle ||
-              "Pick activity, pick date and time, then pay and you're done."}
+              "Choose your experience, pick your date and time, then pay and you're done."}
           </p>
         </div>
 
-        <div className="mt-10 grid gap-4 md:grid-cols-3">
-          {resolvedItems.slice(0, 3).map((item, index) => {
-            const Icon = getIcon(item.icon, index);
+        <div className="relative mt-10">
+          <div className="pointer-events-none absolute left-[16.66%] right-[16.66%] top-1/2 hidden h-px -translate-y-1/2 md:block">
+            <div className="h-full w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+            <div className="absolute inset-0 h-full w-full bg-gradient-to-r from-transparent via-pink-400/25 to-cyan-300/20 blur-sm" />
+          </div>
 
-            return (
-              <div
-                key={item.id}
-                className="group relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-6 shadow-[0_24px_80px_-50px_rgba(0,0,0,0.95)] transition duration-300 hover:-translate-y-1 hover:border-white/20"
-              >
+          <div className="grid gap-4 md:grid-cols-3">
+            {resolvedItems.slice(0, 3).map((item, index) => {
+              const Icon = getIcon(item.icon, index);
+
+              return (
                 <div
-                  className="pointer-events-none absolute inset-x-0 top-0 h-24 opacity-60 blur-2xl"
+                  key={item.id}
+                  className="hiw-card group relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-6 shadow-[0_24px_80px_-50px_rgba(0,0,0,0.95)] transition duration-300 hover:-translate-y-1.5 hover:border-white/20 hover:bg-white/[0.055]"
                   style={{
-                    background:
-                      index === 0
-                        ? "radial-gradient(circle, rgba(236,72,153,0.16) 0%, transparent 70%)"
-                        : index === 1
-                        ? "radial-gradient(circle, rgba(56,189,248,0.16) 0%, transparent 70%)"
-                        : "radial-gradient(circle, rgba(168,85,247,0.16) 0%, transparent 70%)",
+                    animation: `hiwCardIn 600ms cubic-bezier(0.22,1,0.36,1) ${index * 90}ms both`,
                   }}
-                />
+                >
+                  <div
+                    className="pointer-events-none absolute inset-x-0 top-0 h-24 opacity-60 blur-2xl transition duration-500 group-hover:opacity-90"
+                    style={{ background: getStepGlow(index) }}
+                  />
 
-                <div className="relative flex items-center justify-between">
-                  <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-black/20 text-white backdrop-blur-xl">
-                    <Icon className="size-6 text-white" />
+                  <div
+                    className="pointer-events-none absolute inset-0 opacity-0 transition duration-500 group-hover:opacity-100"
+                    style={{
+                      background:
+                        "linear-gradient(120deg, transparent 20%, rgba(255,255,255,0.08) 50%, transparent 80%)",
+                      animation: "hiwShimmer 3.8s linear infinite",
+                    }}
+                  />
+
+                  <div className="relative flex items-center justify-between">
+                    <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-black/20 text-white backdrop-blur-xl transition duration-300 group-hover:-translate-y-1 group-hover:scale-[1.04]">
+                      <Icon className="size-7 text-white" />
+                    </div>
+
+                    <div className="text-4xl font-semibold text-white/[0.06] transition duration-300 group-hover:text-white/[0.09]">
+                      0{index + 1}
+                    </div>
                   </div>
 
-                  <div className="text-4xl font-semibold text-white/12">
-                    0{index + 1}
-                  </div>
+                  <h3 className="relative mt-6 text-xl font-semibold text-white">
+                    {item.title}
+                  </h3>
+
+                  <p className="relative mt-3 text-sm leading-relaxed text-white/62 md:text-base">
+                    {item.description ||
+                      (index === 0
+                        ? "Browse the activities and pick the one that fits your mood."
+                        : index === 1
+                        ? "Choose your date and time with real-time availability."
+                        : "Secure your booking in seconds and get instant confirmation.")}
+                  </p>
                 </div>
-
-                <h3 className="relative mt-6 text-xl font-semibold text-white">
-                  {item.title}
-                </h3>
-
-                <p className="relative mt-3 text-sm leading-relaxed text-white/62 md:text-base">
-                  {item.description ||
-                    (index === 0
-                      ? "Choose the experience that fits your mood."
-                      : index === 1
-                      ? "See real availability and select the best slot for you."
-                      : "Complete payment securely and get instant confirmation.")}
-                </p>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
     </section>
