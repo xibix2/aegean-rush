@@ -1,3 +1,4 @@
+// src/components/admin/NewActivityFormClient.tsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";

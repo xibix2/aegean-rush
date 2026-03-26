@@ -11,6 +11,7 @@ import { redirect } from "next/navigation";
 import { getPlanLimits } from "@/lib/billing";
 
 export const revalidate = 0;
+export const runtime = "nodejs";
 
 /* ====== utils ====== */
 function slugify(input: string) {
@@ -36,21 +37,36 @@ async function getUniqueSlug(base: string, clubId: string) {
 }
 
 async function saveImageFile(file: File | null): Promise<string | null> {
-  if (!file || file.size === 0) return null;
+  console.log("saveImageFile called");
+  console.log("file exists:", !!file);
+  console.log("file name:", file?.name);
+  console.log("file type:", file?.type);
+  console.log("file size:", file?.size);
 
-  const isDev = process.env.NODE_ENV !== "production";
+  if (!file || file.size === 0) {
+    console.log("No file or empty file");
+    return null;
+  }
+
+  if (!file.type?.startsWith("image/")) {
+    console.log("Rejected: not an image");
+    return null;
+  }
+
   const ext = path.extname(file.name || "upload.jpg") || ".jpg";
   const filename = `${Date.now()}_${Math.random().toString(36).slice(2)}${ext}`;
   const buf = Buffer.from(await file.arrayBuffer());
 
-  if (isDev) {
-    const uploadsDir = path.join(process.cwd(), "public", "uploads");
-    await mkdir(uploadsDir, { recursive: true });
-    await writeFile(path.join(uploadsDir, filename), buf);
-    return `/uploads/${filename}`;
-  }
+  const uploadsDir = path.join(process.cwd(), "public", "uploads");
+  console.log("uploadsDir:", uploadsDir);
 
-  return null;
+  await mkdir(uploadsDir, { recursive: true });
+  await writeFile(path.join(uploadsDir, filename), buf);
+
+  const finalPath = `/uploads/${filename}`;
+  console.log("saved to:", finalPath);
+
+  return finalPath;
 }
 
 function parsePositiveInt(value: FormDataEntryValue | null, fallback: number) {
@@ -153,7 +169,8 @@ async function createActivityAction(tenantSlug: string, formData: FormData) {
 
   const mode = parseActivityMode(formData.get("mode"));
   const description = String(formData.get("description") || "").trim();
-  const locationId = String(formData.get("locationId") || "hersonissos-port").trim() || "hersonissos-port";
+  const locationId =
+    String(formData.get("locationId") || "hersonissos-port").trim() || "hersonissos-port";
   const active = formData.get("active") === "on";
 
   const meetingPoint = normalizeText(formData.get("meetingPoint"));
@@ -193,7 +210,17 @@ async function createActivityAction(tenantSlug: string, formData: FormData) {
     mode === "FIXED_SEAT_EVENT" ? manualBasePrice : fallbackBasePrice;
 
   const uploaded = (formData.get("coverFile") as File) || null;
+
+  console.log("=== ACTIVITY UPLOAD DEBUG ===");
+  console.log("uploaded exists:", !!uploaded);
+  console.log("uploaded name:", uploaded?.name);
+  console.log("uploaded type:", uploaded?.type);
+  console.log("uploaded size:", uploaded?.size);
+
   const cover = await saveImageFile(uploaded);
+
+  console.log("saved cover path:", cover);
+  console.log("=== END ACTIVITY UPLOAD DEBUG ===");
 
   await prisma.activity.create({
     data: {
