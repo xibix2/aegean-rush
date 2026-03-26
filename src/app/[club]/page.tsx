@@ -10,6 +10,7 @@ import { GallerySectionClient } from "@/components/home/GallerySectionClient";
 import { HowItWorksSectionClient } from "@/components/home/HowItWorksSectionClient";
 import { WhyChooseUsSectionClient } from "@/components/home/WhyChooseUsSectionClient";
 import { FaqSectionClient } from "@/components/home/FaqSectionClient";
+import { FinalCtaSectionClient } from "@/components/home/FinalCtaSectionClient";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -225,24 +226,16 @@ export default async function ClubHome({
 
           case "FINAL_CTA":
             return (
-              <section
+              <FinalCtaSectionClient
                 key={section.id}
-                className="rounded-[2rem] border border-white/10 bg-white/[0.03] px-6 py-12 text-center backdrop-blur-xl"
-              >
-                <div className="mx-auto max-w-3xl">
-                  <p className="text-sm uppercase tracking-[0.22em] text-white/45">
-                    Ready when you are
-                  </p>
-                  <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white md:text-4xl">
-                    {section.title || "Ready to book your experience?"}
-                  </h2>
-                  {section.subtitle ? (
-                    <p className="mx-auto mt-4 max-w-2xl text-white/65">
-                      {section.subtitle}
-                    </p>
-                  ) : null}
-                </div>
-              </section>
+                title={section.title}
+                subtitle={section.subtitle}
+                body={section.body}
+                primaryCtaLabel={section.primaryCtaLabel}
+                primaryCtaHref={section.primaryCtaHref}
+                secondaryCtaLabel={section.secondaryCtaLabel}
+                secondaryCtaHref={section.secondaryCtaHref}
+              />
             );
 
           default:

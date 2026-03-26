@@ -983,6 +983,23 @@ export default async function AdminHomepagePage({ params }: PageProps) {
                   </div>
                 )}
 
+                {section.type === "FINAL_CTA" && (
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <Field
+                      label="Secondary CTA label"
+                      name="secondaryCtaLabel"
+                      defaultValue={section.secondaryCtaLabel || ""}
+                      placeholder="Find meeting point"
+                    />
+                    <Field
+                      label="Secondary CTA href"
+                      name="secondaryCtaHref"
+                      defaultValue={section.secondaryCtaHref || ""}
+                      placeholder="#meeting-point"
+                    />
+                  </div>
+                )}
+
                 <div className="pt-2">
                   <button
                     type="submit"
