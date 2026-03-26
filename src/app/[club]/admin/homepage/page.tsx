@@ -33,6 +33,7 @@ async function saveImageFile(file: File | null): Promise<string | null> {
   if (!file.type?.startsWith("image/")) return null;
 
   const ext = path.extname(file.name || "upload.jpg") || ".jpg";
+
   const filename = `homepage_${Date.now()}_${Math.random()
     .toString(36)
     .slice(2)}${ext}`;
@@ -546,6 +547,183 @@ export default async function AdminHomepagePage({ params }: PageProps) {
     revalidatePath(`/${slug}/admin/homepage`);
   }
 
+  async function addFaqItem(formData: FormData) {
+    "use server";
+
+    const slug = String(formData.get("clubSlug") || "");
+    const sectionId = String(formData.get("sectionId") || "");
+    const question = normalizeText(formData.get("faqQuestion"));
+    const answer = normalizeText(formData.get("faqAnswer"));
+
+    if (!slug || !sectionId || !question || !answer) return;
+
+    const verifiedTenant = await requireTenant(slug);
+
+    const section = await prisma.homepageSection.findFirst({
+      where: {
+        id: sectionId,
+        clubId: verifiedTenant.id,
+        type: "FAQ",
+      },
+      select: { id: true },
+    });
+
+    if (!section) return;
+
+    const lastItem = await prisma.homepageFaqItem.findFirst({
+      where: { sectionId: section.id },
+      orderBy: { sortOrder: "desc" },
+      select: { sortOrder: true },
+    });
+
+    await prisma.homepageFaqItem.create({
+      data: {
+        sectionId: section.id,
+        question,
+        answer,
+        sortOrder: (lastItem?.sortOrder ?? -1) + 1,
+      },
+    });
+
+    revalidatePath(`/${slug}`);
+    revalidatePath(`/${slug}/admin/homepage`);
+  }
+
+  async function saveFaqItem(formData: FormData) {
+    "use server";
+
+    const slug = String(formData.get("clubSlug") || "");
+    const itemId = String(formData.get("itemId") || "");
+    const question = normalizeText(formData.get("faqQuestion"));
+    const answer = normalizeText(formData.get("faqAnswer"));
+
+    if (!slug || !itemId || !question || !answer) return;
+
+    const verifiedTenant = await requireTenant(slug);
+
+    const item = await prisma.homepageFaqItem.findFirst({
+      where: {
+        id: itemId,
+        section: {
+          clubId: verifiedTenant.id,
+          type: "FAQ",
+        },
+      },
+      select: { id: true },
+    });
+
+    if (!item) return;
+
+    await prisma.homepageFaqItem.update({
+      where: { id: item.id },
+      data: {
+        question,
+        answer,
+      },
+    });
+
+    revalidatePath(`/${slug}`);
+    revalidatePath(`/${slug}/admin/homepage`);
+  }
+
+  async function deleteFaqItem(formData: FormData) {
+    "use server";
+
+    const slug = String(formData.get("clubSlug") || "");
+    const itemId = String(formData.get("itemId") || "");
+
+    if (!slug || !itemId) return;
+
+    const verifiedTenant = await requireTenant(slug);
+
+    const item = await prisma.homepageFaqItem.findFirst({
+      where: {
+        id: itemId,
+        section: {
+          clubId: verifiedTenant.id,
+          type: "FAQ",
+        },
+      },
+      select: { id: true },
+    });
+
+    if (!item) return;
+
+    await prisma.homepageFaqItem.delete({
+      where: { id: item.id },
+    });
+
+    revalidatePath(`/${slug}`);
+    revalidatePath(`/${slug}/admin/homepage`);
+  }
+
+  async function moveFaqItem(formData: FormData) {
+    "use server";
+
+    const slug = String(formData.get("clubSlug") || "");
+    const sectionId = String(formData.get("sectionId") || "");
+    const itemId = String(formData.get("itemId") || "");
+    const direction = String(formData.get("direction") || "");
+
+    if (!slug || !sectionId || !itemId || !direction) return;
+
+    const verifiedTenant = await requireTenant(slug);
+
+    const section = await prisma.homepageSection.findFirst({
+      where: {
+        id: sectionId,
+        clubId: verifiedTenant.id,
+        type: "FAQ",
+      },
+      select: { id: true },
+    });
+
+    if (!section) return;
+
+    const items = await prisma.homepageFaqItem.findMany({
+      where: { sectionId: section.id },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+      select: {
+        id: true,
+        sortOrder: true,
+      },
+    });
+
+    const currentIndex = items.findIndex((item) => item.id === itemId);
+    if (currentIndex === -1) return;
+
+    const targetIndex =
+      direction === "up"
+        ? currentIndex - 1
+        : direction === "down"
+        ? currentIndex + 1
+        : currentIndex;
+
+    if (
+      targetIndex < 0 ||
+      targetIndex >= items.length ||
+      targetIndex === currentIndex
+    ) {
+      return;
+    }
+
+    const reordered = [...items];
+    const [moved] = reordered.splice(currentIndex, 1);
+    reordered.splice(targetIndex, 0, moved);
+
+    await prisma.$transaction(
+      reordered.map((item, index) =>
+        prisma.homepageFaqItem.update({
+          where: { id: item.id },
+          data: { sortOrder: index },
+        })
+      )
+    );
+
+    revalidatePath(`/${slug}`);
+    revalidatePath(`/${slug}/admin/homepage`);
+  }
+
   const sections = await prisma.homepageSection.findMany({
     where: { clubId: tenant.id },
     orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
@@ -570,6 +748,15 @@ export default async function AdminHomepagePage({ params }: PageProps) {
           imageUrl: true,
           altText: true,
           caption: true,
+          sortOrder: true,
+        },
+      },
+      faqItems: {
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+        select: {
+          id: true,
+          question: true,
+          answer: true,
           sortOrder: true,
         },
       },
@@ -1038,6 +1225,195 @@ export default async function AdminHomepagePage({ params }: PageProps) {
                               : "Highlight a review score, years of experience, or another trust point."
                           }
                           rows={3}
+                        />
+
+                        <button
+                          type="submit"
+                          className="inline-flex h-10 items-center justify-center rounded-xl bg-gradient-to-r from-pink-500 to-fuchsia-500 px-4 text-sm font-medium text-white shadow-[0_12px_40px_-16px_rgba(236,72,153,0.75)] transition hover:scale-[1.02]"
+                        >
+                          Add item
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {section.type === "FAQ" && (
+                <div className="mt-8 border-t border-white/10 pt-8">
+                  <div className="mb-4">
+                    <h3 className="text-lg font-semibold text-white">
+                      FAQ items
+                    </h3>
+                    <p className="mt-1 text-sm text-white/55">
+                      Add the most common guest questions and answer them clearly.
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    {section.faqItems.map((item, itemIndex) => (
+                      <div
+                        key={item.id}
+                        className="rounded-2xl border border-white/10 bg-black/20 p-4"
+                      >
+                        <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-white">
+                              Question #{itemIndex + 1}
+                            </p>
+                            <p className="text-xs text-white/45">
+                              Reorder, edit, or remove this FAQ entry.
+                            </p>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <form action={moveFaqItem}>
+                              <input
+                                type="hidden"
+                                name="clubSlug"
+                                value={tenant.slug}
+                              />
+                              <input
+                                type="hidden"
+                                name="sectionId"
+                                value={section.id}
+                              />
+                              <input
+                                type="hidden"
+                                name="itemId"
+                                value={item.id}
+                              />
+                              <input
+                                type="hidden"
+                                name="direction"
+                                value="up"
+                              />
+                              <button
+                                type="submit"
+                                className="inline-flex h-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] px-3 text-xs text-white/80 transition hover:bg-white/[0.08]"
+                              >
+                                Up
+                              </button>
+                            </form>
+
+                            <form action={moveFaqItem}>
+                              <input
+                                type="hidden"
+                                name="clubSlug"
+                                value={tenant.slug}
+                              />
+                              <input
+                                type="hidden"
+                                name="sectionId"
+                                value={section.id}
+                              />
+                              <input
+                                type="hidden"
+                                name="itemId"
+                                value={item.id}
+                              />
+                              <input
+                                type="hidden"
+                                name="direction"
+                                value="down"
+                              />
+                              <button
+                                type="submit"
+                                className="inline-flex h-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] px-3 text-xs text-white/80 transition hover:bg-white/[0.08]"
+                              >
+                                Down
+                              </button>
+                            </form>
+
+                            <form action={deleteFaqItem}>
+                              <input
+                                type="hidden"
+                                name="clubSlug"
+                                value={tenant.slug}
+                              />
+                              <input
+                                type="hidden"
+                                name="itemId"
+                                value={item.id}
+                              />
+                              <button
+                                type="submit"
+                                className="inline-flex h-9 items-center justify-center rounded-xl border border-red-400/20 bg-red-500/10 px-3 text-xs text-red-200 transition hover:bg-red-500/15"
+                              >
+                                Delete
+                              </button>
+                            </form>
+                          </div>
+                        </div>
+
+                        <form action={saveFaqItem} className="space-y-4">
+                          <input
+                            type="hidden"
+                            name="clubSlug"
+                            value={tenant.slug}
+                          />
+                          <input
+                            type="hidden"
+                            name="itemId"
+                            value={item.id}
+                          />
+
+                          <Field
+                            label="Question"
+                            name="faqQuestion"
+                            defaultValue={item.question}
+                            placeholder="Do I need experience before booking?"
+                          />
+
+                          <TextAreaField
+                            label="Answer"
+                            name="faqAnswer"
+                            defaultValue={item.answer}
+                            placeholder="No, many activities are beginner-friendly and the club can guide guests to the best option."
+                            rows={4}
+                          />
+
+                          <button
+                            type="submit"
+                            className="inline-flex h-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] px-4 text-sm font-medium text-white/85 transition hover:bg-white/[0.08]"
+                          >
+                            Save item
+                          </button>
+                        </form>
+                      </div>
+                    ))}
+
+                    <div className="rounded-2xl border border-dashed border-white/10 bg-black/20 p-4 md:p-5">
+                      <h4 className="text-base font-semibold text-white">
+                        Add new FAQ item
+                      </h4>
+                      <p className="mt-1 text-sm text-white/55">
+                        Add another question guests often ask before booking.
+                      </p>
+
+                      <form action={addFaqItem} className="mt-4 space-y-4">
+                        <input
+                          type="hidden"
+                          name="clubSlug"
+                          value={tenant.slug}
+                        />
+                        <input
+                          type="hidden"
+                          name="sectionId"
+                          value={section.id}
+                        />
+
+                        <Field
+                          label="Question"
+                          name="faqQuestion"
+                          placeholder="What should I bring with me?"
+                        />
+
+                        <TextAreaField
+                          label="Answer"
+                          name="faqAnswer"
+                          placeholder="Bring swimwear, a towel, sunscreen, and any extra essentials mentioned by the club."
+                          rows={4}
                         />
 
                         <button
