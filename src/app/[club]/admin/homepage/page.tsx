@@ -1,14 +1,15 @@
 // src/app/[club]/admin/homepage/page.tsx
 import { Prisma } from "@prisma/client";
+import { put } from "@vercel/blob";
 import prisma from "@/lib/prisma";
 import { requireTenant } from "@/lib/tenant";
 import { revalidatePath } from "next/cache";
-import { writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import CoverPicker from "@/components/ui/CoverPicker";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+export const runtime = "nodejs";
 
 type PageProps = {
   params: Promise<{ club: string }>;
@@ -27,20 +28,18 @@ const SECTION_LABELS: Record<string, string> = {
 
 async function saveImageFile(file: File | null): Promise<string | null> {
   if (!file || file.size === 0) return null;
+  if (!file.type?.startsWith("image/")) return null;
 
-  const isDev = process.env.NODE_ENV !== "production";
   const ext = path.extname(file.name || "upload.jpg") || ".jpg";
-  const filename = `${Date.now()}_${Math.random().toString(36).slice(2)}${ext}`;
-  const buf = Buffer.from(await file.arrayBuffer());
+  const filename = `homepage_${Date.now()}_${Math.random()
+    .toString(36)
+    .slice(2)}${ext}`;
 
-  if (isDev) {
-    const uploadsDir = path.join(process.cwd(), "public", "uploads");
-    await mkdir(uploadsDir, { recursive: true });
-    await writeFile(path.join(uploadsDir, filename), buf);
-    return `/uploads/${filename}`;
-  }
+  const blob = await put(filename, file, {
+    access: "public",
+  });
 
-  return null;
+  return blob.url;
 }
 
 export default async function AdminHomepagePage({ params }: PageProps) {
@@ -144,9 +143,17 @@ export default async function AdminHomepagePage({ params }: PageProps) {
     if (currentIndex === -1) return;
 
     const targetIndex =
-      direction === "up" ? currentIndex - 1 : direction === "down" ? currentIndex + 1 : currentIndex;
+      direction === "up"
+        ? currentIndex - 1
+        : direction === "down"
+        ? currentIndex + 1
+        : currentIndex;
 
-    if (targetIndex < 0 || targetIndex >= sections.length || targetIndex === currentIndex) {
+    if (
+      targetIndex < 0 ||
+      targetIndex >= sections.length ||
+      targetIndex === currentIndex
+    ) {
       return;
     }
 
@@ -325,9 +332,17 @@ export default async function AdminHomepagePage({ params }: PageProps) {
     if (currentIndex === -1) return;
 
     const targetIndex =
-      direction === "up" ? currentIndex - 1 : direction === "down" ? currentIndex + 1 : currentIndex;
+      direction === "up"
+        ? currentIndex - 1
+        : direction === "down"
+        ? currentIndex + 1
+        : currentIndex;
 
-    if (targetIndex < 0 || targetIndex >= images.length || targetIndex === currentIndex) {
+    if (
+      targetIndex < 0 ||
+      targetIndex >= images.length ||
+      targetIndex === currentIndex
+    ) {
       return;
     }
 
@@ -380,7 +395,7 @@ export default async function AdminHomepagePage({ params }: PageProps) {
 
   return (
     <div className="space-y-8">
-      <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 md:p-8 backdrop-blur-xl">
+      <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 backdrop-blur-xl md:p-8">
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.22em] text-white/45">
@@ -390,8 +405,8 @@ export default async function AdminHomepagePage({ params }: PageProps) {
               Customize your club homepage
             </h1>
             <p className="mt-3 max-w-2xl text-sm text-white/65 md:text-base">
-              Edit the main landing page for this club, control which sections appear,
-              and fine-tune the first impression guests see.
+              Edit the main landing page for this club, control which sections
+              appear, and fine-tune the first impression guests see.
             </p>
           </div>
 
@@ -414,7 +429,9 @@ export default async function AdminHomepagePage({ params }: PageProps) {
               : null;
 
           const highlightTitle =
-            typeof dataJson?.highlightTitle === "string" ? dataJson.highlightTitle : "";
+            typeof dataJson?.highlightTitle === "string"
+              ? dataJson.highlightTitle
+              : "";
 
           const microText =
             typeof dataJson?.microText === "string" ? dataJson.microText : "";
@@ -422,7 +439,7 @@ export default async function AdminHomepagePage({ params }: PageProps) {
           return (
             <div
               key={section.id}
-              className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 md:p-7 backdrop-blur-xl"
+              className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 backdrop-blur-xl md:p-7"
             >
               <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div>
@@ -506,7 +523,8 @@ export default async function AdminHomepagePage({ params }: PageProps) {
                   />
                 </div>
 
-                {(section.type === "LOCATION" || section.type === "FINAL_CTA") && (
+                {(section.type === "LOCATION" ||
+                  section.type === "FINAL_CTA") && (
                   <div className="grid gap-4">
                     <TextAreaField
                       label="Body"
@@ -567,7 +585,8 @@ export default async function AdminHomepagePage({ params }: PageProps) {
                   </>
                 )}
 
-                {(section.type === "LOCATION" || section.type === "FINAL_CTA") && (
+                {(section.type === "LOCATION" ||
+                  section.type === "FINAL_CTA") && (
                   <div className="grid gap-4 md:grid-cols-2">
                     <Field
                       label="Primary CTA label"
@@ -597,7 +616,9 @@ export default async function AdminHomepagePage({ params }: PageProps) {
               {section.type === "GALLERY" && (
                 <div className="mt-8 border-t border-white/10 pt-8">
                   <div className="mb-4">
-                    <h3 className="text-lg font-semibold text-white">Gallery images</h3>
+                    <h3 className="text-lg font-semibold text-white">
+                      Gallery images
+                    </h3>
                     <p className="mt-1 text-sm text-white/55">
                       Upload gallery photos directly from your device.
                     </p>
@@ -615,16 +636,33 @@ export default async function AdminHomepagePage({ params }: PageProps) {
                               Image #{imageIndex + 1}
                             </p>
                             <p className="text-xs text-white/45">
-                              Reorder, replace, edit, or remove this gallery image.
+                              Reorder, replace, edit, or remove this gallery
+                              image.
                             </p>
                           </div>
 
                           <div className="flex items-center gap-2">
                             <form action={moveGalleryImage}>
-                              <input type="hidden" name="clubSlug" value={tenant.slug} />
-                              <input type="hidden" name="sectionId" value={section.id} />
-                              <input type="hidden" name="imageId" value={image.id} />
-                              <input type="hidden" name="direction" value="up" />
+                              <input
+                                type="hidden"
+                                name="clubSlug"
+                                value={tenant.slug}
+                              />
+                              <input
+                                type="hidden"
+                                name="sectionId"
+                                value={section.id}
+                              />
+                              <input
+                                type="hidden"
+                                name="imageId"
+                                value={image.id}
+                              />
+                              <input
+                                type="hidden"
+                                name="direction"
+                                value="up"
+                              />
                               <button
                                 type="submit"
                                 className="inline-flex h-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] px-3 text-xs text-white/80 transition hover:bg-white/[0.08]"
@@ -634,10 +672,26 @@ export default async function AdminHomepagePage({ params }: PageProps) {
                             </form>
 
                             <form action={moveGalleryImage}>
-                              <input type="hidden" name="clubSlug" value={tenant.slug} />
-                              <input type="hidden" name="sectionId" value={section.id} />
-                              <input type="hidden" name="imageId" value={image.id} />
-                              <input type="hidden" name="direction" value="down" />
+                              <input
+                                type="hidden"
+                                name="clubSlug"
+                                value={tenant.slug}
+                              />
+                              <input
+                                type="hidden"
+                                name="sectionId"
+                                value={section.id}
+                              />
+                              <input
+                                type="hidden"
+                                name="imageId"
+                                value={image.id}
+                              />
+                              <input
+                                type="hidden"
+                                name="direction"
+                                value="down"
+                              />
                               <button
                                 type="submit"
                                 className="inline-flex h-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] px-3 text-xs text-white/80 transition hover:bg-white/[0.08]"
@@ -647,8 +701,16 @@ export default async function AdminHomepagePage({ params }: PageProps) {
                             </form>
 
                             <form action={deleteGalleryImage}>
-                              <input type="hidden" name="clubSlug" value={tenant.slug} />
-                              <input type="hidden" name="imageId" value={image.id} />
+                              <input
+                                type="hidden"
+                                name="clubSlug"
+                                value={tenant.slug}
+                              />
+                              <input
+                                type="hidden"
+                                name="imageId"
+                                value={image.id}
+                              />
                               <button
                                 type="submit"
                                 className="inline-flex h-9 items-center justify-center rounded-xl border border-red-400/20 bg-red-500/10 px-3 text-xs text-red-200 transition hover:bg-red-500/15"
@@ -663,14 +725,30 @@ export default async function AdminHomepagePage({ params }: PageProps) {
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={image.imageUrl}
-                            alt={image.altText || image.caption || `Gallery image ${imageIndex + 1}`}
+                            alt={
+                              image.altText ||
+                              image.caption ||
+                              `Gallery image ${imageIndex + 1}`
+                            }
                             className="h-56 w-full object-cover"
                           />
                         </div>
 
-                        <form action={saveGalleryImage} encType="multipart/form-data" className="space-y-4">
-                          <input type="hidden" name="clubSlug" value={tenant.slug} />
-                          <input type="hidden" name="imageId" value={image.id} />
+                        <form
+                          action={saveGalleryImage}
+                          encType="multipart/form-data"
+                          className="space-y-4"
+                        >
+                          <input
+                            type="hidden"
+                            name="clubSlug"
+                            value={tenant.slug}
+                          />
+                          <input
+                            type="hidden"
+                            name="imageId"
+                            value={image.id}
+                          />
 
                           <div className="grid gap-4 lg:grid-cols-[1fr_300px]">
                             <div className="grid gap-4">
@@ -709,14 +787,28 @@ export default async function AdminHomepagePage({ params }: PageProps) {
                     ))}
 
                     <div className="rounded-2xl border border-dashed border-white/10 bg-black/20 p-4 md:p-5">
-                      <h4 className="text-base font-semibold text-white">Add new image</h4>
+                      <h4 className="text-base font-semibold text-white">
+                        Add new image
+                      </h4>
                       <p className="mt-1 text-sm text-white/55">
                         Upload a new image to this club’s gallery section.
                       </p>
 
-                      <form action={addGalleryImage} encType="multipart/form-data" className="mt-4 space-y-4">
-                        <input type="hidden" name="clubSlug" value={tenant.slug} />
-                        <input type="hidden" name="sectionId" value={section.id} />
+                      <form
+                        action={addGalleryImage}
+                        encType="multipart/form-data"
+                        className="mt-4 space-y-4"
+                      >
+                        <input
+                          type="hidden"
+                          name="clubSlug"
+                          value={tenant.slug}
+                        />
+                        <input
+                          type="hidden"
+                          name="sectionId"
+                          value={section.id}
+                        />
 
                         <div className="grid gap-4 lg:grid-cols-[1fr_300px]">
                           <div className="grid gap-4">
@@ -775,7 +867,9 @@ function Field(props: {
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm font-medium text-white/80">{props.label}</span>
+      <span className="mb-2 block text-sm font-medium text-white/80">
+        {props.label}
+      </span>
       <input
         type="text"
         name={props.name}
@@ -796,7 +890,9 @@ function TextAreaField(props: {
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm font-medium text-white/80">{props.label}</span>
+      <span className="mb-2 block text-sm font-medium text-white/80">
+        {props.label}
+      </span>
       <textarea
         name={props.name}
         defaultValue={props.defaultValue}

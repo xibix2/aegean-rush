@@ -1,7 +1,7 @@
 // src/app/[club]/admin/activities/new/page.tsx
 import { revalidatePath } from "next/cache";
+import { put } from "@vercel/blob";
 import prisma from "@/lib/prisma";
-import { writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { NewActivityHeaderClient } from "@/components/admin/NewActivityHeaderClient";
 import { NewActivityFormClient } from "@/components/admin/NewActivityFormClient";
@@ -37,36 +37,19 @@ async function getUniqueSlug(base: string, clubId: string) {
 }
 
 async function saveImageFile(file: File | null): Promise<string | null> {
-  console.log("saveImageFile called");
-  console.log("file exists:", !!file);
-  console.log("file name:", file?.name);
-  console.log("file type:", file?.type);
-  console.log("file size:", file?.size);
-
-  if (!file || file.size === 0) {
-    console.log("No file or empty file");
-    return null;
-  }
-
-  if (!file.type?.startsWith("image/")) {
-    console.log("Rejected: not an image");
-    return null;
-  }
+  if (!file || file.size === 0) return null;
+  if (!file.type?.startsWith("image/")) return null;
 
   const ext = path.extname(file.name || "upload.jpg") || ".jpg";
-  const filename = `${Date.now()}_${Math.random().toString(36).slice(2)}${ext}`;
-  const buf = Buffer.from(await file.arrayBuffer());
+  const filename = `activity_${Date.now()}_${Math.random()
+    .toString(36)
+    .slice(2)}${ext}`;
 
-  const uploadsDir = path.join(process.cwd(), "public", "uploads");
-  console.log("uploadsDir:", uploadsDir);
+  const blob = await put(filename, file, {
+    access: "public",
+  });
 
-  await mkdir(uploadsDir, { recursive: true });
-  await writeFile(path.join(uploadsDir, filename), buf);
-
-  const finalPath = `/uploads/${filename}`;
-  console.log("saved to:", finalPath);
-
-  return finalPath;
+  return blob.url;
 }
 
 function parsePositiveInt(value: FormDataEntryValue | null, fallback: number) {
@@ -170,7 +153,8 @@ async function createActivityAction(tenantSlug: string, formData: FormData) {
   const mode = parseActivityMode(formData.get("mode"));
   const description = String(formData.get("description") || "").trim();
   const locationId =
-    String(formData.get("locationId") || "hersonissos-port").trim() || "hersonissos-port";
+    String(formData.get("locationId") || "hersonissos-port").trim() ||
+    "hersonissos-port";
   const active = formData.get("active") === "on";
 
   const meetingPoint = normalizeText(formData.get("meetingPoint"));
@@ -185,12 +169,19 @@ async function createActivityAction(tenantSlug: string, formData: FormData) {
   const minParty = parsePositiveInt(formData.get("minParty"), 1);
   const maxParty = Math.max(
     minParty,
-    parsePositiveInt(formData.get("maxParty"), mode === "FIXED_SEAT_EVENT" ? 4 : 6)
+    parsePositiveInt(
+      formData.get("maxParty"),
+      mode === "FIXED_SEAT_EVENT" ? 4 : 6
+    )
   );
 
-  const slotIntervalMin = parseOptionalPositiveInt(formData.get("slotIntervalMin"));
+  const slotIntervalMin = parseOptionalPositiveInt(
+    formData.get("slotIntervalMin")
+  );
   const guestsPerUnit = parseOptionalPositiveInt(formData.get("guestsPerUnit"));
-  const maxUnitsPerBooking = parseOptionalPositiveInt(formData.get("maxUnitsPerBooking"));
+  const maxUnitsPerBooking = parseOptionalPositiveInt(
+    formData.get("maxUnitsPerBooking")
+  );
 
   const durationOptions = parseDurationOptions(formData);
 
@@ -198,10 +189,14 @@ async function createActivityAction(tenantSlug: string, formData: FormData) {
   const manualBasePrice = parseEuroToCents(formData.get("basePriceEuro"), 0);
 
   const fallbackDurationMin =
-    durationOptions.length > 0 ? durationOptions[0].durationMin : manualDurationMin;
+    durationOptions.length > 0
+      ? durationOptions[0].durationMin
+      : manualDurationMin;
 
   const fallbackBasePrice =
-    durationOptions.length > 0 ? durationOptions[0].priceCents : manualBasePrice;
+    durationOptions.length > 0
+      ? durationOptions[0].priceCents
+      : manualBasePrice;
 
   const durationMin =
     mode === "FIXED_SEAT_EVENT" ? manualDurationMin : fallbackDurationMin;
@@ -210,17 +205,7 @@ async function createActivityAction(tenantSlug: string, formData: FormData) {
     mode === "FIXED_SEAT_EVENT" ? manualBasePrice : fallbackBasePrice;
 
   const uploaded = (formData.get("coverFile") as File) || null;
-
-  console.log("=== ACTIVITY UPLOAD DEBUG ===");
-  console.log("uploaded exists:", !!uploaded);
-  console.log("uploaded name:", uploaded?.name);
-  console.log("uploaded type:", uploaded?.type);
-  console.log("uploaded size:", uploaded?.size);
-
   const cover = await saveImageFile(uploaded);
-
-  console.log("saved cover path:", cover);
-  console.log("=== END ACTIVITY UPLOAD DEBUG ===");
 
   await prisma.activity.create({
     data: {

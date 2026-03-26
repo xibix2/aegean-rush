@@ -51,3 +51,4 @@ prisma/migrations/dev.db
 # Misc
 dist
 coverage
+.env*.local
