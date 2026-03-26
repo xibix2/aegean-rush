@@ -6,6 +6,7 @@ import CourtsSection from "@/app/_sections/ExperiencesSection";
 import CourtsSkeleton from "@/components/ui/CourtsSkeleton";
 import { HeroSectionClient } from "@/components/home/HeroSectionClient";
 import { CourtsHeaderClient } from "@/components/home/CourtsHeaderClient";
+import { GallerySectionClient } from "@/components/home/GallerySectionClient";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -42,6 +43,17 @@ export default async function ClubHome({
       secondaryCtaHref: true,
       badgeText: true,
       dataJson: true,
+      galleryImages: {
+        orderBy: {
+          sortOrder: "asc",
+        },
+        select: {
+          id: true,
+          imageUrl: true,
+          altText: true,
+          caption: true,
+        },
+      },
     },
   });
 
@@ -119,24 +131,12 @@ export default async function ClubHome({
 
           case "GALLERY":
             return (
-              <section
+              <GallerySectionClient
                 key={section.id}
-                className="rounded-[2rem] border border-white/10 bg-white/[0.03] px-6 py-12 text-center backdrop-blur-xl"
-              >
-                <div className="mx-auto max-w-3xl">
-                  <p className="text-sm uppercase tracking-[0.22em] text-white/45">
-                    Gallery
-                  </p>
-                  <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white md:text-4xl">
-                    {section.title || "Gallery coming soon"}
-                  </h2>
-                  {section.subtitle ? (
-                    <p className="mx-auto mt-4 max-w-2xl text-white/65">
-                      {section.subtitle}
-                    </p>
-                  ) : null}
-                </div>
-              </section>
+                title={section.title}
+                subtitle={section.subtitle}
+                images={section.galleryImages}
+              />
             );
 
           case "HOW_IT_WORKS":
