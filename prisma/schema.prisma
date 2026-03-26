@@ -14,10 +14,10 @@ enum SubscriptionPlan {
 }
 
 enum SubscriptionStatus {
-  INACTIVE   // no active subscription yet
-  TRIALING   // optional: free trial period
-  ACTIVE     // paid & current
-  PAST_DUE   // payment issues
+  INACTIVE
+  TRIALING
+  ACTIVE
+  PAST_DUE
   CANCELED
 }
 
@@ -27,6 +27,17 @@ enum ActivityMode {
   HYBRID_UNIT_BOOKING
 }
 
+enum HomepageSectionType {
+  HERO
+  GALLERY
+  ACTIVITIES
+  HOW_IT_WORKS
+  WHY_CHOOSE_US
+  LOCATION
+  FAQ
+  FINAL_CTA
+}
+
 model Club {
   id         String       @id @default(cuid())
   slug       String       @unique
@@ -34,7 +45,6 @@ model Club {
   currency   String
   location   String?
 
-  // BRANDING
   primaryHex      String?
   logoKey         String?
   emailFromName   String?
@@ -48,7 +58,8 @@ model Club {
   users       User[]
   staffInvites StaffInvite[]
 
-  // BILLING FIELDS
+  homepageSections HomepageSection[]
+
   subscriptionPlan    SubscriptionPlan   @default(BASIC)
   subscriptionStatus  SubscriptionStatus @default(INACTIVE)
 
@@ -57,8 +68,82 @@ model Club {
   stripePriceId         String?
   trialEndsAt           DateTime?
 
-  // Stripe Connect Express account for payouts
   stripeConnectAccountId String? @unique
+}
+
+model HomepageSection {
+  id                 String              @id @default(cuid())
+  clubId             String
+  type               HomepageSectionType
+  enabled            Boolean             @default(true)
+  sortOrder          Int                 @default(0)
+
+  title              String?
+  subtitle           String?
+  body               String?
+
+  primaryCtaLabel    String?
+  primaryCtaHref     String?
+  secondaryCtaLabel  String?
+  secondaryCtaHref   String?
+
+  badgeText          String?
+  dataJson           Json?
+
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  club               Club                @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  galleryImages      HomepageGalleryImage[]
+  faqItems           HomepageFaqItem[]
+  featureItems       HomepageFeatureItem[]
+
+  @@index([clubId, sortOrder])
+  @@unique([clubId, type], name: "clubId_type")
+}
+
+model HomepageGalleryImage {
+  id          String           @id @default(cuid())
+  sectionId   String
+  imageUrl    String
+  altText     String?
+  caption     String?
+  sortOrder   Int              @default(0)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  section     HomepageSection  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  @@index([sectionId, sortOrder])
+}
+
+model HomepageFaqItem {
+  id          String           @id @default(cuid())
+  sectionId   String
+  question    String
+  answer      String
+  sortOrder   Int              @default(0)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  section     HomepageSection  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  @@index([sectionId, sortOrder])
+}
+
+model HomepageFeatureItem {
+  id          String           @id @default(cuid())
+  sectionId   String
+  title       String
+  description String?
+  icon        String?
+  sortOrder   Int              @default(0)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  section     HomepageSection  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  @@index([sectionId, sortOrder])
 }
 
 model User {
@@ -73,8 +158,8 @@ model User {
 
   resetTokens PasswordResetToken[]
 
-  @@unique([email, clubId]) // unique per club (multiple NULLs for superadmin are allowed)
-  @@index([clubId]) // speeds up lookups by club
+  @@unique([email, clubId])
+  @@index([clubId])
 }
 
 model PasswordResetToken {
@@ -86,7 +171,7 @@ model PasswordResetToken {
   usedAt    DateTime?
   createdAt DateTime  @default(now())
 
-  @@index([userId]) // speeds up token→user lookups
+  @@index([userId])
 }
 
 model Customer {
@@ -119,10 +204,8 @@ model Activity {
   sport              String       @default("tennis")
   coverImageUrl      String?
 
-  // NEW: activity behavior mode
   mode               ActivityMode @default(FIXED_SEAT_EVENT)
 
-  // NEW: tourism / rental / hybrid metadata
   meetingPoint       String?
   includedText       String?
   bringText          String?
@@ -132,13 +215,12 @@ model Activity {
   safetyInfo         String?
   pricingNotes       String?
 
-  // NEW: unit-based booking logic
   guestsPerUnit      Int?
   maxUnitsPerBooking Int?
   slotIntervalMin    Int?
 
   createdAt          DateTime     @default(now())
-  updatedAt          DateTime     @default(now()) @updatedAt
+  updatedAt          DateTime     @updatedAt
   club               Club         @relation(fields: [clubId], references: [id])
   bookings           Booking[]
   timeSlots          TimeSlot[]

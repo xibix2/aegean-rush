@@ -1,3 +1,4 @@
+// src/components/home/HeroSectionClient.tsx
 "use client";
 
 import Link from "next/link";
@@ -11,11 +12,46 @@ import {
 } from "lucide-react";
 import { useT } from "@/components/I18nProvider";
 
-export function HeroSectionClient({ tenantSlug }: { tenantSlug: string }) {
+type HeroSectionClientProps = {
+  tenantSlug: string;
+  badgeText?: string | null;
+  title?: string | null;
+  highlightTitle?: string | null;
+  subtitle?: string | null;
+  primaryCtaLabel?: string | null;
+  primaryCtaHref?: string | null;
+  secondaryCtaLabel?: string | null;
+  secondaryCtaHref?: string | null;
+  microText?: string | null;
+};
+
+export function HeroSectionClient({
+  tenantSlug,
+  badgeText,
+  title,
+  highlightTitle,
+  subtitle,
+  primaryCtaLabel,
+  primaryCtaHref,
+  secondaryCtaLabel,
+  secondaryCtaHref,
+  microText,
+}: HeroSectionClientProps) {
   const t = useT();
 
   const base = `/${tenantSlug}`;
-  const activitiesHref = `${base}/activities`;
+  const defaultActivitiesHref = `${base}/activities`;
+
+  const resolvedBadgeText = badgeText || "Aegean thrill experiences";
+  const resolvedTitle = title || "Book your next Aegean experience in seconds.";
+  const resolvedHighlightTitle = highlightTitle || "Ride the sea. Feel the rush.";
+  const resolvedSubtitle =
+    subtitle || "Real-time availability. Secure booking. Instant confirmation.";
+  const resolvedPrimaryCtaLabel = primaryCtaLabel || "Explore experiences";
+  const resolvedPrimaryCtaHref = primaryCtaHref || defaultActivitiesHref;
+  const resolvedSecondaryCtaLabel = secondaryCtaLabel || "Find us";
+  const resolvedSecondaryCtaHref = secondaryCtaHref || "#meeting-point";
+  const resolvedMicroText = microText || "No calls. No waiting. Book instantly.";
 
   return (
     <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#050816] px-6 py-16 text-white shadow-[0_30px_120px_-40px_rgba(0,0,0,0.8)] sm:px-10 md:px-14 md:py-24">
@@ -114,23 +150,23 @@ export function HeroSectionClient({ tenantSlug }: { tenantSlug: string }) {
       <div className="relative z-10 mx-auto max-w-4xl text-center">
         <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/6 px-4 py-2 text-xs font-medium tracking-[0.18em] text-white/80 uppercase backdrop-blur-xl">
           <Sparkles className="size-3.5 text-pink-300" />
-          Aegean thrill experiences
+          {resolvedBadgeText}
         </div>
 
         <h1 className="text-4xl font-semibold leading-[1.02] tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
-          <span className="block">Book your next Aegean experience in seconds.</span>
+          <span className="block">{resolvedTitle}</span>
           <span className="mt-2 block bg-gradient-to-r from-cyan-200 via-white to-pink-300 bg-clip-text text-transparent">
-            Ride the sea. Feel the rush.
+            {resolvedHighlightTitle}
           </span>
         </h1>
 
         <p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-white/72 md:text-lg">
-          Real-time availability. Secure booking. Instant confirmation.
+          {resolvedSubtitle}
         </p>
 
         <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Link
-            href={activitiesHref}
+            href={resolvedPrimaryCtaHref}
             className="group relative inline-flex h-12 items-center justify-center overflow-hidden rounded-xl border border-pink-300/20 bg-gradient-to-r from-pink-500 to-fuchsia-500 px-6 font-medium text-white shadow-[0_10px_40px_-12px_rgba(236,72,153,0.75)] transition duration-300 hover:scale-[1.03] hover:shadow-[0_18px_60px_-16px_rgba(236,72,153,0.85)]"
           >
             <span
@@ -142,21 +178,19 @@ export function HeroSectionClient({ tenantSlug }: { tenantSlug: string }) {
               }}
             />
             <CircleDot className="relative z-10 mr-2 size-4" />
-            <span className="relative z-10">Explore experiences</span>
+            <span className="relative z-10">{resolvedPrimaryCtaLabel}</span>
           </Link>
 
           <a
-            href="#meeting-point"
+            href={resolvedSecondaryCtaHref}
             className="inline-flex h-12 items-center justify-center rounded-xl border border-white/12 bg-white/6 px-6 font-medium text-white/88 backdrop-blur-xl transition duration-300 hover:scale-[1.02] hover:bg-white/10"
           >
             <MapPin className="mr-2 size-4" />
-            Find us
+            {resolvedSecondaryCtaLabel}
           </a>
         </div>
 
-        <p className="mt-3 text-sm text-white/50">
-          No calls. No waiting. Book instantly.
-        </p>
+        <p className="mt-3 text-sm text-white/50">{resolvedMicroText}</p>
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-4 py-2 text-sm text-white/80 backdrop-blur-xl">
