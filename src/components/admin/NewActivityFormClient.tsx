@@ -108,6 +108,7 @@ export function NewActivityFormClient({
   return (
     <form
       action={createAction}
+      encType="multipart/form-data"
       className="relative overflow-hidden rounded-2xl u-border u-surface backdrop-blur-md p-6 sm:p-8 space-y-8 glow-soft"
     >
       <input type="hidden" name="mode" value={mode} />

@@ -668,7 +668,7 @@ export default async function AdminHomepagePage({ params }: PageProps) {
                           />
                         </div>
 
-                        <form action={saveGalleryImage} className="space-y-4">
+                        <form action={saveGalleryImage} encType="multipart/form-data" className="space-y-4">
                           <input type="hidden" name="clubSlug" value={tenant.slug} />
                           <input type="hidden" name="imageId" value={image.id} />
 
@@ -714,7 +714,7 @@ export default async function AdminHomepagePage({ params }: PageProps) {
                         Upload a new image to this club’s gallery section.
                       </p>
 
-                      <form action={addGalleryImage} className="mt-4 space-y-4">
+                      <form action={addGalleryImage} encType="multipart/form-data" className="mt-4 space-y-4">
                         <input type="hidden" name="clubSlug" value={tenant.slug} />
                         <input type="hidden" name="sectionId" value={section.id} />
 
