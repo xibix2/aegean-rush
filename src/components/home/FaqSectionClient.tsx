@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, HelpCircle } from "lucide-react";
+import { ChevronDown, HelpCircle, Sparkles } from "lucide-react";
 
 type FaqItem = {
   id: string;
@@ -16,15 +16,24 @@ type FaqSectionClientProps = {
   items: FaqItem[];
 };
 
+function getFaqGlow(index: number) {
+  if (index === 0) {
+    return "radial-gradient(circle, rgba(56,189,248,0.18) 0%, transparent 72%)";
+  }
+  if (index === 1) {
+    return "radial-gradient(circle, rgba(236,72,153,0.18) 0%, transparent 72%)";
+  }
+  if (index === 2) {
+    return "radial-gradient(circle, rgba(168,85,247,0.18) 0%, transparent 72%)";
+  }
+  return "radial-gradient(circle, rgba(34,197,94,0.16) 0%, transparent 72%)";
+}
+
 export function FaqSectionClient({
   title,
   subtitle,
   items,
 }: FaqSectionClientProps) {
-  const [openId, setOpenId] = useState<string | null>(
-    items.length > 0 ? items[0].id : "default-0"
-  );
-
   const resolvedItems =
     items.length > 0
       ? items
@@ -59,22 +68,39 @@ export function FaqSectionClient({
           },
         ];
 
+  const [openId, setOpenId] = useState<string | null>(resolvedItems[0]?.id ?? null);
+
   return (
-    <section className="relative overflow-hidden rounded-[2.1rem] border border-white/10 bg-[#0b0d14] px-5 py-12 backdrop-blur-xl sm:px-6 md:px-8 md:py-14">
+    <section className="relative overflow-hidden rounded-[2.15rem] border border-white/10 bg-[#070b16] px-5 py-12 backdrop-blur-xl sm:px-6 md:px-8 md:py-16">
       <style
         dangerouslySetInnerHTML={{
           __html: `
-@keyframes faqGlowA {
-  0%,100% { opacity: .15; transform: scale(1); }
-  50% { opacity: .28; transform: scale(1.05); }
+@keyframes faqGlowMain {
+  0%,100% { opacity: .22; transform: scale(1) translateY(0px); }
+  50% { opacity: .4; transform: scale(1.05) translateY(-6px); }
 }
-@keyframes faqGlowB {
-  0%,100% { opacity: .12; transform: translateY(0px); }
-  50% { opacity: .2; transform: translateY(-10px); }
+@keyframes faqGlowFloat {
+  0%,100% { opacity: .14; transform: translateY(0px); }
+  50% { opacity: .25; transform: translateY(-14px); }
+}
+@keyframes faqGridMove {
+  0% { transform: translateX(0px) translateY(0px); }
+  50% { transform: translateX(8px) translateY(-6px); }
+  100% { transform: translateX(0px) translateY(0px); }
 }
 @keyframes faqCardIn {
-  from { opacity: 0; transform: translateY(18px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(20px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes faqShimmer {
+  0% { transform: translateX(-120%) skewX(-16deg); opacity: 0; }
+  20% { opacity: .06; }
+  50% { opacity: .12; }
+  100% { transform: translateX(140%) skewX(-16deg); opacity: 0; }
+}
+@keyframes faqPulseRing {
+  0%,100% { box-shadow: 0 0 0 0 rgba(236,72,153,.14); }
+  50% { box-shadow: 0 0 0 10px rgba(236,72,153,0); }
 }
 @media (prefers-reduced-motion: reduce) {
   .faq-anim,
@@ -83,49 +109,71 @@ export function FaqSectionClient({
     transition: none !important;
   }
 }
-        `.trim(),
+          `.trim(),
         }}
       />
 
       <div
-        className="faq-anim pointer-events-none absolute left-1/2 top-0 h-44 w-[68%] -translate-x-1/2 blur-3xl"
+        className="faq-anim pointer-events-none absolute left-1/2 top-0 h-56 w-[74%] -translate-x-1/2 blur-3xl"
         style={{
           background:
-            "radial-gradient(circle, rgba(56,189,248,0.14) 0%, rgba(236,72,153,0.10) 45%, transparent 72%)",
-          animation: "faqGlowA 8s ease-in-out infinite",
+            "radial-gradient(circle, rgba(56,189,248,0.18) 0%, rgba(236,72,153,0.14) 38%, rgba(168,85,247,0.16) 58%, transparent 76%)",
+          animation: "faqGlowMain 9s ease-in-out infinite",
         }}
       />
       <div
-        className="faq-anim pointer-events-none absolute left-[8%] top-[20%] h-36 w-36 rounded-full blur-3xl"
+        className="faq-anim pointer-events-none absolute left-[4%] top-[18%] h-40 w-40 rounded-full blur-3xl"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(236,72,153,0.14) 0%, transparent 72%)",
+          animation: "faqGlowFloat 11s ease-in-out infinite",
+        }}
+      />
+      <div
+        className="faq-anim pointer-events-none absolute right-[6%] bottom-[14%] h-44 w-44 rounded-full blur-3xl"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(56,189,248,0.14) 0%, transparent 72%)",
+          animation: "faqGlowFloat 13s ease-in-out infinite",
+        }}
+      />
+      <div
+        className="faq-anim pointer-events-none absolute left-[28%] bottom-[8%] h-32 w-32 rounded-full blur-3xl"
         style={{
           background:
             "radial-gradient(circle, rgba(168,85,247,0.12) 0%, transparent 72%)",
-          animation: "faqGlowB 11s ease-in-out infinite",
+          animation: "faqGlowFloat 12s ease-in-out infinite",
         }}
       />
+
       <div
-        className="faq-anim pointer-events-none absolute right-[8%] bottom-[10%] h-40 w-40 rounded-full blur-3xl"
+        className="faq-anim pointer-events-none absolute inset-0 opacity-[0.08]"
         style={{
-          background:
-            "radial-gradient(circle, rgba(56,189,248,0.12) 0%, transparent 72%)",
-          animation: "faqGlowB 13s ease-in-out infinite",
+          backgroundImage:
+            "linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)",
+          backgroundSize: "42px 42px",
+          maskImage:
+            "radial-gradient(circle at center, black 35%, transparent 82%)",
+          WebkitMaskImage:
+            "radial-gradient(circle at center, black 35%, transparent 82%)",
+          animation: "faqGridMove 16s ease-in-out infinite",
         }}
       />
 
       <div className="relative mx-auto max-w-4xl">
         <div className="mx-auto max-w-3xl text-center">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-4 py-1.5 text-xs uppercase tracking-[0.18em] text-white/70 backdrop-blur-xl">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-4 py-1.5 text-xs uppercase tracking-[0.18em] text-white/72 shadow-[0_10px_30px_-18px_rgba(56,189,248,0.5)] backdrop-blur-xl">
             <HelpCircle className="size-3.5 text-sky-300" />
             FAQ
           </div>
 
           <h2 className="text-3xl font-semibold tracking-tight text-white md:text-5xl">
-            {title || "Everything guests usually ask"}
+            {title || "Frequently asked questions"}
           </h2>
 
-          <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-white/65 md:text-base">
+          <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-white/66 md:text-base">
             {subtitle ||
-              "Answer the last few questions before booking and reduce hesitation with clear, friendly information."}
+              "Everything guests usually want to know before booking — answered clearly and beautifully."}
           </p>
         </div>
 
@@ -136,38 +184,62 @@ export function FaqSectionClient({
             return (
               <div
                 key={item.id}
-                className="faq-card overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.04] shadow-[0_24px_80px_-50px_rgba(0,0,0,0.95)]"
+                className="faq-card group relative overflow-hidden rounded-[1.65rem] border border-white/10 bg-white/[0.045] shadow-[0_24px_90px_-54px_rgba(0,0,0,0.95)] transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-white/[0.06]"
                 style={{
-                  animation: `faqCardIn 600ms cubic-bezier(0.22,1,0.36,1) ${index * 80}ms both`,
+                  animation: `faqCardIn 700ms cubic-bezier(0.22,1,0.36,1) ${index * 90}ms both`,
                 }}
               >
+                <div
+                  className="pointer-events-none absolute inset-x-0 top-0 h-24 opacity-60 blur-2xl transition duration-500 group-hover:opacity-100"
+                  style={{ background: getFaqGlow(index) }}
+                />
+
+                <div
+                  className="pointer-events-none absolute inset-0 opacity-0 transition duration-500 group-hover:opacity-100"
+                  style={{
+                    background:
+                      "linear-gradient(120deg, transparent 18%, rgba(255,255,255,0.08) 50%, transparent 82%)",
+                    animation: "faqShimmer 4.2s linear infinite",
+                  }}
+                />
+
                 <button
                   type="button"
                   onClick={() => setOpenId(isOpen ? null : item.id)}
-                  className="flex w-full items-center justify-between gap-4 px-5 py-5 text-left transition hover:bg-white/[0.03] md:px-6"
+                  className="relative flex w-full items-center justify-between gap-4 px-5 py-5 text-left md:px-6"
                 >
-                  <div>
-                    <h3 className="text-base font-semibold text-white md:text-lg">
-                      {item.question}
-                    </h3>
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-black/20 text-white/85 backdrop-blur-xl">
+                      <Sparkles className="size-4 text-pink-300" />
+                    </div>
+
+                    <div>
+                      <h3 className="text-base font-semibold text-white md:text-lg">
+                        {item.question}
+                      </h3>
+                    </div>
                   </div>
 
                   <div
-                    className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-black/20 text-white/80 transition duration-300 ${
-                      isOpen ? "rotate-180" : ""
+                    className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-black/20 text-white/85 backdrop-blur-xl transition duration-300 ${
+                      isOpen ? "rotate-180 scale-105" : ""
                     }`}
+                    style={{
+                      animation: isOpen ? "faqPulseRing 1.8s ease-in-out infinite" : undefined,
+                    }}
                   >
                     <ChevronDown className="size-5" />
                   </div>
                 </button>
 
                 <div
-                  className={`grid transition-all duration-300 ease-out ${
+                  className={`grid transition-all duration-400 ease-out ${
                     isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
                   }`}
                 >
                   <div className="overflow-hidden">
-                    <div className="border-t border-white/10 px-5 py-4 text-sm leading-relaxed text-white/68 md:px-6 md:text-base">
+                    <div className="relative border-t border-white/10 px-5 py-4 text-sm leading-relaxed text-white/70 md:px-6 md:text-base">
+                      <div className="pointer-events-none absolute left-0 top-0 h-full w-px bg-gradient-to-b from-transparent via-pink-400/40 to-transparent" />
                       {item.answer}
                     </div>
                   </div>
