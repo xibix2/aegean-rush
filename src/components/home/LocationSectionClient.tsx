@@ -294,51 +294,50 @@ export function LocationSectionClient({
             <style
               dangerouslySetInnerHTML={{
                 __html: `
-@keyframes locCorePulse {
-  0%,100% { transform: translate(-50%, -50%) scale(1); opacity: .82; }
-  50% { transform: translate(-50%, -50%) scale(1.12); opacity: 1; }
+@keyframes locRoutePulse {
+  0%,100% { opacity: .25; stroke-dashoffset: 0; }
+  50% { opacity: .65; stroke-dashoffset: -18; }
 }
-@keyframes locRingRotateA {
-  from { transform: translate(-50%, -50%) rotate(0deg); }
-  to { transform: translate(-50%, -50%) rotate(360deg); }
+@keyframes locBoatMove {
+  0%   { transform: translate(0px, 0px) rotate(-8deg); }
+  20%  { transform: translate(34px, -8px) rotate(-4deg); }
+  40%  { transform: translate(78px, 4px) rotate(2deg); }
+  60%  { transform: translate(118px, -10px) rotate(-3deg); }
+  80%  { transform: translate(168px, 0px) rotate(4deg); }
+  100% { transform: translate(210px, -6px) rotate(0deg); }
 }
-@keyframes locRingRotateB {
-  from { transform: translate(-50%, -50%) rotate(360deg); }
-  to { transform: translate(-50%, -50%) rotate(0deg); }
+@keyframes locPinFloatA {
+  0%,100% { transform: translateY(0px) scale(1); opacity: .78; }
+  50% { transform: translateY(-8px) scale(1.06); opacity: 1; }
 }
-@keyframes locParticleA {
-  0%,100% { transform: translate3d(0,0,0) scale(1); opacity: .55; }
-  50% { transform: translate3d(18px,-12px,0) scale(1.16); opacity: .95; }
+@keyframes locPinFloatB {
+  0%,100% { transform: translateY(0px) scale(1); opacity: .68; }
+  50% { transform: translateY(6px) scale(1.04); opacity: .92; }
 }
-@keyframes locParticleB {
-  0%,100% { transform: translate3d(0,0,0) scale(1); opacity: .5; }
-  50% { transform: translate3d(-16px,12px,0) scale(1.1); opacity: .85; }
+@keyframes locCompassSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
-@keyframes locBeamSweep {
-  0% { transform: translateX(-30%) skewX(-18deg); opacity: 0; }
-  20% { opacity: .18; }
-  50% { opacity: .34; }
-  100% { transform: translateX(30%) skewX(-18deg); opacity: 0; }
+@keyframes locCompassPulse {
+  0%,100% { opacity: .22; transform: scale(1); }
+  50% { opacity: .42; transform: scale(1.06); }
 }
-@keyframes locNebula {
-  0%,100% { transform: scale(1) translateY(0px); opacity: .3; }
-  50% { transform: scale(1.08) translateY(-8px); opacity: .5; }
+@keyframes locStarPulse {
+  0%,100% { opacity: .35; transform: scale(1); }
+  50% { opacity: .95; transform: scale(1.3); }
+}
+@keyframes locScan {
+  0% { transform: translateX(-120%); opacity: 0; }
+  20% { opacity: .12; }
+  50% { opacity: .22; }
+  100% { transform: translateX(140%); opacity: 0; }
 }
 @keyframes locGridDrift {
-  0% { transform: translate(0,0); opacity: .07; }
-  50% { transform: translate(10px,-8px); opacity: .11; }
-  100% { transform: translate(0,0); opacity: .07; }
+  0% { transform: translate(0,0); opacity: .08; }
+  50% { transform: translate(8px,-6px); opacity: .12; }
+  100% { transform: translate(0,0); opacity: .08; }
 }
                 `.trim(),
-              }}
-            />
-
-            <div
-              className="absolute inset-0"
-              style={{
-                background:
-                  "radial-gradient(circle at 50% 55%, rgba(236,72,153,0.12) 0%, rgba(168,85,247,0.10) 26%, rgba(56,189,248,0.10) 44%, transparent 72%)",
-                animation: "locNebula 10s ease-in-out infinite",
               }}
             />
 
@@ -349,93 +348,149 @@ export function LocationSectionClient({
                   "linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)",
                 backgroundSize: "30px 30px",
                 maskImage:
-                  "radial-gradient(circle at center, black 30%, transparent 88%)",
+                  "radial-gradient(circle at center, black 36%, transparent 92%)",
                 WebkitMaskImage:
-                  "radial-gradient(circle at center, black 30%, transparent 88%)",
-                animation: "locGridDrift 16s ease-in-out infinite",
+                  "radial-gradient(circle at center, black 36%, transparent 92%)",
+                animation: "locGridDrift 14s ease-in-out infinite",
               }}
             />
 
             <div
-              className="absolute left-1/2 top-1/2 h-[150px] w-[150px] rounded-full border border-white/10"
+              className="absolute inset-0"
               style={{
-                animation: "locRingRotateA 18s linear infinite",
-                boxShadow: "0 0 50px rgba(236,72,153,0.08)",
+                background:
+                  "radial-gradient(circle at 20% 60%, rgba(236,72,153,0.14) 0%, transparent 28%), radial-gradient(circle at 78% 42%, rgba(56,189,248,0.14) 0%, transparent 26%), radial-gradient(circle at 52% 48%, rgba(168,85,247,0.10) 0%, transparent 34%)",
+              }}
+            />
+
+            <div className="absolute left-6 top-6">
+              <div className="relative h-16 w-16">
+                <div
+                  className="absolute inset-0 rounded-full border border-white/10"
+                  style={{ animation: "locCompassSpin 18s linear infinite" }}
+                />
+                <div
+                  className="absolute inset-2 rounded-full border border-sky-300/20"
+                  style={{ animation: "locCompassSpin 10s linear infinite reverse" }}
+                />
+                <div
+                  className="absolute inset-0 rounded-full blur-xl"
+                  style={{
+                    background:
+                      "radial-gradient(circle, rgba(56,189,248,0.18) 0%, transparent 72%)",
+                    animation: "locCompassPulse 4.8s ease-in-out infinite",
+                  }}
+                />
+                <div className="absolute inset-0 flex items-center justify-center text-[10px] uppercase tracking-[0.2em] text-white/60">
+                  Nav
+                </div>
+              </div>
+            </div>
+
+            <svg
+              viewBox="0 0 320 150"
+              className="absolute inset-0 h-full w-full"
+              preserveAspectRatio="none"
+            >
+              <path
+                d="M32,102 C74,70 98,70 130,82 C162,94 188,116 214,104 C242,92 258,70 292,78"
+                fill="none"
+                stroke="rgba(255,255,255,0.08)"
+                strokeWidth="2"
+                strokeDasharray="6 8"
+              />
+              <path
+                d="M32,102 C74,70 98,70 130,82 C162,94 188,116 214,104 C242,92 258,70 292,78"
+                fill="none"
+                stroke="rgba(236,72,153,0.45)"
+                strokeWidth="2.4"
+                strokeLinecap="round"
+                strokeDasharray="10 10"
+                style={{ animation: "locRoutePulse 6s linear infinite" }}
+              />
+            </svg>
+
+            <div
+              className="absolute left-[28px] top-[94px] h-4 w-4 rounded-full"
+              style={{
+                background:
+                  "radial-gradient(circle, rgba(236,72,153,0.95) 0%, rgba(236,72,153,0.45) 45%, transparent 78%)",
+                boxShadow: "0 0 18px rgba(236,72,153,0.4)",
+                animation: "locPinFloatA 4.2s ease-in-out infinite",
               }}
             />
             <div
-              className="absolute left-1/2 top-1/2 h-[108px] w-[108px] rounded-full border border-white/10"
+              className="absolute left-[144px] top-[76px] h-3.5 w-3.5 rounded-full"
               style={{
-                animation: "locRingRotateB 14s linear infinite",
-                boxShadow: "0 0 40px rgba(56,189,248,0.08)",
+                background:
+                  "radial-gradient(circle, rgba(56,189,248,0.95) 0%, rgba(56,189,248,0.42) 45%, transparent 78%)",
+                boxShadow: "0 0 16px rgba(56,189,248,0.35)",
+                animation: "locPinFloatB 5.3s ease-in-out infinite",
+              }}
+            />
+            <div
+              className="absolute right-[26px] top-[70px] h-4.5 w-4.5 rounded-full"
+              style={{
+                background:
+                  "radial-gradient(circle, rgba(168,85,247,0.95) 0%, rgba(168,85,247,0.42) 45%, transparent 78%)",
+                boxShadow: "0 0 18px rgba(168,85,247,0.35)",
+                animation: "locPinFloatA 4.9s ease-in-out infinite",
               }}
             />
 
             <div
-              className="absolute left-1/2 top-1/2 h-16 w-16 rounded-full blur-2xl"
-              style={{
-                background:
-                  "radial-gradient(circle, rgba(236,72,153,0.45) 0%, rgba(168,85,247,0.28) 42%, transparent 78%)",
-                animation: "locCorePulse 6s ease-in-out infinite",
-              }}
-            />
+              className="absolute left-[34px] top-[92px] z-10"
+              style={{ animation: "locBoatMove 11s ease-in-out infinite alternate" }}
+            >
+              <div className="relative">
+                <div
+                  className="absolute -inset-2 rounded-full blur-xl"
+                  style={{
+                    background:
+                      "radial-gradient(circle, rgba(255,255,255,0.12) 0%, rgba(56,189,248,0.12) 38%, transparent 78%)",
+                  }}
+                />
+                <div className="relative text-lg drop-shadow-[0_0_10px_rgba(255,255,255,0.18)]">
+                  ⛵
+                </div>
+              </div>
+            </div>
+
             <div
-              className="absolute left-1/2 top-1/2 h-9 w-9 rounded-full"
+              className="absolute inset-y-0 left-[-30%] w-[55%]"
               style={{
-                transform: "translate(-50%, -50%)",
                 background:
-                  "radial-gradient(circle, rgba(255,255,255,0.88) 0%, rgba(56,189,248,0.4) 45%, rgba(236,72,153,0.18) 72%, transparent 100%)",
-                boxShadow:
-                  "0 0 30px rgba(255,255,255,0.18), 0 0 60px rgba(236,72,153,0.16), 0 0 80px rgba(56,189,248,0.14)",
+                  "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.02) 20%, rgba(236,72,153,0.10) 50%, rgba(56,189,248,0.08) 72%, transparent 100%)",
+                filter: "blur(10px)",
+                animation: "locScan 8s ease-in-out infinite",
               }}
             />
 
             <div
-              className="absolute left-[16%] top-[28%] h-20 w-20 rounded-full blur-2xl"
+              className="absolute left-[42%] top-[34%] h-1.5 w-1.5 rounded-full bg-white"
               style={{
-                background:
-                  "radial-gradient(circle, rgba(236,72,153,0.34) 0%, transparent 72%)",
-                animation: "locParticleA 9s ease-in-out infinite",
+                boxShadow: "0 0 14px rgba(255,255,255,0.5)",
+                animation: "locStarPulse 3.4s ease-in-out infinite",
               }}
             />
             <div
-              className="absolute right-[14%] top-[24%] h-24 w-24 rounded-full blur-2xl"
+              className="absolute left-[62%] top-[64%] h-1.5 w-1.5 rounded-full bg-white"
               style={{
-                background:
-                  "radial-gradient(circle, rgba(56,189,248,0.30) 0%, transparent 72%)",
-                animation: "locParticleB 11s ease-in-out infinite",
+                boxShadow: "0 0 14px rgba(255,255,255,0.45)",
+                animation: "locStarPulse 4.1s ease-in-out infinite",
               }}
             />
             <div
-              className="absolute left-[32%] bottom-[14%] h-16 w-16 rounded-full blur-2xl"
+              className="absolute left-[74%] top-[30%] h-1 w-1 rounded-full bg-white"
               style={{
-                background:
-                  "radial-gradient(circle, rgba(168,85,247,0.30) 0%, transparent 72%)",
-                animation: "locParticleA 10s ease-in-out infinite",
-              }}
-            />
-            <div
-              className="absolute right-[28%] bottom-[16%] h-14 w-14 rounded-full blur-2xl"
-              style={{
-                background:
-                  "radial-gradient(circle, rgba(236,72,153,0.22) 0%, transparent 72%)",
-                animation: "locParticleB 8s ease-in-out infinite",
-              }}
-            />
-
-            <div
-              className="absolute inset-y-0 left-[-20%] w-[70%]"
-              style={{
-                background:
-                  "linear-gradient(90deg, transparent 0%, rgba(236,72,153,0.06) 38%, rgba(255,255,255,0.1) 50%, rgba(56,189,248,0.08) 62%, transparent 100%)",
-                filter: "blur(8px)",
-                animation: "locBeamSweep 7s ease-in-out infinite",
+                boxShadow: "0 0 12px rgba(255,255,255,0.4)",
+                animation: "locStarPulse 3.8s ease-in-out infinite",
               }}
             />
 
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="rounded-full border border-white/10 bg-black/30 px-4 py-2 text-[11px] uppercase tracking-[0.22em] text-white/62 backdrop-blur-xl shadow-[0_0_30px_rgba(255,255,255,0.05)]">
-                Energy pulse
+                Route active
               </div>
             </div>
           </div>
