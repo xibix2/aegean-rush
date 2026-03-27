@@ -3,12 +3,10 @@
 import {
   MapPin,
   Navigation,
-  Car,
   Clock3,
   Phone,
   Sparkles,
   Waves,
-  CheckCircle2,
 } from "lucide-react";
 
 type LocationSectionClientProps = {
@@ -65,10 +63,6 @@ export function LocationSectionClient({
     subtitle ||
     "Everything guests need to find you easily, arrive with confidence, and feel ready before the experience starts.";
 
-  const resolvedBody =
-    body ||
-    "Make arrival effortless with a clear meeting point, practical directions, and a live map guests can open instantly.";
-
   const resolvedLocationName = locationName || "Main meeting point";
   const resolvedAddressLine =
     addressLine || "Set your exact address in the homepage editor.";
@@ -119,6 +113,23 @@ export function LocationSectionClient({
   0%,100% { transform: scale(1); opacity: .9; }
   50% { transform: scale(1.08); opacity: 1; }
 }
+@keyframes locOrbA {
+  0%,100% { transform: translate3d(0,0,0) scale(1); opacity: .55; }
+  50% { transform: translate3d(12px,-10px,0) scale(1.08); opacity: .9; }
+}
+@keyframes locOrbB {
+  0%,100% { transform: translate3d(0,0,0) scale(1); opacity: .45; }
+  50% { transform: translate3d(-10px,8px,0) scale(1.12); opacity: .8; }
+}
+@keyframes locBeam {
+  0%,100% { opacity: .18; transform: translateX(-6px); }
+  50% { opacity: .34; transform: translateX(10px); }
+}
+@keyframes locGrid {
+  0% { transform: translate(0,0); }
+  50% { transform: translate(8px,-6px); }
+  100% { transform: translate(0,0); }
+}
 @media (prefers-reduced-motion: reduce) {
   .loc-anim,
   .loc-card {
@@ -168,7 +179,7 @@ export function LocationSectionClient({
           </div>
 
           <h2 className="mt-5 text-3xl font-semibold tracking-tight text-white md:text-5xl">
-            {resolvedTitle}
+            {title || "Meeting point"}
           </h2>
 
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/68 md:text-base">
@@ -200,7 +211,7 @@ export function LocationSectionClient({
                   {index === 0 ? (
                     <Clock3 className="mt-0.5 size-4 shrink-0 text-sky-300" />
                   ) : index === 1 ? (
-                    <Car className="mt-0.5 size-4 shrink-0 text-fuchsia-300" />
+                    <Waves className="mt-0.5 size-4 shrink-0 text-fuchsia-300" />
                   ) : (
                     <Phone className="mt-0.5 size-4 shrink-0 text-pink-300" />
                   )}
@@ -265,10 +276,6 @@ export function LocationSectionClient({
                 </h3>
                 <p className="mt-3 max-w-md text-sm leading-relaxed text-white/58">
                   Paste a Google Maps embed link in the homepage admin editor.
-                  It should start with
-                  <span className="mx-1 text-white/80">
-                    https://www.google.com/maps/embed?...
-                  </span>
                 </p>
                 <a
                   href={resolvedGoogleMapsUrl}
@@ -283,59 +290,58 @@ export function LocationSectionClient({
             )}
           </div>
 
-          <div className="mt-4 grid gap-3">
-            <div className="rounded-[1.35rem] border border-white/10 bg-black/20 px-4 py-4">
-              <div className="flex items-start gap-3">
-                <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-sky-300" />
-                <div>
-                  <p className="text-xs uppercase tracking-[0.18em] text-white/42">
-                    Before you arrive
-                  </p>
-                  <ul className="mt-2 space-y-2">
-                    {detailItems.map((detail, index) => (
-                      <li
-                        key={`${detail}-before-${index}`}
-                        className="text-sm leading-relaxed text-white/64"
-                      >
-                        {detail}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </div>
+          <div className="relative mt-4 h-[150px] overflow-hidden rounded-[1.35rem] border border-white/10 bg-black/20">
+            <div
+              className="loc-anim absolute left-[10%] top-[28%] h-24 w-24 rounded-full blur-2xl"
+              style={{
+                background:
+                  "radial-gradient(circle, rgba(236,72,153,0.28) 0%, transparent 72%)",
+                animation: "locOrbA 8s ease-in-out infinite",
+              }}
+            />
+            <div
+              className="loc-anim absolute right-[12%] top-[18%] h-28 w-28 rounded-full blur-2xl"
+              style={{
+                background:
+                  "radial-gradient(circle, rgba(56,189,248,0.24) 0%, transparent 72%)",
+                animation: "locOrbB 10s ease-in-out infinite",
+              }}
+            />
+            <div
+              className="loc-anim absolute left-[38%] bottom-[12%] h-20 w-20 rounded-full blur-2xl"
+              style={{
+                background:
+                  "radial-gradient(circle, rgba(168,85,247,0.24) 0%, transparent 72%)",
+                animation: "locOrbA 9s ease-in-out infinite",
+              }}
+            />
 
-            <div className="rounded-[1.35rem] border border-white/10 bg-black/20 px-4 py-4">
-              <p className="text-xs uppercase tracking-[0.18em] text-white/42">
-                Quick actions
-              </p>
+            <div
+              className="loc-anim absolute inset-x-[12%] top-1/2 h-px"
+              style={{
+                background:
+                  "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.06) 20%, rgba(236,72,153,0.35) 50%, rgba(56,189,248,0.28) 72%, transparent 100%)",
+                animation: "locBeam 6s ease-in-out infinite",
+              }}
+            />
 
-              <div className="mt-3 flex flex-col gap-2">
-                <a
-                  href={resolvedGoogleMapsUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-4 text-sm font-medium text-white/84 transition hover:bg-white/[0.08]"
-                >
-                  <Navigation className="size-4 text-sky-300" />
-                  Open route
-                </a>
+            <div
+              className="loc-anim absolute inset-0 opacity-[0.08]"
+              style={{
+                backgroundImage:
+                  "linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)",
+                backgroundSize: "28px 28px",
+                maskImage:
+                  "radial-gradient(circle at center, black 35%, transparent 90%)",
+                WebkitMaskImage:
+                  "radial-gradient(circle at center, black 35%, transparent 90%)",
+                animation: "locGrid 14s ease-in-out infinite",
+              }}
+            />
 
-                <a
-                  href={resolvedSecondaryCtaHref}
-                  className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-4 text-sm font-medium text-white/84 transition hover:bg-white/[0.08]"
-                >
-                  <Phone className="size-4 text-pink-300" />
-                  Contact the club
-                </a>
-
-                <a
-                  href="#courts"
-                  className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-4 text-sm font-medium text-white/84 transition hover:bg-white/[0.08]"
-                >
-                  <Waves className="size-4 text-fuchsia-300" />
-                  View experiences
-                </a>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="rounded-full border border-white/10 bg-black/25 px-4 py-2 text-xs uppercase tracking-[0.2em] text-white/58 backdrop-blur-xl">
+                Arrival flow
               </div>
             </div>
           </div>
