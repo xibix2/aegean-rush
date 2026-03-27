@@ -191,7 +191,7 @@ export default async function ClubHome({
               <section
                 key={section.id}
                 id="meeting-point"
-                className="rounded-[2rem] border border-white/10 bg-white/[0.03] px-6 py-12 text-center backdrop-blur-xl"
+                className="scroll-mt-28 md:scroll-mt-36 rounded-[2rem] border border-white/10 bg-white/[0.03] px-6 py-12 text-center backdrop-blur-xl"
               >
                 <div className="mx-auto max-w-3xl">
                   <p className="text-sm uppercase tracking-[0.22em] text-white/45">
@@ -216,7 +216,7 @@ export default async function ClubHome({
 
           case "FAQ":
             return (
-              <section key={section.id} id="faq">
+              <section key={section.id} id="faq" className="scroll-mt-28 md:scroll-mt-36">
                 <FaqSectionClient
                   title={section.title}
                   subtitle={section.subtitle}
