@@ -216,18 +216,20 @@ export default async function ClubHome({
 
           case "FAQ":
             return (
-              <FaqSectionClient
-                key={section.id}
-                title={section.title}
-                subtitle={section.subtitle}
-                items={section.faqItems}
-              />
+              <section key={section.id} id="faq">
+                <FaqSectionClient
+                  title={section.title}
+                  subtitle={section.subtitle}
+                  items={section.faqItems}
+                />
+              </section>
             );
 
           case "FINAL_CTA":
             return (
               <FinalCtaSectionClient
                 key={section.id}
+                clubSlug={slug}
                 title={section.title}
                 subtitle={section.subtitle}
                 body={section.body}
