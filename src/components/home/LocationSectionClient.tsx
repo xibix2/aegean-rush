@@ -291,57 +291,151 @@ export function LocationSectionClient({
           </div>
 
           <div className="relative mt-4 h-[150px] overflow-hidden rounded-[1.35rem] border border-white/10 bg-black/20">
-            <div
-              className="loc-anim absolute left-[10%] top-[28%] h-24 w-24 rounded-full blur-2xl"
-              style={{
-                background:
-                  "radial-gradient(circle, rgba(236,72,153,0.28) 0%, transparent 72%)",
-                animation: "locOrbA 8s ease-in-out infinite",
-              }}
-            />
-            <div
-              className="loc-anim absolute right-[12%] top-[18%] h-28 w-28 rounded-full blur-2xl"
-              style={{
-                background:
-                  "radial-gradient(circle, rgba(56,189,248,0.24) 0%, transparent 72%)",
-                animation: "locOrbB 10s ease-in-out infinite",
-              }}
-            />
-            <div
-              className="loc-anim absolute left-[38%] bottom-[12%] h-20 w-20 rounded-full blur-2xl"
-              style={{
-                background:
-                  "radial-gradient(circle, rgba(168,85,247,0.24) 0%, transparent 72%)",
-                animation: "locOrbA 9s ease-in-out infinite",
+            <style
+              dangerouslySetInnerHTML={{
+                __html: `
+@keyframes locCorePulse {
+  0%,100% { transform: translate(-50%, -50%) scale(1); opacity: .82; }
+  50% { transform: translate(-50%, -50%) scale(1.12); opacity: 1; }
+}
+@keyframes locRingRotateA {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+@keyframes locRingRotateB {
+  from { transform: translate(-50%, -50%) rotate(360deg); }
+  to { transform: translate(-50%, -50%) rotate(0deg); }
+}
+@keyframes locParticleA {
+  0%,100% { transform: translate3d(0,0,0) scale(1); opacity: .55; }
+  50% { transform: translate3d(18px,-12px,0) scale(1.16); opacity: .95; }
+}
+@keyframes locParticleB {
+  0%,100% { transform: translate3d(0,0,0) scale(1); opacity: .5; }
+  50% { transform: translate3d(-16px,12px,0) scale(1.1); opacity: .85; }
+}
+@keyframes locBeamSweep {
+  0% { transform: translateX(-30%) skewX(-18deg); opacity: 0; }
+  20% { opacity: .18; }
+  50% { opacity: .34; }
+  100% { transform: translateX(30%) skewX(-18deg); opacity: 0; }
+}
+@keyframes locNebula {
+  0%,100% { transform: scale(1) translateY(0px); opacity: .3; }
+  50% { transform: scale(1.08) translateY(-8px); opacity: .5; }
+}
+@keyframes locGridDrift {
+  0% { transform: translate(0,0); opacity: .07; }
+  50% { transform: translate(10px,-8px); opacity: .11; }
+  100% { transform: translate(0,0); opacity: .07; }
+}
+                `.trim(),
               }}
             />
 
             <div
-              className="loc-anim absolute inset-x-[12%] top-1/2 h-px"
+              className="absolute inset-0"
               style={{
                 background:
-                  "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.06) 20%, rgba(236,72,153,0.35) 50%, rgba(56,189,248,0.28) 72%, transparent 100%)",
-                animation: "locBeam 6s ease-in-out infinite",
+                  "radial-gradient(circle at 50% 55%, rgba(236,72,153,0.12) 0%, rgba(168,85,247,0.10) 26%, rgba(56,189,248,0.10) 44%, transparent 72%)",
+                animation: "locNebula 10s ease-in-out infinite",
               }}
             />
 
             <div
-              className="loc-anim absolute inset-0 opacity-[0.08]"
+              className="absolute inset-0 opacity-[0.1]"
               style={{
                 backgroundImage:
                   "linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)",
-                backgroundSize: "28px 28px",
+                backgroundSize: "30px 30px",
                 maskImage:
-                  "radial-gradient(circle at center, black 35%, transparent 90%)",
+                  "radial-gradient(circle at center, black 30%, transparent 88%)",
                 WebkitMaskImage:
-                  "radial-gradient(circle at center, black 35%, transparent 90%)",
-                animation: "locGrid 14s ease-in-out infinite",
+                  "radial-gradient(circle at center, black 30%, transparent 88%)",
+                animation: "locGridDrift 16s ease-in-out infinite",
+              }}
+            />
+
+            <div
+              className="absolute left-1/2 top-1/2 h-[150px] w-[150px] rounded-full border border-white/10"
+              style={{
+                animation: "locRingRotateA 18s linear infinite",
+                boxShadow: "0 0 50px rgba(236,72,153,0.08)",
+              }}
+            />
+            <div
+              className="absolute left-1/2 top-1/2 h-[108px] w-[108px] rounded-full border border-white/10"
+              style={{
+                animation: "locRingRotateB 14s linear infinite",
+                boxShadow: "0 0 40px rgba(56,189,248,0.08)",
+              }}
+            />
+
+            <div
+              className="absolute left-1/2 top-1/2 h-16 w-16 rounded-full blur-2xl"
+              style={{
+                background:
+                  "radial-gradient(circle, rgba(236,72,153,0.45) 0%, rgba(168,85,247,0.28) 42%, transparent 78%)",
+                animation: "locCorePulse 6s ease-in-out infinite",
+              }}
+            />
+            <div
+              className="absolute left-1/2 top-1/2 h-9 w-9 rounded-full"
+              style={{
+                transform: "translate(-50%, -50%)",
+                background:
+                  "radial-gradient(circle, rgba(255,255,255,0.88) 0%, rgba(56,189,248,0.4) 45%, rgba(236,72,153,0.18) 72%, transparent 100%)",
+                boxShadow:
+                  "0 0 30px rgba(255,255,255,0.18), 0 0 60px rgba(236,72,153,0.16), 0 0 80px rgba(56,189,248,0.14)",
+              }}
+            />
+
+            <div
+              className="absolute left-[16%] top-[28%] h-20 w-20 rounded-full blur-2xl"
+              style={{
+                background:
+                  "radial-gradient(circle, rgba(236,72,153,0.34) 0%, transparent 72%)",
+                animation: "locParticleA 9s ease-in-out infinite",
+              }}
+            />
+            <div
+              className="absolute right-[14%] top-[24%] h-24 w-24 rounded-full blur-2xl"
+              style={{
+                background:
+                  "radial-gradient(circle, rgba(56,189,248,0.30) 0%, transparent 72%)",
+                animation: "locParticleB 11s ease-in-out infinite",
+              }}
+            />
+            <div
+              className="absolute left-[32%] bottom-[14%] h-16 w-16 rounded-full blur-2xl"
+              style={{
+                background:
+                  "radial-gradient(circle, rgba(168,85,247,0.30) 0%, transparent 72%)",
+                animation: "locParticleA 10s ease-in-out infinite",
+              }}
+            />
+            <div
+              className="absolute right-[28%] bottom-[16%] h-14 w-14 rounded-full blur-2xl"
+              style={{
+                background:
+                  "radial-gradient(circle, rgba(236,72,153,0.22) 0%, transparent 72%)",
+                animation: "locParticleB 8s ease-in-out infinite",
+              }}
+            />
+
+            <div
+              className="absolute inset-y-0 left-[-20%] w-[70%]"
+              style={{
+                background:
+                  "linear-gradient(90deg, transparent 0%, rgba(236,72,153,0.06) 38%, rgba(255,255,255,0.1) 50%, rgba(56,189,248,0.08) 62%, transparent 100%)",
+                filter: "blur(8px)",
+                animation: "locBeamSweep 7s ease-in-out infinite",
               }}
             />
 
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="rounded-full border border-white/10 bg-black/25 px-4 py-2 text-xs uppercase tracking-[0.2em] text-white/58 backdrop-blur-xl">
-                Arrival flow
+              <div className="rounded-full border border-white/10 bg-black/30 px-4 py-2 text-[11px] uppercase tracking-[0.22em] text-white/62 backdrop-blur-xl shadow-[0_0_30px_rgba(255,255,255,0.05)]">
+                Energy pulse
               </div>
             </div>
           </div>
