@@ -8,6 +8,7 @@ import {
   Phone,
   Sparkles,
   Waves,
+  CheckCircle2,
 } from "lucide-react";
 
 type LocationSectionClientProps = {
@@ -28,6 +29,18 @@ type LocationSectionClientProps = {
   detailLine2?: string | null;
   detailLine3?: string | null;
 };
+
+function isValidGoogleMapsEmbedUrl(value: string | null | undefined) {
+  if (!value) return false;
+
+  const trimmed = value.trim();
+
+  return (
+    trimmed.startsWith("https://www.google.com/maps/embed?") ||
+    trimmed.startsWith("https://maps.google.com/maps?") ||
+    trimmed.startsWith("https://www.google.com/maps?q=")
+  );
+}
 
 export function LocationSectionClient({
   clubSlug,
@@ -57,13 +70,20 @@ export function LocationSectionClient({
     "Make arrival effortless with a clear meeting point, practical directions, and a live map guests can open instantly.";
 
   const resolvedLocationName = locationName || "Main meeting point";
-  const resolvedAddressLine = addressLine || "Set your exact address in the homepage editor.";
+  const resolvedAddressLine =
+    addressLine || "Set your exact address in the homepage editor.";
+
   const resolvedGoogleMapsUrl =
-    googleMapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(resolvedAddressLine)}`;
+    googleMapsUrl ||
+    `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+      resolvedAddressLine
+    )}`;
+
   const resolvedPrimaryCtaLabel = primaryCtaLabel || "Open in Google Maps";
   const resolvedPrimaryCtaHref = primaryCtaHref || resolvedGoogleMapsUrl;
   const resolvedSecondaryCtaLabel = secondaryCtaLabel || "Contact us";
-  const resolvedSecondaryCtaHref = secondaryCtaHref || `/${clubSlug}/contact`;
+  const resolvedSecondaryCtaHref =
+    secondaryCtaHref || `/${clubSlug}/contact`;
 
   const detailItems = [
     detailLine1 || "Arrive 15 minutes before your booking.",
@@ -71,7 +91,9 @@ export function LocationSectionClient({
     detailLine3 || "Contact the club if you need help finding the spot.",
   ].filter(Boolean);
 
-  const showEmbed = Boolean(embedUrl);
+  const safeEmbedUrl = isValidGoogleMapsEmbedUrl(embedUrl)
+    ? embedUrl!.trim()
+    : null;
 
   return (
     <section
@@ -153,10 +175,6 @@ export function LocationSectionClient({
             {resolvedSubtitle}
           </p>
 
-          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/54 md:text-base">
-            {resolvedBody}
-          </p>
-
           <div className="mt-7 rounded-[1.6rem] border border-white/10 bg-black/20 p-5">
             <div className="flex items-start gap-4">
               <div className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] text-white/90 backdrop-blur-xl">
@@ -170,9 +188,6 @@ export function LocationSectionClient({
                 <h3 className="mt-1 text-xl font-semibold text-white">
                   {resolvedLocationName}
                 </h3>
-                <p className="mt-2 text-sm leading-relaxed text-white/62 md:text-base">
-                  {resolvedAddressLine}
-                </p>
               </div>
             </div>
 
@@ -221,10 +236,11 @@ export function LocationSectionClient({
         <div
           className="loc-card relative overflow-hidden rounded-[1.9rem] border border-white/10 bg-white/[0.05] p-3 shadow-[0_28px_90px_-55px_rgba(0,0,0,0.95)]"
           style={{
-            animation: "locCardIn 700ms cubic-bezier(0.22,1,0.36,1) 120ms both",
+            animation:
+              "locCardIn 700ms cubic-bezier(0.22,1,0.36,1) 120ms both",
           }}
         >
-          <div className="pointer-events-none absolute left-6 top-6 z-10 inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/35 px-3 py-1.5 text-xs uppercase tracking-[0.18em] text-white/75 backdrop-blur-xl">
+          <div className="pointer-events-none absolute right-6 top-6 z-10 inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/35 px-3 py-1.5 text-xs uppercase tracking-[0.18em] text-white/75 backdrop-blur-xl">
             <div
               className="h-2.5 w-2.5 rounded-full bg-pink-400"
               style={{ animation: "locPulse 2.4s ease-in-out infinite" }}
@@ -233,23 +249,26 @@ export function LocationSectionClient({
           </div>
 
           <div className="overflow-hidden rounded-[1.5rem] border border-white/10 bg-black/30">
-            {showEmbed ? (
+            {safeEmbedUrl ? (
               <iframe
-                src={embedUrl!}
+                src={safeEmbedUrl}
                 title="Meeting point map"
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
-                className="h-[420px] w-full"
+                className="h-[340px] w-full"
               />
             ) : (
-              <div className="flex h-[420px] flex-col items-center justify-center px-6 text-center">
+              <div className="flex h-[340px] flex-col items-center justify-center px-6 text-center">
                 <MapPin className="size-10 text-pink-300" />
                 <h3 className="mt-4 text-xl font-semibold text-white">
-                  Add a Google Maps embed URL
+                  Add a valid Google Maps embed URL
                 </h3>
                 <p className="mt-3 max-w-md text-sm leading-relaxed text-white/58">
-                  Paste a Google Maps embed link in the homepage admin editor to
-                  show the live map here.
+                  Paste a Google Maps embed link in the homepage admin editor.
+                  It should start with
+                  <span className="mx-1 text-white/80">
+                    https://www.google.com/maps/embed?...
+                  </span>
                 </p>
                 <a
                   href={resolvedGoogleMapsUrl}
@@ -264,16 +283,39 @@ export function LocationSectionClient({
             )}
           </div>
 
-          <div className="pointer-events-none absolute inset-x-8 bottom-6 z-10 rounded-2xl border border-white/10 bg-black/35 px-4 py-3 backdrop-blur-xl">
-            <div className="flex items-center gap-3">
-              <MapPin className="size-4 shrink-0 text-pink-300" />
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-white">
-                  {resolvedLocationName}
-                </p>
-                <p className="truncate text-xs text-white/60">
-                  {resolvedAddressLine}
-                </p>
+          <div className="mt-4 grid gap-3">
+            <div className="rounded-[1.35rem] border border-white/10 bg-black/20 px-4 py-4">
+              <div className="flex items-start gap-3">
+                <MapPin className="mt-0.5 size-4 shrink-0 text-pink-300" />
+                <div>
+                  <p className="text-xs uppercase tracking-[0.18em] text-white/42">
+                    Address
+                  </p>
+                  <p className="mt-1 text-sm leading-relaxed text-white/78">
+                    {resolvedAddressLine}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-[1.35rem] border border-white/10 bg-black/20 px-4 py-4">
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-sky-300" />
+                <div>
+                  <p className="text-xs uppercase tracking-[0.18em] text-white/42">
+                    Arrival tips
+                  </p>
+                  <ul className="mt-2 space-y-2">
+                    {detailItems.slice(0, 2).map((detail, index) => (
+                      <li
+                        key={`${detail}-tip-${index}`}
+                        className="text-sm leading-relaxed text-white/64"
+                      >
+                        {detail}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
             </div>
           </div>
