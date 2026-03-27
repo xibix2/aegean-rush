@@ -49,6 +49,41 @@ function isContactHref(href: string | null | undefined) {
   );
 }
 
+function isHashHref(href: string | null | undefined) {
+  return typeof href === "string" && href.startsWith("#");
+}
+
+function smoothScrollToId(id: string, offset = 120, duration = 1100) {
+  const target = document.getElementById(id);
+  if (!target) return;
+
+  const startY = window.scrollY;
+  const targetY =
+    target.getBoundingClientRect().top + window.scrollY - offset;
+  const distance = targetY - startY;
+  const startTime = performance.now();
+
+  const easeInOutCubic = (t: number) =>
+    t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+  const step = (currentTime: number) => {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = easeInOutCubic(progress);
+
+    window.scrollTo({
+      top: startY + distance * eased,
+      behavior: "auto",
+    });
+
+    if (progress < 1) {
+      window.requestAnimationFrame(step);
+    }
+  };
+
+  window.requestAnimationFrame(step);
+}
+
 export function FinalCtaSectionClient({
   clubSlug,
   title,
@@ -72,6 +107,11 @@ export function FinalCtaSectionClient({
     : `/${clubSlug}/contact`;
 
   const showSecondaryAsLocation = !isContactHref(secondaryCtaHref);
+
+  const handleInternalJump = (href: string) => {
+    const id = href.replace(/^#/, "");
+    smoothScrollToId(id, 120, 1100);
+  };
 
   return (
     <section className="relative overflow-hidden rounded-[2.35rem] border border-white/10 bg-[#070b16] px-5 py-14 backdrop-blur-xl sm:px-6 md:px-8 md:py-20">
@@ -199,31 +239,62 @@ export function FinalCtaSectionClient({
         </p>
 
         <div className="mt-9 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-          <a
-            href={resolvedPrimaryHref}
-            className="cta-anim group relative inline-flex h-13 items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-r from-pink-500 via-fuchsia-500 to-violet-500 px-7 text-sm font-medium text-white shadow-[0_22px_65px_-22px_rgba(236,72,153,0.85)] transition hover:scale-[1.03] hover:shadow-[0_28px_80px_-22px_rgba(236,72,153,0.95)] md:h-14 md:px-8 md:text-base"
-            style={{ animation: "ctaButtonFloat 4.8s ease-in-out infinite" }}
-          >
-            <span
-              className="pointer-events-none absolute inset-0"
-              style={{
-                background:
-                  "linear-gradient(120deg, transparent 18%, rgba(255,255,255,0.18) 50%, transparent 82%)",
-                animation: "ctaShimmer 4s linear infinite",
-              }}
-            />
-            <span className="relative">{resolvedPrimaryLabel}</span>
-            <ArrowRight className="relative size-4 transition group-hover:translate-x-0.5" />
-          </a>
+          {isHashHref(resolvedPrimaryHref) ? (
+            <button
+              type="button"
+              onClick={() => handleInternalJump(resolvedPrimaryHref)}
+              className="cta-anim group relative inline-flex h-13 items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-r from-pink-500 via-fuchsia-500 to-violet-500 px-7 text-sm font-medium text-white shadow-[0_22px_65px_-22px_rgba(236,72,153,0.85)] transition hover:scale-[1.03] hover:shadow-[0_28px_80px_-22px_rgba(236,72,153,0.95)] md:h-14 md:px-8 md:text-base"
+              style={{ animation: "ctaButtonFloat 4.8s ease-in-out infinite" }}
+            >
+              <span
+                className="pointer-events-none absolute inset-0"
+                style={{
+                  background:
+                    "linear-gradient(120deg, transparent 18%, rgba(255,255,255,0.18) 50%, transparent 82%)",
+                  animation: "ctaShimmer 4s linear infinite",
+                }}
+              />
+              <span className="relative">{resolvedPrimaryLabel}</span>
+              <ArrowRight className="relative size-4 transition group-hover:translate-x-0.5" />
+            </button>
+          ) : (
+            <a
+              href={resolvedPrimaryHref}
+              className="cta-anim group relative inline-flex h-13 items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-r from-pink-500 via-fuchsia-500 to-violet-500 px-7 text-sm font-medium text-white shadow-[0_22px_65px_-22px_rgba(236,72,153,0.85)] transition hover:scale-[1.03] hover:shadow-[0_28px_80px_-22px_rgba(236,72,153,0.95)] md:h-14 md:px-8 md:text-base"
+              style={{ animation: "ctaButtonFloat 4.8s ease-in-out infinite" }}
+            >
+              <span
+                className="pointer-events-none absolute inset-0"
+                style={{
+                  background:
+                    "linear-gradient(120deg, transparent 18%, rgba(255,255,255,0.18) 50%, transparent 82%)",
+                  animation: "ctaShimmer 4s linear infinite",
+                }}
+              />
+              <span className="relative">{resolvedPrimaryLabel}</span>
+              <ArrowRight className="relative size-4 transition group-hover:translate-x-0.5" />
+            </a>
+          )}
 
           {showSecondaryAsLocation ? (
-            <a
-              href={resolvedSecondaryHref}
-              className="inline-flex h-13 items-center justify-center gap-2 rounded-2xl border border-white/12 bg-white/[0.05] px-7 text-sm font-medium text-white/88 shadow-[0_16px_40px_-30px_rgba(56,189,248,0.55)] transition hover:-translate-y-0.5 hover:bg-white/[0.08] md:h-14 md:px-8 md:text-base"
-            >
-              <MapPin className="size-4 text-sky-300" />
-              {resolvedSecondaryLabel}
-            </a>
+            isHashHref(resolvedSecondaryHref) ? (
+              <button
+                type="button"
+                onClick={() => handleInternalJump(resolvedSecondaryHref)}
+                className="inline-flex h-13 items-center justify-center gap-2 rounded-2xl border border-white/12 bg-white/[0.05] px-7 text-sm font-medium text-white/88 shadow-[0_16px_40px_-30px_rgba(56,189,248,0.55)] transition hover:-translate-y-0.5 hover:bg-white/[0.08] md:h-14 md:px-8 md:text-base"
+              >
+                <MapPin className="size-4 text-sky-300" />
+                {resolvedSecondaryLabel}
+              </button>
+            ) : (
+              <a
+                href={resolvedSecondaryHref}
+                className="inline-flex h-13 items-center justify-center gap-2 rounded-2xl border border-white/12 bg-white/[0.05] px-7 text-sm font-medium text-white/88 shadow-[0_16px_40px_-30px_rgba(56,189,248,0.55)] transition hover:-translate-y-0.5 hover:bg-white/[0.08] md:h-14 md:px-8 md:text-base"
+              >
+                <MapPin className="size-4 text-sky-300" />
+                {resolvedSecondaryLabel}
+              </a>
+            )
           ) : null}
 
           <a
@@ -282,12 +353,13 @@ export function FinalCtaSectionClient({
               Talk to us
             </a>
 
-            <a
-              href="#faq"
+            <button
+              type="button"
+              onClick={() => handleInternalJump("#faq")}
               className="inline-flex h-11 items-center justify-center rounded-xl border border-white/10 bg-black/20 px-5 text-sm font-medium text-white/72 transition hover:bg-white/[0.06]"
             >
               View FAQ
-            </a>
+            </button>
           </div>
         </div>
       </div>

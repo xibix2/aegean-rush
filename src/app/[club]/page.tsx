@@ -188,11 +188,7 @@ export default async function ClubHome({
 
           case "LOCATION":
             return (
-              <section
-                key={section.id}
-                id="meeting-point"
-                className="rounded-[2rem] border border-white/10 bg-white/[0.03] px-6 py-12 text-center backdrop-blur-xl"
-              >
+              <section key={section.id} id="faq" className="scroll-mt-28 md:scroll-mt-36">
                 <div className="mx-auto max-w-3xl">
                   <p className="text-sm uppercase tracking-[0.22em] text-white/45">
                     Meeting point
