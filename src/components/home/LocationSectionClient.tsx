@@ -363,30 +363,6 @@ export function LocationSectionClient({
               }}
             />
 
-            <div className="absolute left-6 top-6">
-              <div className="relative h-16 w-16">
-                <div
-                  className="absolute inset-0 rounded-full border border-white/10"
-                  style={{ animation: "locCompassSpin 18s linear infinite" }}
-                />
-                <div
-                  className="absolute inset-2 rounded-full border border-sky-300/20"
-                  style={{ animation: "locCompassSpin 10s linear infinite reverse" }}
-                />
-                <div
-                  className="absolute inset-0 rounded-full blur-xl"
-                  style={{
-                    background:
-                      "radial-gradient(circle, rgba(56,189,248,0.18) 0%, transparent 72%)",
-                    animation: "locCompassPulse 4.8s ease-in-out infinite",
-                  }}
-                />
-                <div className="absolute inset-0 flex items-center justify-center text-[10px] uppercase tracking-[0.2em] text-white/60">
-                  Nav
-                </div>
-              </div>
-            </div>
-
             <svg
               viewBox="0 0 320 150"
               className="absolute inset-0 h-full w-full"
@@ -487,12 +463,6 @@ export function LocationSectionClient({
                 animation: "locStarPulse 3.8s ease-in-out infinite",
               }}
             />
-
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="rounded-full border border-white/10 bg-black/30 px-4 py-2 text-[11px] uppercase tracking-[0.22em] text-white/62 backdrop-blur-xl shadow-[0_0_30px_rgba(255,255,255,0.05)]">
-                Route active
-              </div>
-            </div>
           </div>
         </div>
       </div>
