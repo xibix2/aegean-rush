@@ -11,6 +11,7 @@ import { HowItWorksSectionClient } from "@/components/home/HowItWorksSectionClie
 import { WhyChooseUsSectionClient } from "@/components/home/WhyChooseUsSectionClient";
 import { FaqSectionClient } from "@/components/home/FaqSectionClient";
 import { FinalCtaSectionClient } from "@/components/home/FinalCtaSectionClient";
+import { LocationSectionClient } from "@/components/home/LocationSectionClient";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -186,33 +187,69 @@ export default async function ClubHome({
               />
             );
 
-          case "LOCATION":
+          case "LOCATION": {
+            const locationData =
+              section.dataJson && typeof section.dataJson === "object"
+                ? (section.dataJson as Record<string, unknown>)
+                : null;
+
+            const locationName =
+              typeof locationData?.locationName === "string"
+                ? locationData.locationName
+                : null;
+
+            const addressLine =
+              typeof locationData?.addressLine === "string"
+                ? locationData.addressLine
+                : null;
+
+            const googleMapsUrl =
+              typeof locationData?.googleMapsUrl === "string"
+                ? locationData.googleMapsUrl
+                : null;
+
+            const embedUrl =
+              typeof locationData?.embedUrl === "string"
+                ? locationData.embedUrl
+                : null;
+
+            const detailLine1 =
+              typeof locationData?.detailLine1 === "string"
+                ? locationData.detailLine1
+                : null;
+
+            const detailLine2 =
+              typeof locationData?.detailLine2 === "string"
+                ? locationData.detailLine2
+                : null;
+
+            const detailLine3 =
+              typeof locationData?.detailLine3 === "string"
+                ? locationData.detailLine3
+                : null;
+
             return (
-              <section
+              <LocationSectionClient
                 key={section.id}
-                id="meeting-point"
-                className="scroll-mt-28 md:scroll-mt-36 rounded-[2rem] border border-white/10 bg-white/[0.03] px-6 py-12 text-center backdrop-blur-xl"
-              >
-                <div className="mx-auto max-w-3xl">
-                  <p className="text-sm uppercase tracking-[0.22em] text-white/45">
-                    Meeting point
-                  </p>
-                  <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white md:text-4xl">
-                    {section.title || "Meeting point"}
-                  </h2>
-                  {section.subtitle ? (
-                    <p className="mx-auto mt-4 max-w-2xl text-white/65">
-                      {section.subtitle}
-                    </p>
-                  ) : null}
-                  {section.body ? (
-                    <p className="mx-auto mt-3 max-w-2xl text-white/55">
-                      {section.body}
-                    </p>
-                  ) : null}
-                </div>
-              </section>
+                clubSlug={slug}
+                badgeText={section.badgeText}
+                title={section.title}
+                subtitle={section.subtitle}
+                body={section.body}
+                primaryCtaLabel={section.primaryCtaLabel}
+                primaryCtaHref={section.primaryCtaHref}
+                secondaryCtaLabel={section.secondaryCtaLabel}
+                secondaryCtaHref={section.secondaryCtaHref}
+                locationName={locationName}
+                addressLine={addressLine}
+                googleMapsUrl={googleMapsUrl}
+                embedUrl={embedUrl}
+                detailLine1={detailLine1}
+                detailLine2={detailLine2}
+                detailLine3={detailLine3}
+              />
             );
+          }
 
           case "FAQ":
             return (

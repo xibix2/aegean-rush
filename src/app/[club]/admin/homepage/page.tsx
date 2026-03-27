@@ -70,6 +70,14 @@ export default async function AdminHomepagePage({ params }: PageProps) {
     const highlightTitle = normalizeText(formData.get("highlightTitle"));
     const microText = normalizeText(formData.get("microText"));
 
+    const locationName = normalizeText(formData.get("locationName"));
+    const addressLine = normalizeText(formData.get("addressLine"));
+    const googleMapsUrl = normalizeText(formData.get("googleMapsUrl"));
+    const embedUrl = normalizeText(formData.get("embedUrl"));
+    const detailLine1 = normalizeText(formData.get("detailLine1"));
+    const detailLine2 = normalizeText(formData.get("detailLine2"));
+    const detailLine3 = normalizeText(formData.get("detailLine3"));
+
     if (!slug || !sectionId || !type) return;
 
     const verifiedTenant = await requireTenant(slug);
@@ -98,6 +106,29 @@ export default async function AdminHomepagePage({ params }: PageProps) {
 
       if (microText) nextDataJson.microText = microText;
       else delete nextDataJson.microText;
+    }
+
+    if (type === "LOCATION") {
+      if (locationName) nextDataJson.locationName = locationName;
+      else delete nextDataJson.locationName;
+
+      if (addressLine) nextDataJson.addressLine = addressLine;
+      else delete nextDataJson.addressLine;
+
+      if (googleMapsUrl) nextDataJson.googleMapsUrl = googleMapsUrl;
+      else delete nextDataJson.googleMapsUrl;
+
+      if (embedUrl) nextDataJson.embedUrl = embedUrl;
+      else delete nextDataJson.embedUrl;
+
+      if (detailLine1) nextDataJson.detailLine1 = detailLine1;
+      else delete nextDataJson.detailLine1;
+
+      if (detailLine2) nextDataJson.detailLine2 = detailLine2;
+      else delete nextDataJson.detailLine2;
+
+      if (detailLine3) nextDataJson.detailLine3 = detailLine3;
+      else delete nextDataJson.detailLine3;
     }
 
     await prisma.homepageSection.update({
@@ -816,6 +847,41 @@ export default async function AdminHomepagePage({ params }: PageProps) {
           const microText =
             typeof dataJson?.microText === "string" ? dataJson.microText : "";
 
+          const locationName =
+            typeof dataJson?.locationName === "string"
+              ? dataJson.locationName
+              : "";
+
+          const addressLine =
+            typeof dataJson?.addressLine === "string"
+              ? dataJson.addressLine
+              : "";
+
+          const googleMapsUrl =
+            typeof dataJson?.googleMapsUrl === "string"
+              ? dataJson.googleMapsUrl
+              : "";
+
+          const embedUrl =
+            typeof dataJson?.embedUrl === "string"
+              ? dataJson.embedUrl
+              : "";
+
+          const detailLine1 =
+            typeof dataJson?.detailLine1 === "string"
+              ? dataJson.detailLine1
+              : "";
+
+          const detailLine2 =
+            typeof dataJson?.detailLine2 === "string"
+              ? dataJson.detailLine2
+              : "";
+
+          const detailLine3 =
+            typeof dataJson?.detailLine3 === "string"
+              ? dataJson.detailLine3
+              : "";
+
           return (
             <div
               key={section.id}
@@ -965,22 +1031,73 @@ export default async function AdminHomepagePage({ params }: PageProps) {
                   </>
                 )}
 
-                {(section.type === "LOCATION" ||
-                  section.type === "FINAL_CTA") && (
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <Field
-                      label="Primary CTA label"
-                      name="primaryCtaLabel"
-                      defaultValue={section.primaryCtaLabel || ""}
-                      placeholder="Explore experiences"
-                    />
-                    <Field
-                      label="Primary CTA href"
-                      name="primaryCtaHref"
-                      defaultValue={section.primaryCtaHref || ""}
-                      placeholder={`/${tenant.slug}/activities`}
-                    />
-                  </div>
+                {section.type === "LOCATION" && (
+                  <>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <Field
+                        label="Location name"
+                        name="locationName"
+                        defaultValue={locationName}
+                        placeholder="Aegean Rush Marina Base"
+                      />
+                      <Field
+                        label="Address line"
+                        name="addressLine"
+                        defaultValue={addressLine}
+                        placeholder="Hersonissos Port, Crete"
+                      />
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <Field
+                        label="Google Maps URL"
+                        name="googleMapsUrl"
+                        defaultValue={googleMapsUrl}
+                        placeholder="https://maps.google.com/..."
+                      />
+                      <Field
+                        label="Google Maps embed URL"
+                        name="embedUrl"
+                        defaultValue={embedUrl}
+                        placeholder="https://www.google.com/maps/embed?pb=..."
+                      />
+                    </div>
+
+                    <div className="grid gap-4">
+                      <TextAreaField
+                        label="Detail line 1"
+                        name="detailLine1"
+                        defaultValue={detailLine1}
+                        placeholder="Arrive 15 minutes before your booking."
+                        rows={2}
+                      />
+                      <TextAreaField
+                        label="Detail line 2"
+                        name="detailLine2"
+                        defaultValue={detailLine2}
+                        placeholder="Easy parking nearby / next to the marina entrance."
+                        rows={2}
+                      />
+                      <TextAreaField
+                        label="Detail line 3"
+                        name="detailLine3"
+                        defaultValue={detailLine3}
+                        placeholder="Call the club if you need help finding the spot."
+                        rows={2}
+                      />
+                    </div>
+
+                    <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-4 text-sm text-white/60">
+                      <p className="font-medium text-white/82">
+                        How to get the embed URL
+                      </p>
+                      <p className="mt-2 leading-relaxed">
+                        In Google Maps: open the place → Share → Embed a map →
+                        copy the iframe source URL and paste only the URL part
+                        here.
+                      </p>
+                    </div>
+                  </>
                 )}
 
                 {section.type === "FINAL_CTA" && (
