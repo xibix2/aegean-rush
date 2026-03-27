@@ -286,29 +286,15 @@ export function LocationSectionClient({
           <div className="mt-4 grid gap-3">
             <div className="rounded-[1.35rem] border border-white/10 bg-black/20 px-4 py-4">
               <div className="flex items-start gap-3">
-                <MapPin className="mt-0.5 size-4 shrink-0 text-pink-300" />
-                <div>
-                  <p className="text-xs uppercase tracking-[0.18em] text-white/42">
-                    Address
-                  </p>
-                  <p className="mt-1 text-sm leading-relaxed text-white/78">
-                    {resolvedAddressLine}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-[1.35rem] border border-white/10 bg-black/20 px-4 py-4">
-              <div className="flex items-start gap-3">
                 <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-sky-300" />
                 <div>
                   <p className="text-xs uppercase tracking-[0.18em] text-white/42">
-                    Arrival tips
+                    Before you arrive
                   </p>
                   <ul className="mt-2 space-y-2">
-                    {detailItems.slice(0, 2).map((detail, index) => (
+                    {detailItems.map((detail, index) => (
                       <li
-                        key={`${detail}-tip-${index}`}
+                        key={`${detail}-before-${index}`}
                         className="text-sm leading-relaxed text-white/64"
                       >
                         {detail}
@@ -316,6 +302,40 @@ export function LocationSectionClient({
                     ))}
                   </ul>
                 </div>
+              </div>
+            </div>
+
+            <div className="rounded-[1.35rem] border border-white/10 bg-black/20 px-4 py-4">
+              <p className="text-xs uppercase tracking-[0.18em] text-white/42">
+                Quick actions
+              </p>
+
+              <div className="mt-3 flex flex-col gap-2">
+                <a
+                  href={resolvedGoogleMapsUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-4 text-sm font-medium text-white/84 transition hover:bg-white/[0.08]"
+                >
+                  <Navigation className="size-4 text-sky-300" />
+                  Open route
+                </a>
+
+                <a
+                  href={resolvedSecondaryCtaHref}
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-4 text-sm font-medium text-white/84 transition hover:bg-white/[0.08]"
+                >
+                  <Phone className="size-4 text-pink-300" />
+                  Contact the club
+                </a>
+
+                <a
+                  href="#courts"
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-4 text-sm font-medium text-white/84 transition hover:bg-white/[0.08]"
+                >
+                  <Waves className="size-4 text-fuchsia-300" />
+                  View experiences
+                </a>
               </div>
             </div>
           </div>
