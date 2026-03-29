@@ -4,9 +4,11 @@ import { format } from "date-fns";
 import Link from "next/link";
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useFormState, useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/Button";
 import { Card, CardTitle, CardSubtle } from "@/components/ui/Card";
 import { useT } from "@/components/I18nProvider";
+import { cancelBookingAction } from "./actions";
 
 type ActivityMode =
   | "FIXED_SEAT_EVENT"
@@ -17,6 +19,7 @@ type BookingPayload =
   | null
   | {
       id: string;
+      publicToken: string;
       status: string;
       partySize: number;
       totalPrice: number;
@@ -28,6 +31,9 @@ type BookingPayload =
       unitPriceSnapshot: number | null;
       pricingLabelSnapshot: string | null;
 
+      cancelledAt: string | null;
+      canCancel: boolean;
+
       timeSlot: {
         startAt: string;
         endAt: string | null;
@@ -38,8 +44,32 @@ type BookingPayload =
       };
     };
 
+type CancelActionState = {
+  ok: boolean;
+  error: string | null;
+};
+
+const initialCancelState: CancelActionState = {
+  ok: false,
+  error: null,
+};
+
 function formatMoney(cents: number, currencyGlyph: string) {
   return `${currencyGlyph}${(cents / 100).toFixed(2)}`;
+}
+
+function CancelSubmitButton({ disabled }: { disabled?: boolean }) {
+  const { pending } = useFormStatus();
+
+  return (
+    <button
+      type="submit"
+      disabled={disabled || pending}
+      className="inline-flex h-11 items-center justify-center rounded-xl border border-red-400/20 bg-red-500/10 px-5 text-sm font-medium text-red-200 transition hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-60"
+    >
+      {pending ? "Cancelling..." : "Cancel booking"}
+    </button>
+  );
 }
 
 export default function BookingClient({
@@ -56,13 +86,24 @@ export default function BookingClient({
   const searchParams = useSearchParams();
   const urlStatus = (searchParams.get("status") || "").toLowerCase();
 
+  const [cancelState, cancelFormAction] = useFormState(
+    cancelBookingAction,
+    initialCancelState
+  );
+
+  useEffect(() => {
+    if (cancelState.ok) {
+      router.refresh();
+    }
+  }, [cancelState.ok, router]);
+
   if (!booking) {
     return (
       <main className="py-24 text-center">
-        <h1 className="text-3xl font-semibold mb-3">
+        <h1 className="mb-3 text-3xl font-semibold">
           {t("booking.notFoundTitle")}
         </h1>
-        <p className="opacity-70 text-base">{t("booking.notFoundText")}</p>
+        <p className="text-base opacity-70">{t("booking.notFoundText")}</p>
         <div className="mt-8">
           <Link href={`/${tenantSlug}`}>
             <Button
@@ -101,8 +142,6 @@ export default function BookingClient({
   const isUrlSuccess = urlStatus === "success";
   const isUrlCancelled = urlStatus === "cancelled";
 
-  // If Stripe redirects back with success but webhook hasn't updated yet,
-  // refresh the server component a few times instead of showing cancelled.
   useEffect(() => {
     if (!(isUrlSuccess && isPending)) return;
 
@@ -121,7 +160,6 @@ export default function BookingClient({
     return () => clearInterval(timer);
   }, [isUrlSuccess, isPending, router]);
 
-  // DB status is the source of truth.
   const isPaid = isDbPaid;
   const isCancelled = isDbCancelled || (isUrlCancelled && !isDbPaid);
 
@@ -185,11 +223,11 @@ export default function BookingClient({
     (booking.durationMinSnapshot ? `${booking.durationMinSnapshot} min` : null);
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-28 flex flex-col items-center text-center relative">
+    <main className="relative mx-auto flex max-w-3xl flex-col items-center px-6 py-28 text-center">
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,color-mix(in_oklab,var(--accent-500),transparent_88%),transparent_70%)]" />
 
       <div
-        className={`relative mb-8 flex items-center justify-center rounded-full size-28 ${
+        className={`relative mb-8 flex size-28 items-center justify-center rounded-full ${
           isPaid
             ? "bg-emerald-500/10 text-emerald-400"
             : isCancelled
@@ -238,7 +276,7 @@ export default function BookingClient({
         />
       </div>
 
-      <div className="text-base opacity-85 mt-5 mb-8 max-w-lg leading-relaxed space-y-1.5">
+      <div className="mt-5 mb-8 max-w-lg space-y-1.5 text-base leading-relaxed opacity-85">
         {descriptionLines.map((line, i) => (
           <p key={i}>{line}</p>
         ))}
@@ -249,10 +287,10 @@ export default function BookingClient({
         <span
           className={
             isPaid
-              ? "text-emerald-400 font-semibold"
+              ? "font-semibold text-emerald-400"
               : isCancelled
-              ? "text-red-400 font-semibold"
-              : "text-amber-300 font-semibold"
+              ? "font-semibold text-red-400"
+              : "font-semibold text-amber-300"
           }
         >
           {statusLabel}
@@ -261,8 +299,7 @@ export default function BookingClient({
 
       <Card
         className="
-          relative w-full max-w-2xl text-left space-y-4 p-8 shadow-lg rounded-2xl overflow-hidden
-          border border-transparent
+          relative w-full max-w-2xl overflow-hidden rounded-2xl border border-transparent p-8 text-left shadow-lg
           [background:
             linear-gradient(var(--color-card),var(--color-card))_padding-box,
             linear-gradient(90deg,
@@ -275,64 +312,94 @@ export default function BookingClient({
       >
         <CardTitle className="text-2xl">{t("booking.summary")}</CardTitle>
 
-        <CardSubtle className="text-lg">
-          <b>{t("booking.activity")}:</b>{" "}
-          <span
-            className="font-medium"
-            style={{
-              color: "color-mix(in oklab, var(--accent-400), white 15%)",
-              textShadow:
-                "0 0 8px color-mix(in oklab, var(--accent-500), transparent 80%), 0 0 16px color-mix(in oklab, var(--accent-600), transparent 85%)",
-            }}
-          >
-            {booking.timeSlot.activity.name}
-          </span>
-        </CardSubtle>
-
-        <CardSubtle className="text-lg">
-          <b>{t("booking.date")}:</b>{" "}
-          {format(actualStart, "PPPP p")} – {format(actualEnd, "p")}
-        </CardSubtle>
-
-        {durationText && mode !== "FIXED_SEAT_EVENT" && (
+        <div className="mt-4 space-y-4">
           <CardSubtle className="text-lg">
-            <b>Duration:</b> {durationText}
+            <b>{t("booking.activity")}:</b>{" "}
+            <span
+              className="font-medium"
+              style={{
+                color: "color-mix(in oklab, var(--accent-400), white 15%)",
+                textShadow:
+                  "0 0 8px color-mix(in oklab, var(--accent-500), transparent 80%), 0 0 16px color-mix(in oklab, var(--accent-600), transparent 85%)",
+              }}
+            >
+              {booking.timeSlot.activity.name}
+            </span>
           </CardSubtle>
-        )}
 
-        <CardSubtle className="text-lg">
-          <b>{bookingTypeLabel}:</b> {bookingTypeValue}
-        </CardSubtle>
-
-        {unitPriceText && mode !== "FIXED_SEAT_EVENT" && (
           <CardSubtle className="text-lg">
-            <b>Unit price:</b> {unitPriceText}
+            <b>{t("booking.date")}:</b>{" "}
+            {format(actualStart, "PPPP p")} – {format(actualEnd, "p")}
           </CardSubtle>
-        )}
 
-        <CardSubtle className="text-lg">
-          <b>{t("booking.total")}:</b>{" "}
-          <span className="font-semibold">
-            {formatMoney(booking.totalPrice, currencyGlyph)}
-          </span>
-        </CardSubtle>
+          {durationText && mode !== "FIXED_SEAT_EVENT" && (
+            <CardSubtle className="text-lg">
+              <b>Duration:</b> {durationText}
+            </CardSubtle>
+          )}
+
+          <CardSubtle className="text-lg">
+            <b>{bookingTypeLabel}:</b> {bookingTypeValue}
+          </CardSubtle>
+
+          {unitPriceText && mode !== "FIXED_SEAT_EVENT" && (
+            <CardSubtle className="text-lg">
+              <b>Unit price:</b> {unitPriceText}
+            </CardSubtle>
+          )}
+
+          <CardSubtle className="text-lg">
+            <b>{t("booking.total")}:</b>{" "}
+            <span className="font-semibold">
+              {formatMoney(booking.totalPrice, currencyGlyph)}
+            </span>
+          </CardSubtle>
+        </div>
       </Card>
 
-      <div className="mt-10">
-        <Link href={`/${tenantSlug}`}>
-          <Button
-            size="lg"
-            variant="primary"
-            className="relative inline-flex h-14 items-center rounded-[12px] px-8 text-lg font-medium
-                       text-[--color-brand-foreground]
-                       bg-[linear-gradient(90deg,var(--accent-600),var(--accent-500),var(--accent-600))] bg-[length:200%_100%]
-                       shadow-[0_18px_48px_-20px_color-mix(in_oklab,var(--accent-500),transparent_65%)]
-                       hover:scale-[1.02] transition"
-            style={{ animation: "shimmerAlt 5.5s ease-in-out infinite" } as any}
-          >
-            {t("booking.returnHome")}
-          </Button>
-        </Link>
+      <div className="mt-8 w-full max-w-2xl">
+        {cancelState.error ? (
+          <div className="rounded-xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+            {cancelState.error}
+          </div>
+        ) : null}
+
+        {cancelState.ok ? (
+          <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+            Your booking has been cancelled successfully.
+          </div>
+        ) : null}
+
+        <div className="mt-4 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          {booking.canCancel && !isCancelled ? (
+            <form action={cancelFormAction}>
+              <input type="hidden" name="club" value={tenantSlug} />
+              <input type="hidden" name="token" value={booking.publicToken} />
+              <CancelSubmitButton />
+            </form>
+          ) : (
+            <div className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white/60">
+              {isCancelled
+                ? "This booking is already cancelled."
+                : "Online cancellation is unavailable for this booking."}
+            </div>
+          )}
+
+          <Link href={`/${tenantSlug}`}>
+            <Button
+              size="lg"
+              variant="primary"
+              className="relative inline-flex h-14 items-center rounded-[12px] px-8 text-lg font-medium
+                         text-[--color-brand-foreground]
+                         bg-[linear-gradient(90deg,var(--accent-600),var(--accent-500),var(--accent-600))] bg-[length:200%_100%]
+                         shadow-[0_18px_48px_-20px_color-mix(in_oklab,var(--accent-500),transparent_65%)]
+                         hover:scale-[1.02] transition"
+              style={{ animation: "shimmerAlt 5.5s ease-in-out infinite" } as any}
+            >
+              {t("booking.returnHome")}
+            </Button>
+          </Link>
+        </div>
       </div>
     </main>
   );

@@ -282,6 +282,9 @@ model Booking {
   unitPriceSnapshot    Int?
   pricingLabelSnapshot String?
 
+  publicToken          String        @unique @default(cuid())
+  cancelledAt          DateTime?
+
   createdAt            DateTime      @default(now())
   activity             Activity      @relation(fields: [activityId], references: [id])
   customer             Customer      @relation(fields: [customerId], references: [id])

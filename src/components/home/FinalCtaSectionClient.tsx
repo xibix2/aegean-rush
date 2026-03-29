@@ -1,3 +1,4 @@
+//FinalCtaSectionClient.tsx
 "use client";
 
 import type { ComponentType } from "react";
@@ -11,6 +12,7 @@ import {
   ShieldCheck,
   Clock3,
   MessageCircle,
+  Ticket,
 } from "lucide-react";
 
 type FinalCtaSectionClientProps = {
@@ -58,8 +60,7 @@ function smoothScrollToId(id: string, offset = 120, duration = 1100) {
   if (!target) return;
 
   const startY = window.scrollY;
-  const targetY =
-    target.getBoundingClientRect().top + window.scrollY - offset;
+  const targetY = target.getBoundingClientRect().top + window.scrollY - offset;
   const distance = targetY - startY;
   const startTime = performance.now();
 
@@ -351,6 +352,14 @@ export function FinalCtaSectionClient({
             >
               <MessageCircle className="size-4 text-pink-300" />
               Talk to us
+            </a>
+
+            <a
+              href={`/${clubSlug}/manage-booking`}
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-white/10 bg-black/20 px-5 text-sm font-medium text-white/78 transition hover:bg-white/[0.06]"
+            >
+              <Ticket className="size-4 text-sky-300" />
+              Manage booking
             </a>
 
             <button

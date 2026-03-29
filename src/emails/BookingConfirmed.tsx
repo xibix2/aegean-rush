@@ -9,6 +9,7 @@ export default function BookingConfirmed({
   clubName,
   logoUrl,
   brandPrimary,
+  manageBookingUrl,
 }: {
   activity: string;
   startISO: string;
@@ -18,6 +19,7 @@ export default function BookingConfirmed({
   clubName: string;
   logoUrl?: string | null;
   brandPrimary?: string | null;
+  manageBookingUrl: string;
 }) {
   const start = new Date(startISO);
   const end = new Date(endISO);
@@ -45,7 +47,7 @@ export default function BookingConfirmed({
   const timeLabel = sameDay
     ? `${formatterTime.format(start)} – ${formatterTime.format(end)}`
     : `${formatterTime.format(start)} – ${formatterTime.format(
-        end,
+        end
       )} (next day)`;
 
   const totalEuros = (totalCents || 0) / 100;
@@ -224,7 +226,7 @@ export default function BookingConfirmed({
                 <span
                   style={{
                     fontWeight: 600,
-                    color: color,
+                    color,
                   }}
                 >
                   €{totalEuros.toFixed(2)}
@@ -243,15 +245,32 @@ export default function BookingConfirmed({
           }}
         >
           <p style={{ margin: "0 0 8px" }}>
-            Please arrive{" "}
-            <span style={{ fontWeight: 500 }}>10 minutes early</span> so there’s
-            enough time for check-in and any pre-activity preparation at{" "}
-            <span style={{ fontWeight: 500 }}>{clubName}</span>.
+            Please arrive <span style={{ fontWeight: 500 }}>10 minutes early</span>{" "}
+            so there’s enough time for check-in and any pre-activity preparation
+            at <span style={{ fontWeight: 500 }}>{clubName}</span>.
           </p>
           <p style={{ margin: 0 }}>
             Bring this email with you in case your booking needs to be verified.
             Follow any instructions shared by the operator before arrival.
           </p>
+        </div>
+
+        <div style={{ marginTop: 18 }}>
+          <a
+            href={manageBookingUrl}
+            style={{
+              display: "inline-block",
+              padding: "11px 16px",
+              borderRadius: 12,
+              background: color,
+              color: "#ffffff",
+              textDecoration: "none",
+              fontSize: 13,
+              fontWeight: 600,
+            }}
+          >
+            Manage booking
+          </a>
         </div>
 
         <hr

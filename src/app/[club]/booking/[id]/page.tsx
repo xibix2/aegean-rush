@@ -14,7 +14,7 @@ export default async function BookingPage({
 
   const booking = await prisma.booking.findFirst({
     where: {
-      id,
+      publicToken: id,
       timeSlot: {
         activity: {
           clubId: tenant.id,
@@ -33,37 +33,49 @@ export default async function BookingPage({
   const jar = await cookies();
   const currencyGlyph = jar.get("ui_currency")?.value ?? "€";
 
+  const effectiveStart = booking?.bookingStartAt ?? booking?.timeSlot.startAt ?? null;
+  const effectiveEnd =
+    booking?.bookingEndAt ??
+    booking?.timeSlot.endAt ??
+    (booking?.timeSlot.startAt
+      ? new Date(booking.timeSlot.startAt.getTime() + 90 * 60 * 1000)
+      : null);
+
+  const canCancel =
+    booking &&
+    booking.status !== "cancelled" &&
+    booking.status !== "refunded" &&
+    effectiveStart &&
+    effectiveStart.getTime() - Date.now() > 24 * 60 * 60 * 1000;
+
   const payload =
-    booking && {
-      id: booking.id,
-      status: booking.status,
-      partySize: booking.partySize,
-      totalPrice: booking.totalPrice,
-
-      reservedUnits: booking.reservedUnits,
-      bookingStartAt: (
-        booking.bookingStartAt ?? booking.timeSlot.startAt
-      ).toISOString(),
-      bookingEndAt: (
-        booking.bookingEndAt ??
-        booking.timeSlot.endAt ??
-        new Date(booking.timeSlot.startAt.getTime() + 90 * 60 * 1000)
-      ).toISOString(),
-      durationMinSnapshot: booking.durationMinSnapshot,
-      unitPriceSnapshot: booking.unitPriceSnapshot,
-      pricingLabelSnapshot: booking.pricingLabelSnapshot,
-
-      timeSlot: {
-        startAt: booking.timeSlot.startAt.toISOString(),
-        endAt: booking.timeSlot.endAt
-          ? booking.timeSlot.endAt.toISOString()
-          : null,
-        activity: {
-          name: booking.timeSlot.activity.name,
-          mode: booking.timeSlot.activity.mode,
-        },
-      },
-    };
+    booking && effectiveStart && effectiveEnd
+      ? {
+          id: booking.id,
+          publicToken: booking.publicToken,
+          status: booking.status,
+          partySize: booking.partySize,
+          totalPrice: booking.totalPrice,
+          reservedUnits: booking.reservedUnits,
+          bookingStartAt: effectiveStart.toISOString(),
+          bookingEndAt: effectiveEnd.toISOString(),
+          durationMinSnapshot: booking.durationMinSnapshot,
+          unitPriceSnapshot: booking.unitPriceSnapshot,
+          pricingLabelSnapshot: booking.pricingLabelSnapshot,
+          cancelledAt: booking.cancelledAt?.toISOString() ?? null,
+          canCancel: Boolean(canCancel),
+          timeSlot: {
+            startAt: booking.timeSlot.startAt.toISOString(),
+            endAt: booking.timeSlot.endAt
+              ? booking.timeSlot.endAt.toISOString()
+              : null,
+            activity: {
+              name: booking.timeSlot.activity.name,
+              mode: booking.timeSlot.activity.mode,
+            },
+          },
+        }
+      : null;
 
   return (
     <BookingClient
