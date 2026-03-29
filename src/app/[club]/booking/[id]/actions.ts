@@ -45,12 +45,12 @@ export async function cancelBookingAction(
 
   const effectiveStart = booking.bookingStartAt ?? booking.timeSlot.startAt;
   const msUntilStart = effectiveStart.getTime() - Date.now();
-  const minNoticeMs = 24 * 60 * 60 * 1000;
+  const minNoticeMs = 48 * 60 * 60 * 1000;
 
   if (msUntilStart <= minNoticeMs) {
     return {
       ok: false,
-      error: "Online cancellation is no longer available for this booking.",
+      error: "Online cancellation is only available at least 48 hours before the booking.",
     };
   }
 

@@ -96,9 +96,21 @@ function isFreshPending(createdAt: Date, now: Date) {
 function countsAgainstAvailability(
   status: BookingStatus,
   createdAt: Date,
-  now: Date,
+  now: Date
 ) {
-  return status === "paid" || (status === "pending" && isFreshPending(createdAt, now));
+  return (
+    status === "paid" ||
+    (status === "pending" && isFreshPending(createdAt, now))
+  );
+}
+
+function getActiveBookings(
+  existingBookings: ExistingBookingLike[],
+  now: Date
+) {
+  return existingBookings.filter((b) =>
+    countsAgainstAvailability(b.status, b.createdAt, now)
+  );
 }
 
 function parseStartTime(input: string | Date | null | undefined): Date | null {
@@ -123,11 +135,12 @@ function normalizePositiveInt(n: number | null | undefined, fallback: number) {
 
 function resolveDurationOption(
   activity: ActivityLike,
-  durationOptionId: string | null | undefined,
+  durationOptionId: string | null | undefined
 ) {
   if (!durationOptionId) return null;
   return (
-    activity.durationOptions.find((d) => d.id === durationOptionId && d.isActive) ?? null
+    activity.durationOptions.find((d) => d.id === durationOptionId && d.isActive) ??
+    null
   );
 }
 
@@ -139,7 +152,7 @@ function getFixedEventPrice(slot: TimeSlotLike, activity: ActivityLike) {
 function getRentalUnitPrice(
   slot: TimeSlotLike,
   activity: ActivityLike,
-  duration: DurationOptionLike,
+  duration: DurationOptionLike
 ) {
   const raw = duration.priceCents ?? slot.priceCents ?? activity.basePrice ?? 0;
   return Number.isFinite(raw) && raw >= 0 ? raw : 0;
@@ -163,7 +176,7 @@ function validateInsideWindow(
   start: Date,
   end: Date,
   slot: TimeSlotLike,
-  errors: string[],
+  errors: string[]
 ) {
   if (start < slot.startAt) {
     errors.push("Selected start time is before the availability window.");
@@ -197,7 +210,7 @@ function validateInterval(
   activity: ActivityLike,
   start: Date,
   slot: TimeSlotLike,
-  errors: string[],
+  errors: string[]
 ) {
   const step = getAllowedStartStepMinutes(activity);
   if (!step || step <= 1) return;
@@ -211,29 +224,19 @@ function validateInterval(
   }
 }
 
-function usedSeatsForFixedEvent(
-  existingBookings: ExistingBookingLike[],
-  now: Date,
-) {
-  return existingBookings.reduce((sum, b) => {
-    return countsAgainstAvailability(b.status, b.createdAt, now)
-      ? sum + (b.partySize ?? 0)
-      : sum;
-  }, 0);
+function usedSeatsForFixedEvent(activeBookings: ExistingBookingLike[]) {
+  return activeBookings.reduce((sum, b) => sum + (b.partySize ?? 0), 0);
 }
 
 function usedUnitsForRange(
-  existingBookings: ExistingBookingLike[],
+  activeBookings: ExistingBookingLike[],
   rangeStart: Date,
   rangeEnd: Date,
-  slot: TimeSlotLike,
-  now: Date,
+  slot: TimeSlotLike
 ) {
   let used = 0;
 
-  for (const b of existingBookings) {
-    if (!countsAgainstAvailability(b.status, b.createdAt, now)) continue;
-
+  for (const b of activeBookings) {
     const bStart = b.bookingStartAt ?? slot.startAt;
     const bEnd =
       b.bookingEndAt ??
@@ -249,10 +252,11 @@ function usedUnitsForRange(
 }
 
 export function getBookingQuoteAndAvailability(
-  input: BookingEngineInput,
+  input: BookingEngineInput
 ): BookingEngineResult {
   const now = input.now ?? new Date();
   const { activity, slot, existingBookings } = input;
+  const activeBookings = getActiveBookings(existingBookings, now);
   const errors: string[] = [];
 
   const mode = activity.mode;
@@ -269,7 +273,7 @@ export function getBookingQuoteAndAvailability(
   }
 
   if (mode === ActivityMode.FIXED_SEAT_EVENT) {
-    const used = usedSeatsForFixedEvent(existingBookings, now);
+    const used = usedSeatsForFixedEvent(activeBookings);
     const remaining = Math.max(0, slot.capacity - used);
     const unitPrice = getFixedEventPrice(slot, activity);
     const totalPrice = unitPrice * partySize;
@@ -339,7 +343,7 @@ export function getBookingQuoteAndAvailability(
     let remainingUnitsForRange: number | null = null;
 
     if (start && bookingEndAt) {
-      const used = usedUnitsForRange(existingBookings, start, bookingEndAt, slot, now);
+      const used = usedUnitsForRange(activeBookings, start, bookingEndAt, slot);
       remainingUnitsForRange = Math.max(0, slot.capacity - used);
 
       if (remainingUnitsForRange < requestedUnits) {
@@ -375,9 +379,7 @@ export function getBookingQuoteAndAvailability(
   const requiredUnits = ceilDiv(guests, guestsPerUnit);
 
   if (requestedUnits < requiredUnits) {
-    errors.push(
-      `At least ${requiredUnits} unit(s) are required for ${guests} guest(s).`,
-    );
+    errors.push(`At least ${requiredUnits} unit(s) are required for ${guests} guest(s).`);
   }
 
   if (
@@ -393,7 +395,7 @@ export function getBookingQuoteAndAvailability(
   let remainingUnitsForRange: number | null = null;
 
   if (start && bookingEndAt) {
-    const used = usedUnitsForRange(existingBookings, start, bookingEndAt, slot, now);
+    const used = usedUnitsForRange(activeBookings, start, bookingEndAt, slot);
     remainingUnitsForRange = Math.max(0, slot.capacity - used);
 
     if (remainingUnitsForRange < requestedUnits) {

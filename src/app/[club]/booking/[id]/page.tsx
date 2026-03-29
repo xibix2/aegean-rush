@@ -33,7 +33,9 @@ export default async function BookingPage({
   const jar = await cookies();
   const currencyGlyph = jar.get("ui_currency")?.value ?? "€";
 
-  const effectiveStart = booking?.bookingStartAt ?? booking?.timeSlot.startAt ?? null;
+  const effectiveStart =
+    booking?.bookingStartAt ?? booking?.timeSlot.startAt ?? null;
+
   const effectiveEnd =
     booking?.bookingEndAt ??
     booking?.timeSlot.endAt ??
@@ -46,7 +48,7 @@ export default async function BookingPage({
     booking.status !== "cancelled" &&
     booking.status !== "refunded" &&
     effectiveStart &&
-    effectiveStart.getTime() - Date.now() > 24 * 60 * 60 * 1000;
+    effectiveStart.getTime() - Date.now() > 48 * 60 * 60 * 1000;
 
   const payload =
     booking && effectiveStart && effectiveEnd

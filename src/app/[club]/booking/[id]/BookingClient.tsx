@@ -282,7 +282,7 @@ export default function BookingClient({
         ))}
       </div>
 
-      <div className="mb-10 text-lg font-medium opacity-75">
+      <div className="mb-6 text-lg font-medium opacity-75">
         {t("booking.status")}:{" "}
         <span
           className={
@@ -295,6 +295,11 @@ export default function BookingClient({
         >
           {statusLabel}
         </span>
+      </div>
+
+      <div className="mb-10 max-w-2xl rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white/65">
+        You are viewing your booking details. Online cancellation is only available
+        at least 48 hours before the booking start time.
       </div>
 
       <Card
@@ -381,7 +386,7 @@ export default function BookingClient({
             <div className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white/60">
               {isCancelled
                 ? "This booking is already cancelled."
-                : "Online cancellation is unavailable for this booking."}
+                : "Refunds and cancellations are unavailable within 48 hours of the booking."}
             </div>
           )}
 
