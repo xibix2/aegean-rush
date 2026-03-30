@@ -19,7 +19,7 @@ export default function BookingConfirmed({
   clubName: string;
   logoUrl?: string | null;
   brandPrimary?: string | null;
-  manageBookingUrl: string;
+  manageBookingUrl?: string;
 }) {
   const start = new Date(startISO);
   const end = new Date(endISO);
@@ -255,23 +255,25 @@ export default function BookingConfirmed({
           </p>
         </div>
 
-        <div style={{ marginTop: 18 }}>
-          <a
-            href={manageBookingUrl}
-            style={{
-              display: "inline-block",
-              padding: "11px 16px",
-              borderRadius: 12,
-              background: color,
-              color: "#ffffff",
-              textDecoration: "none",
-              fontSize: 13,
-              fontWeight: 600,
-            }}
-          >
-            Manage booking
-          </a>
-        </div>
+        {manageBookingUrl ? (
+          <div style={{ marginTop: 18 }}>
+            <a
+              href={manageBookingUrl}
+              style={{
+                display: "inline-block",
+                padding: "11px 16px",
+                borderRadius: 12,
+                background: color,
+                color: "#ffffff",
+                textDecoration: "none",
+                fontSize: 13,
+                fontWeight: 600,
+              }}
+            >
+              Manage booking
+            </a>
+          </div>
+        ) : null}
 
         <hr
           style={{

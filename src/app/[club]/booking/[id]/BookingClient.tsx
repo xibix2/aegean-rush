@@ -67,7 +67,7 @@ function CancelSubmitButton({ disabled }: { disabled?: boolean }) {
       disabled={disabled || pending}
       className="inline-flex h-11 items-center justify-center rounded-xl border border-red-400/20 bg-red-500/10 px-5 text-sm font-medium text-red-200 transition hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-60"
     >
-      {pending ? "Cancelling..." : "Cancel booking"}
+      {pending ? "Processing..." : "Cancel / refund booking"}
     </button>
   );
 }
@@ -371,7 +371,7 @@ export default function BookingClient({
 
         {cancelState.ok ? (
           <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
-            Your booking has been cancelled successfully.
+            Your booking has been updated successfully.
           </div>
         ) : null}
 

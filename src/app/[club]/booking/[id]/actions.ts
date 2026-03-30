@@ -1,8 +1,11 @@
 "use server";
 
 import prisma from "@/lib/prisma";
+import Stripe from "stripe";
 import { requireTenant } from "@/lib/tenant";
 import { revalidatePath } from "next/cache";
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 export async function cancelBookingAction(
   prevState: { ok: boolean; error: string | null },
@@ -28,6 +31,7 @@ export async function cancelBookingAction(
     },
     include: {
       timeSlot: true,
+      payment: true,
     },
   });
 
@@ -50,17 +54,43 @@ export async function cancelBookingAction(
   if (msUntilStart <= minNoticeMs) {
     return {
       ok: false,
-      error: "Online cancellation is only available at least 48 hours before the booking.",
+      error: "Refunds are only available at least 48 hours before the booking.",
     };
   }
 
-  await prisma.booking.update({
-    where: { id: booking.id },
-    data: {
-      status: "cancelled",
-      cancelledAt: new Date(),
-    },
-  });
+  if (booking.status === "paid") {
+    const paymentIntentId =
+      booking.payment?.providerIntentId?.startsWith("pi_")
+        ? booking.payment.providerIntentId
+        : null;
+
+    if (paymentIntentId) {
+      await stripe.refunds.create({
+        payment_intent: paymentIntentId,
+      });
+    }
+
+    await prisma.payment.updateMany({
+      where: { bookingId: booking.id },
+      data: { status: "refunded" },
+    });
+
+    await prisma.booking.update({
+      where: { id: booking.id },
+      data: {
+        status: "refunded",
+        cancelledAt: new Date(),
+      },
+    });
+  } else {
+    await prisma.booking.update({
+      where: { id: booking.id },
+      data: {
+        status: "cancelled",
+        cancelledAt: new Date(),
+      },
+    });
+  }
 
   revalidatePath(`/${club}/booking/${token}`);
   revalidatePath(`/${club}/manage-booking`);
