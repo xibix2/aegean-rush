@@ -247,6 +247,32 @@ function availabilityTone(opt: TimeOption, requestedUnits: number) {
   if (opt.availableUnits >= requestedUnits + 1) return "bg-emerald-300/70";
   return "bg-amber-300/75";
 }
+function buildVisualTimeSegments(options: TimeOption[], size = 48) {
+  if (options.length <= size) return options;
+
+  const result: TimeOption[] = [];
+  const step = options.length / size;
+
+  for (let i = 0; i < size; i++) {
+    const index = Math.min(options.length - 1, Math.floor(i * step));
+    result.push(options[index]);
+  }
+
+  return result;
+}
+
+function getAvailabilitySegmentTone(opt: TimeOption, requestedUnits: number) {
+  if (!opt.canFit) {
+    return "bg-rose-500/70";
+  }
+  if (opt.availableUnits >= requestedUnits + 2) {
+    return "bg-emerald-400/85";
+  }
+  if (opt.availableUnits >= requestedUnits) {
+    return "bg-amber-300/85";
+  }
+  return "bg-rose-500/70";
+}
 
 export default function TimetableClient() {
   const t = useT();
@@ -963,6 +989,7 @@ export default function TimetableClient() {
                 
                 const visualOptions = chunkTimeOptions(timeOptions, 14);
                 const validOptions = timeOptions.filter((opt) => opt.canFit);
+                const visualSegments = buildVisualTimeSegments(timeOptions, 56);
                 const activeOption =
                   selectedTime && validOptions.find((opt) => opt.value === selectedTime)
                     ? selectedTime
@@ -1066,9 +1093,9 @@ export default function TimetableClient() {
                         <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                           <div className="flex items-center justify-between gap-3">
                             <div>
-                              <div className="text-sm font-medium text-white/88">Availability window</div>
+                              <div className="text-sm font-medium text-white/88">Availability through the day</div>
                               <div className="mt-1 text-xs text-white/50">
-                                Bright points are easier to book. Dim points are already full or unavailable.
+                                Green is easier to book, amber is limited, red is unavailable.
                               </div>
                             </div>
 
@@ -1077,84 +1104,62 @@ export default function TimetableClient() {
                             </div>
                           </div>
 
-                          <div className="relative mt-5 px-1">
-                            <div className="absolute left-0 right-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-gradient-to-r from-fuchsia-400/20 via-sky-300/20 to-violet-400/20" />
+                          <div className="mt-5">
+                            <div className="relative">
+                              <div className="flex h-4 items-center gap-[2px]">
+                                {visualSegments.map((opt) => {
+                                  const isActive = activeOption === opt.value;
+                                  const clickable = opt.canFit && !loading;
 
-                            <div className="relative flex items-center justify-between gap-1">
-                              {visualOptions.map((opt) => {
-                                const isActive = activeOption === opt.value;
-                                const isUnavailable = !opt.canFit;
-
-                                let toneClass = "bg-white/30";
-                                let glowClass = "";
-
-                                if (isUnavailable) {
-                                  toneClass = "bg-white/18";
-                                  glowClass = "";
-                                } else if (opt.availableUnits >= requestedUnits + 2) {
-                                  toneClass = "bg-emerald-300";
-                                  glowClass = "shadow-[0_0_12px_rgba(110,231,183,0.45)]";
-                                } else if (opt.availableUnits >= requestedUnits) {
-                                  toneClass = "bg-amber-300";
-                                  glowClass = "shadow-[0_0_10px_rgba(252,211,77,0.35)]";
-                                }
-
-                                return (
-                                  <button
-                                    key={`${s.id}-timeline-${opt.value}`}
-                                    type="button"
-                                    onClick={() => {
-                                      if (!opt.canFit || loading) return;
-                                      setSelectedTime(opt.value);
-                                    }}
-                                    disabled={loading || !opt.canFit}
-                                    title={`${opt.label} · ${opt.availableUnits} free`}
-                                    className="group relative flex flex-col items-center disabled:cursor-not-allowed"
-                                  >
-                                    <span
-                                      className={`transition-all duration-200 rounded-full ${
-                                        isActive
-                                          ? "h-4 w-4 bg-fuchsia-300 ring-4 ring-fuchsia-400/20 shadow-[0_0_18px_rgba(232,121,249,0.8)]"
-                                          : isUnavailable
-                                          ? "h-2.5 w-2.5 bg-white/18"
-                                          : `h-3 w-3 ${toneClass} ${glowClass} group-hover:scale-110`
-                                      }`}
-                                    />
-
-                                    <span
-                                      className={`mt-2 text-[10px] transition ${
-                                        isActive
-                                          ? "text-fuchsia-100"
-                                          : isUnavailable
-                                          ? "text-white/22"
-                                          : "text-white/38 group-hover:text-white/62"
-                                      }`}
+                                  return (
+                                    <button
+                                      key={`${s.id}-segment-${opt.value}`}
+                                      type="button"
+                                      onClick={() => {
+                                        if (!clickable) return;
+                                        setSelectedTime(opt.value);
+                                      }}
+                                      disabled={!clickable}
+                                      title={`${opt.label} · ${opt.canFit ? `${opt.availableUnits} free` : "Unavailable"}`}
+                                      className={`group relative h-4 flex-1 rounded-full transition ${
+                                        !clickable ? "cursor-not-allowed" : "hover:opacity-95"
+                                      } ${getAvailabilitySegmentTone(opt, requestedUnits)}`}
                                     >
-                                      {opt.label}
-                                    </span>
-                                  </button>
-                                );
-                              })}
+                                      {isActive && (
+                                        <span className="absolute left-1/2 top-1/2 h-6 w-[3px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-fuchsia-300 shadow-[0_0_12px_rgba(232,121,249,0.9)]" />
+                                      )}
+                                    </button>
+                                  );
+                                })}
+                              </div>
                             </div>
-                          </div>
 
-                          <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[11px] text-white/42">
-                            <span className="inline-flex items-center gap-1.5">
-                              <span className="h-2.5 w-2.5 rounded-full bg-emerald-300 shadow-[0_0_8px_rgba(110,231,183,0.4)]" />
-                              Good availability
-                            </span>
-                            <span className="inline-flex items-center gap-1.5">
-                              <span className="h-2.5 w-2.5 rounded-full bg-amber-300 shadow-[0_0_8px_rgba(252,211,77,0.3)]" />
-                              Limited
-                            </span>
-                            <span className="inline-flex items-center gap-1.5">
-                              <span className="h-2.5 w-2.5 rounded-full bg-white/20" />
-                              Booked / unavailable
-                            </span>
-                            <span className="inline-flex items-center gap-1.5">
-                              <span className="h-3 w-3 rounded-full bg-fuchsia-300 shadow-[0_0_10px_rgba(232,121,249,0.6)]" />
-                              Selected
-                            </span>
+                            <div className="mt-3 flex items-center justify-between text-[11px] text-white/42">
+                              <span>{timeOptions[0]?.label}</span>
+                              <span>{timeOptions[timeOptions.length - 1]?.label}</span>
+                            </div>
+
+                            <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[11px] text-white/42">
+                              <span className="inline-flex items-center gap-1.5">
+                                <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/85 shadow-[0_0_8px_rgba(52,211,153,0.35)]" />
+                                Good availability
+                              </span>
+
+                              <span className="inline-flex items-center gap-1.5">
+                                <span className="h-2.5 w-2.5 rounded-full bg-amber-300/85 shadow-[0_0_8px_rgba(252,211,77,0.3)]" />
+                                Limited
+                              </span>
+
+                              <span className="inline-flex items-center gap-1.5">
+                                <span className="h-2.5 w-2.5 rounded-full bg-rose-500/70 shadow-[0_0_8px_rgba(244,63,94,0.25)]" />
+                                Booked / unavailable
+                              </span>
+
+                              <span className="inline-flex items-center gap-1.5">
+                                <span className="h-3 w-[3px] rounded-full bg-fuchsia-300 shadow-[0_0_8px_rgba(232,121,249,0.6)]" />
+                                Selected
+                              </span>
+                            </div>
                           </div>
                         </div>
                       )}
