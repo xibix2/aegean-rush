@@ -6,7 +6,6 @@ import { format, addDays, addMonths, subMonths, parse } from "date-fns";
 import { formatInTimeZone } from "date-fns-tz";
 import { toast } from "sonner";
 import MonthCalendar from "@/components/MonthCalendar";
-import AvailabilityTimeline from "@/components/booking/AvailabilityTimeline";
 import { useT } from "@/components/I18nProvider";
 
 type DayBucket = "none" | "low" | "medium" | "high" | "full";
@@ -214,35 +213,17 @@ function buildTimeOptions(args: {
   return options;
 }
 
-function splitTimeOptionsByHour(options: TimeOption[]) {
-  const map = new Map<string, TimeOption[]>();
-
-  for (const opt of options) {
-    const [hour] = opt.value.split(":");
-    const list = map.get(hour) ?? [];
-    list.push(opt);
-    map.set(hour, list);
-  }
-
-  return map;
-}
-
-function getHourAndMinute(value: string) {
-  const [hour = "", minute = ""] = value.split(":");
-  return { hour, minute };
-}
-
 function modeLabel(mode: ActivityMode) {
   if (mode === "FIXED_SEAT_EVENT") return "Guided experience";
   if (mode === "DYNAMIC_RENTAL") return "Flexible rental";
   return "Hybrid booking";
 }
 
-function stepCardClass() {
-  return "rounded-[1.5rem] border border-white/10 bg-[#070b16] p-4 sm:p-5 shadow-[0_24px_80px_-45px_rgba(0,0,0,0.95)]";
+function cardClass() {
+  return "rounded-[1.6rem] border border-white/10 bg-[#070b16] p-4 sm:p-5 shadow-[0_24px_80px_-45px_rgba(0,0,0,0.95)]";
 }
 
-function fieldShellClass() {
+function fieldClass() {
   return "rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-3";
 }
 
@@ -259,8 +240,6 @@ export default function TimetableClient() {
   const [units, setUnits] = useState<number>(Number(params.get("units") ?? 1));
   const [guests, setGuests] = useState<number>(Number(params.get("guests") ?? 1));
   const [selectedTime, setSelectedTime] = useState<string>(params.get("startTime") ?? "");
-  const [selectedHour, setSelectedHour] = useState<string>("");
-  const [selectedMinute, setSelectedMinute] = useState<string>("");
   const [selectedDurationId, setSelectedDurationId] = useState<string>(
     params.get("durationOptionId") ?? "",
   );
@@ -453,18 +432,6 @@ export default function TimetableClient() {
   };
 
   useEffect(() => {
-    if (!selectedTime) {
-      setSelectedHour("");
-      setSelectedMinute("");
-      return;
-    }
-
-    const { hour, minute } = getHourAndMinute(selectedTime);
-    setSelectedHour(hour);
-    setSelectedMinute(minute);
-  }, [selectedTime]);
-
-  useEffect(() => {
     if (!activityId) return;
     if (!date || date < minBookable) {
       const q = safeParamsCopy();
@@ -527,27 +494,43 @@ export default function TimetableClient() {
   };
 
   const onDateInputChange = (s: string) => {
-    if (s) {
-      setSelectedTime("");
-      setQuery({ date: s, startTime: "" });
-    }
+    if (!s) return;
+    const clamped = clampToMin(s);
+    const d = parse(clamped, "yyyy-MM-dd", new Date());
+    setMonth(d.getMonth() + 1);
+    setYear(d.getFullYear());
+    setSelectedTime("");
+    setQuery({ date: clamped, startTime: "" });
   };
 
   const goPrevDay = () => {
     const d = parse(`${safeDate}`, "yyyy-MM-dd", new Date());
+    const next = ymd(addDays(d, -1));
+    const clamped = clampToMin(next);
+    const parsed = parse(clamped, "yyyy-MM-dd", new Date());
+    setMonth(parsed.getMonth() + 1);
+    setYear(parsed.getFullYear());
     setSelectedTime("");
-    setQuery({ date: ymd(addDays(d, -1)), startTime: "" });
+    setQuery({ date: clamped, startTime: "" });
   };
 
   const goNextDay = () => {
     const d = parse(`${safeDate}`, "yyyy-MM-dd", new Date());
+    const next = ymd(addDays(d, +1));
+    const parsed = parse(next, "yyyy-MM-dd", new Date());
+    setMonth(parsed.getMonth() + 1);
+    setYear(parsed.getFullYear());
     setSelectedTime("");
-    setQuery({ date: ymd(addDays(d, +1)), startTime: "" });
+    setQuery({ date: next, startTime: "" });
   };
 
   const onPickDay = (iso: string) => {
+    const clamped = clampToMin(iso);
+    const parsed = parse(clamped, "yyyy-MM-dd", new Date());
+    setMonth(parsed.getMonth() + 1);
+    setYear(parsed.getFullYear());
     setSelectedTime("");
-    setQuery({ date: iso, startTime: "" });
+    setQuery({ date: clamped, startTime: "" });
   };
 
   const prevMonth = () => {
@@ -577,44 +560,21 @@ export default function TimetableClient() {
   const stepMin = getBookingStepMinutes(activity);
 
   const summaryBits: string[] = [];
-  if (mode === "FIXED_SEAT_EVENT") {
-    summaryBits.push(`${partySize} guest${partySize === 1 ? "" : "s"}`);
-  }
+  if (mode === "FIXED_SEAT_EVENT") summaryBits.push(`${partySize} guest${partySize === 1 ? "" : "s"}`);
   if (mode === "DYNAMIC_RENTAL") {
-    if (selectedDuration) {
-      summaryBits.push(selectedDuration.label || `${selectedDuration.durationMin} min`);
-    }
+    if (selectedDuration) summaryBits.push(selectedDuration.label || `${selectedDuration.durationMin} min`);
     summaryBits.push(`${units} unit${units === 1 ? "" : "s"}`);
     if (selectedTime) summaryBits.push(`Start ${selectedTime}`);
   }
   if (mode === "HYBRID_UNIT_BOOKING") {
     summaryBits.push(`${guests} guest${guests === 1 ? "" : "s"}`);
     summaryBits.push(`${units} unit${units === 1 ? "" : "s"}`);
-    if (selectedDuration) {
-      summaryBits.push(selectedDuration.label || `${selectedDuration.durationMin} min`);
-    }
+    if (selectedDuration) summaryBits.push(selectedDuration.label || `${selectedDuration.durationMin} min`);
     if (selectedTime) summaryBits.push(`Start ${selectedTime}`);
   }
 
   return (
-    <main className="mx-auto max-w-6xl px-4 pb-12 pt-6 sm:px-6">
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-.no-spin::-webkit-outer-spin-button, .no-spin::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-.no-spin { -moz-appearance: textfield; appearance: textfield; }
-@keyframes tFade {
-  0% { opacity: 0; transform: translateY(8px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-.card-appear { animation: tFade .45s ease-out both; }
-@media (prefers-reduced-motion: reduce) {
-  .card-appear { animation: none !important; }
-}
-          `.trim(),
-        }}
-      />
-
+    <main className="mx-auto max-w-5xl px-4 pb-12 pt-6 sm:px-6">
       <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#070b16] px-5 py-7 sm:px-7 md:px-8 md:py-8">
         <div
           className="pointer-events-none absolute inset-0"
@@ -657,8 +617,8 @@ export default function TimetableClient() {
         </div>
       </section>
 
-      <section className="mt-6 grid gap-5 lg:grid-cols-[1.02fr_0.98fr]">
-        <div className={stepCardClass()}>
+      <section className="mt-6 grid gap-5">
+        <div className={cardClass()}>
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
               <p className="text-[11px] uppercase tracking-[0.18em] text-white/42">Step 1</p>
@@ -666,12 +626,13 @@ export default function TimetableClient() {
             </div>
 
             <div className="text-xs text-white/48">
-              {t("timetable.timezonePrefix")} <span className="text-white/72">{TIMEZONE}</span>
+              All times in <span className="text-white/72">{TIMEZONE}</span>
             </div>
           </div>
 
-          <div className="card-appear rounded-[1.4rem] border border-white/10 bg-white/[0.03] p-2 sm:p-3">
+          <div className="rounded-[1.4rem] border border-white/10 bg-white/[0.03] p-2 sm:p-3">
             <MonthCalendar
+              key={`${year}-${month}-${safeDate}`}
               year={year}
               month={month}
               data={heat}
@@ -712,7 +673,7 @@ export default function TimetableClient() {
           </div>
         </div>
 
-        <div className={stepCardClass()}>
+        <div className={cardClass()}>
           <div className="mb-4">
             <p className="text-[11px] uppercase tracking-[0.18em] text-white/42">Step 2</p>
             <h2 className="mt-1 text-lg font-semibold text-white">
@@ -725,7 +686,7 @@ export default function TimetableClient() {
           </div>
 
           {mode === "FIXED_SEAT_EVENT" && (
-            <div className={fieldShellClass()}>
+            <div className={fieldClass()}>
               <div className="mb-2 text-sm font-medium text-white/88">Guests</div>
               <div className="flex items-center rounded-2xl border border-white/10 bg-black/20">
                 <button
@@ -758,14 +719,12 @@ export default function TimetableClient() {
 
           {mode === "DYNAMIC_RENTAL" && (
             <div className="grid gap-3">
-              <div className={fieldShellClass()}>
+              <div className={fieldClass()}>
                 <div className="mb-2 text-sm font-medium text-white/88">Duration</div>
                 <select
                   value={selectedDurationId}
                   onChange={(e) => {
                     setSelectedTime("");
-                    setSelectedHour("");
-                    setSelectedMinute("");
                     setSelectedDurationId(e.target.value);
                   }}
                   className="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none"
@@ -779,7 +738,7 @@ export default function TimetableClient() {
                 </select>
               </div>
 
-              <div className={fieldShellClass()}>
+              <div className={fieldClass()}>
                 <div className="mb-2 text-sm font-medium text-white/88">Units</div>
                 <div className="flex items-center rounded-2xl border border-white/10 bg-black/20">
                   <button
@@ -813,7 +772,7 @@ export default function TimetableClient() {
 
           {mode === "HYBRID_UNIT_BOOKING" && (
             <div className="grid gap-3">
-              <div className={fieldShellClass()}>
+              <div className={fieldClass()}>
                 <div className="mb-2 text-sm font-medium text-white/88">Guests</div>
                 <div className="flex items-center rounded-2xl border border-white/10 bg-black/20">
                   <button
@@ -843,7 +802,7 @@ export default function TimetableClient() {
                 </div>
               </div>
 
-              <div className={fieldShellClass()}>
+              <div className={fieldClass()}>
                 <div className="mb-2 text-sm font-medium text-white/88">Units</div>
                 <div className="flex items-center rounded-2xl border border-white/10 bg-black/20">
                   <button
@@ -874,14 +833,12 @@ export default function TimetableClient() {
                 <p className="mt-2 text-xs text-white/48">Minimum units needed: {hybridMinUnits}</p>
               </div>
 
-              <div className={fieldShellClass()}>
+              <div className={fieldClass()}>
                 <div className="mb-2 text-sm font-medium text-white/88">Duration</div>
                 <select
                   value={selectedDurationId}
                   onChange={(e) => {
                     setSelectedTime("");
-                    setSelectedHour("");
-                    setSelectedMinute("");
                     setSelectedDurationId(e.target.value);
                   }}
                   className="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none"
@@ -897,10 +854,8 @@ export default function TimetableClient() {
             </div>
           )}
         </div>
-      </section>
 
-      <section className="mt-6">
-        <div className={stepCardClass()}>
+        <div className={cardClass()}>
           <div className="mb-4">
             <p className="text-[11px] uppercase tracking-[0.18em] text-white/42">Step 3</p>
             <h2 className="mt-1 text-lg font-semibold text-white">
@@ -911,7 +866,7 @@ export default function TimetableClient() {
 
           {mode !== "FIXED_SEAT_EVENT" && !selectedDuration && (
             <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-sm text-white/62">
-              Pick a duration first to see the available start times.
+              Pick a duration first to unlock the available start times.
             </div>
           )}
 
@@ -930,18 +885,14 @@ export default function TimetableClient() {
             )}
 
             {!loading &&
-              slots.map((s, idx) => {
+              slots.map((s) => {
                 if (s.kind === "fixed") {
                   const disabled = !s.canFit;
                   const start = new Date(s.start);
                   const end = s.end ? new Date(s.end) : null;
 
                   return (
-                    <div
-                      key={s.id}
-                      className="card-appear rounded-[1.6rem] border border-white/10 bg-white/[0.03] p-5"
-                      style={{ animationDelay: `${0.03 * idx}s` }}
-                    >
+                    <div key={s.id} className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5">
                       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                           <div className="text-xl font-semibold text-white">
@@ -955,9 +906,7 @@ export default function TimetableClient() {
 
                         <div className="flex flex-col gap-3 sm:items-end">
                           <div className="text-right">
-                            <div className="text-xs uppercase tracking-[0.18em] text-white/40">
-                              Total
-                            </div>
+                            <div className="text-xs uppercase tracking-[0.18em] text-white/40">Total</div>
                             <div className="mt-1 text-2xl font-semibold text-white">
                               €{formatMoney(s.totalPrice)}
                             </div>
@@ -991,186 +940,104 @@ export default function TimetableClient() {
                   requestedUnits,
                 });
 
+                const validOptions = timeOptions.filter((opt) => opt.canFit);
                 const activeOption =
-                  selectedTime && timeOptions.find((opt) => opt.value === selectedTime)
+                  selectedTime && validOptions.find((opt) => opt.value === selectedTime)
                     ? selectedTime
                     : "";
-
-                const validOptions = timeOptions.filter((opt) => opt.canFit);
-                const quickOptions = validOptions.slice(0, 6);
+                const quickOptions = validOptions.slice(0, 10);
                 const disabled = !selectedDuration || !activeOption || !s.canFit;
 
-                const windowStart = new Date(s.availableWindowStart);
-                const windowEnd = s.availableWindowEnd ? new Date(s.availableWindowEnd) : null;
-
                 return (
-                  <div
-                    key={s.id}
-                    className="card-appear rounded-[1.6rem] border border-white/10 bg-white/[0.03] p-5"
-                    style={{ animationDelay: `${0.03 * idx}s` }}
-                  >
+                  <div key={s.id} className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5">
                     <div className="flex flex-col gap-5">
                       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                        <div className="min-w-0">
+                        <div>
                           <div className="text-xl font-semibold text-white">
-                            {format(windowStart, "HH:mm")}
-                            {windowEnd ? `–${format(windowEnd, "HH:mm")}` : ""}
+                            {format(new Date(s.availableWindowStart), "HH:mm")}
+                            {s.availableWindowEnd ? `–${format(new Date(s.availableWindowEnd), "HH:mm")}` : ""}
                           </div>
                           <div className="mt-1 text-sm text-white/56">
                             {validOptions.length > 0
-                              ? `${validOptions.length} start time${validOptions.length === 1 ? "" : "s"} available`
-                              : "No valid start times with the current selection"}
+                              ? `${validOptions.length} available start time${validOptions.length === 1 ? "" : "s"}`
+                              : "No start times available with the current setup"}
                           </div>
-
                           {!!s.errors?.length && (
                             <div className="mt-2 text-xs text-amber-300">{s.errors[0]}</div>
                           )}
                         </div>
 
                         <div className="text-left sm:text-right">
-                          <div className="text-xs uppercase tracking-[0.18em] text-white/40">
-                            Total
-                          </div>
+                          <div className="text-xs uppercase tracking-[0.18em] text-white/40">Total</div>
                           <div className="mt-1 text-2xl font-semibold text-white">
                             €{formatMoney(s.totalPrice ?? 0)}
                           </div>
                           <div className="mt-1 text-xs text-white/50">
                             €{formatMoney(s.unitPrice ?? 0)} / unit
                           </div>
-                          {s.pricingLabel && (
-                            <div className="mt-1 text-xs text-white/45">{s.pricingLabel}</div>
-                          )}
                         </div>
                       </div>
 
                       {selectedDuration && (
-                        <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                          {(() => {
-                            const hourMap = splitTimeOptionsByHour(validOptions);
-                            const availableHours = Array.from(hourMap.keys()).sort();
-                            const effectiveHour =
-                              selectedHour && hourMap.has(selectedHour)
-                                ? selectedHour
-                                : availableHours[0] ?? "";
-
-                            const minuteOptions = effectiveHour ? hourMap.get(effectiveHour) ?? [] : [];
-                            const availableMinutes = minuteOptions.map((opt) => opt.value.split(":")[1]);
-                            const effectiveMinute =
-                              selectedMinute && availableMinutes.includes(selectedMinute)
-                                ? selectedMinute
-                                : availableMinutes[0] ?? "";
-
-                            const composedTime =
-                              effectiveHour && effectiveMinute ? `${effectiveHour}:${effectiveMinute}` : "";
-
-                            if (composedTime && composedTime !== selectedTime) {
-                              queueMicrotask(() => {
-                                setSelectedHour(effectiveHour);
-                                setSelectedMinute(effectiveMinute);
-                                setSelectedTime(composedTime);
-                              });
-                            }
-
-                            return (
-                              <div className="grid gap-4">
-                                <div className="flex flex-wrap gap-2">
-                                  {quickOptions.map((opt) => {
-                                    const active = activeOption === opt.value;
-                                    return (
-                                      <button
-                                        key={`${s.id}-quick-${opt.value}`}
-                                        type="button"
-                                        onClick={() => {
-                                          const { hour, minute } = getHourAndMinute(opt.value);
-                                          setSelectedHour(hour);
-                                          setSelectedMinute(minute);
-                                          setSelectedTime(opt.value);
-                                        }}
-                                        disabled={loading}
-                                        className={`rounded-full border px-3 py-2 text-xs transition ${
-                                          active
-                                            ? "border-fuchsia-300/50 bg-fuchsia-400/15 text-fuchsia-100"
-                                            : "border-white/10 bg-white/5 text-white/78 hover:bg-white/10"
-                                        }`}
-                                      >
-                                        {opt.label}
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-
-                                <div className="grid gap-3 sm:grid-cols-2">
-                                  <label className="block">
-                                    <div className="mb-2 text-xs font-medium text-white/78">Hour</div>
-                                    <select
-                                      value={effectiveHour}
-                                      onChange={(e) => {
-                                        const nextHour = e.target.value;
-                                        const nextMinuteOptions = hourMap.get(nextHour) ?? [];
-                                        const nextMinute = nextMinuteOptions[0]?.value.split(":")[1] ?? "";
-
-                                        setSelectedHour(nextHour);
-                                        setSelectedMinute(nextMinute);
-                                        setSelectedTime(nextHour && nextMinute ? `${nextHour}:${nextMinute}` : "");
-                                      }}
-                                      disabled={!availableHours.length || loading}
-                                      className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:ring-2 focus:ring-fuchsia-400/25 disabled:opacity-50"
+                        <>
+                          <div>
+                            <div className="mb-3 text-sm font-medium text-white/88">Quick start times</div>
+                            <div className="flex flex-wrap gap-2">
+                              {quickOptions.length > 0 ? (
+                                quickOptions.map((opt) => {
+                                  const active = activeOption === opt.value;
+                                  return (
+                                    <button
+                                      key={`${s.id}-quick-${opt.value}`}
+                                      type="button"
+                                      onClick={() => setSelectedTime(opt.value)}
+                                      disabled={loading}
+                                      className={`rounded-full border px-3 py-2 text-xs transition ${
+                                        active
+                                          ? "border-fuchsia-300/50 bg-fuchsia-400/15 text-fuchsia-100"
+                                          : "border-white/10 bg-white/5 text-white/78 hover:bg-white/10"
+                                      }`}
                                     >
-                                      <option value="">
-                                        {availableHours.length ? "Select hour" : "No valid hours"}
-                                      </option>
-                                      {availableHours.map((hour) => (
-                                        <option key={`${s.id}-hour-${hour}`} value={hour}>
-                                          {hour}:00
-                                        </option>
-                                      ))}
-                                    </select>
-                                  </label>
+                                      {opt.label}
+                                    </button>
+                                  );
+                                })
+                              ) : (
+                                <div className="text-sm text-white/52">No valid quick times available.</div>
+                              )}
+                            </div>
+                          </div>
 
-                                  <label className="block">
-                                    <div className="mb-2 text-xs font-medium text-white/78">Minutes</div>
-                                    <select
-                                      value={effectiveMinute}
-                                      onChange={(e) => {
-                                        const nextMinute = e.target.value;
-                                        setSelectedHour(effectiveHour);
-                                        setSelectedMinute(nextMinute);
-                                        setSelectedTime(
-                                          effectiveHour && nextMinute ? `${effectiveHour}:${nextMinute}` : "",
-                                        );
-                                      }}
-                                      disabled={!effectiveHour || !minuteOptions.length || loading}
-                                      className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:ring-2 focus:ring-fuchsia-400/25 disabled:opacity-50"
-                                    >
-                                      <option value="">
-                                        {minuteOptions.length ? "Select minutes" : "No valid minutes"}
-                                      </option>
-                                      {minuteOptions.map((opt) => {
-                                        const minute = opt.value.split(":")[1];
-                                        return (
-                                          <option key={`${s.id}-minute-${opt.value}`} value={minute}>
-                                            {minute} · {opt.availableUnits} free
-                                          </option>
-                                        );
-                                      })}
-                                    </select>
-                                  </label>
-                                </div>
+                          {validOptions.length > 0 && (
+                            <div className={fieldClass()}>
+                              <div className="mb-2 text-sm font-medium text-white/88">Or choose any available start time</div>
+                              <select
+                                value={activeOption}
+                                onChange={(e) => setSelectedTime(e.target.value)}
+                                disabled={loading}
+                                className="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none"
+                              >
+                                <option value="">Choose start time</option>
+                                {validOptions.map((opt) => (
+                                  <option key={`${s.id}-${opt.value}`} value={opt.value}>
+                                    {opt.label} · {opt.availableUnits} free
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
 
-                                {activeOption && (
-                                  <div className="text-xs text-white/52">
-                                    Selected start time: <span className="text-white/78">{activeOption}</span>
-                                    {typeof s.requiredUnits === "number" && s.requiredUnits > 0 && (
-                                      <span className="ml-2">
-                                        · Required units: <span className="text-white/78">{s.requiredUnits}</span>
-                                      </span>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })()}
-                        </div>
+                          {activeOption && (
+                            <div className="text-sm text-white/58">
+                              Selected start time: <span className="text-white/82">{activeOption}</span>
+                              {typeof s.requiredUnits === "number" && s.requiredUnits > 0 && (
+                                <span className="ml-2">
+                                  · Required units: <span className="text-white/82">{s.requiredUnits}</span>
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </>
                       )}
 
                       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -1192,19 +1059,6 @@ export default function TimetableClient() {
                           {disabled ? t("timetable.notEnough") : t("timetable.choose")}
                         </button>
                       </div>
-
-                      <AvailabilityTimeline
-                        mode={mode}
-                        windowStart={s.availableWindowStart}
-                        windowEnd={s.availableWindowEnd}
-                        selectedStart={s.bookingStartAt ?? null}
-                        selectedEnd={s.bookingEndAt ?? null}
-                        capacity={s.capacity}
-                        remainingUnits={s.remainingUnits ?? null}
-                        reservedUnits={s.reservedUnits ?? null}
-                        requiredUnits={s.requiredUnits ?? null}
-                        bookedRanges={s.bookedRanges ?? []}
-                      />
                     </div>
                   </div>
                 );
