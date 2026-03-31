@@ -261,17 +261,40 @@ function buildVisualTimeSegments(options: TimeOption[], size = 48) {
   return result;
 }
 
-function getAvailabilitySegmentTone(opt: TimeOption, requestedUnits: number) {
-  if (!opt.canFit) {
-    return "bg-rose-500/70";
+function buildAvailabilityRibbonBackground(
+  options: TimeOption[],
+  requestedUnits: number,
+) {
+  if (!options.length) {
+    return "linear-gradient(90deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04))";
   }
-  if (opt.availableUnits >= requestedUnits + 2) {
-    return "bg-emerald-400/85";
-  }
-  if (opt.availableUnits >= requestedUnits) {
-    return "bg-amber-300/85";
-  }
-  return "bg-rose-500/70";
+
+  const stops = options.map((opt, index) => {
+    const pct =
+      options.length === 1 ? 0 : (index / (options.length - 1)) * 100;
+
+    let color = "rgba(55, 65, 81, 0.55)"; // unavailable / dark
+
+    if (opt.canFit) {
+      if (opt.availableUnits >= requestedUnits + 2) {
+        color = "rgba(45, 212, 191, 0.88)"; // strong teal
+      } else if (opt.availableUnits >= requestedUnits) {
+        color = "rgba(250, 204, 21, 0.82)"; // amber
+      }
+    }
+
+    return `${color} ${pct.toFixed(2)}%`;
+  });
+
+  return `linear-gradient(90deg, ${stops.join(", ")})`;
+}
+
+function getSelectedTimePercent(options: TimeOption[], selected: string) {
+  if (!options.length || !selected) return null;
+  const idx = options.findIndex((opt) => opt.value === selected);
+  if (idx < 0) return null;
+  if (options.length === 1) return 50;
+  return (idx / (options.length - 1)) * 100;
 }
 
 export default function TimetableClient() {
@@ -990,10 +1013,12 @@ export default function TimetableClient() {
                 const visualOptions = chunkTimeOptions(timeOptions, 14);
                 const validOptions = timeOptions.filter((opt) => opt.canFit);
                 const visualSegments = buildVisualTimeSegments(timeOptions, 56);
+                
                 const activeOption =
                   selectedTime && validOptions.find((opt) => opt.value === selectedTime)
                     ? selectedTime
                     : "";
+                const selectedPercent = getSelectedTimePercent(timeOptions, activeOption);
                 const quickOptions = validOptions.slice(0, 10);
                 const disabled = !selectedDuration || !activeOption || !s.canFit;
 
@@ -1093,9 +1118,11 @@ export default function TimetableClient() {
                         <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                           <div className="flex items-center justify-between gap-3">
                             <div>
-                              <div className="text-sm font-medium text-white/88">Availability through the day</div>
+                              <div className="text-sm font-medium text-white/88">
+                                Availability through the day
+                              </div>
                               <div className="mt-1 text-xs text-white/50">
-                                Tap a brighter area to choose an easier booking time.
+                                Brighter parts of the ribbon usually mean easier booking times.
                               </div>
                             </div>
 
@@ -1105,42 +1132,47 @@ export default function TimetableClient() {
                           </div>
 
                           <div className="mt-5">
-                            <div className="relative overflow-hidden rounded-full border border-white/10 bg-white/[0.04] p-1.5">
-                              <div className="relative flex h-4 gap-[2px] overflow-hidden rounded-full">
-                                {visualSegments.map((opt) => {
-                                  const isActive = activeOption === opt.value;
-                                  const clickable = opt.canFit && !loading;
+                            <div className="relative">
+                              <div className="overflow-hidden rounded-full border border-white/10 bg-white/[0.04] p-[6px]">
+                                <div
+                                  className="relative h-5 rounded-full"
+                                  style={{
+                                    background: buildAvailabilityRibbonBackground(
+                                      timeOptions,
+                                      requestedUnits
+                                    ),
+                                    boxShadow:
+                                      "inset 0 1px 0 rgba(255,255,255,0.08), 0 0 30px rgba(0,0,0,0.18)",
+                                    filter: "saturate(120%)",
+                                  }}
+                                >
+                                  <div
+                                    className="absolute inset-0 rounded-full opacity-35"
+                                    style={{
+                                      background:
+                                        "linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.02) 45%, rgba(0,0,0,0.12) 100%)",
+                                    }}
+                                  />
 
-                                  let segClass = "bg-rose-500/55";
-                                  if (opt.canFit && opt.availableUnits >= requestedUnits + 2) {
-                                    segClass = "bg-emerald-400/75";
-                                  } else if (opt.canFit && opt.availableUnits >= requestedUnits) {
-                                    segClass = "bg-amber-300/75";
-                                  }
-
-                                  return (
-                                    <button
-                                      key={`${s.id}-segment-${opt.value}`}
-                                      type="button"
-                                      onClick={() => {
-                                        if (!clickable) return;
-                                        setSelectedTime(opt.value);
-                                      }}
-                                      disabled={!clickable}
-                                      title={`${opt.label} · ${opt.canFit ? `${opt.availableUnits} free` : "Unavailable"}`}
-                                      className={`relative h-full flex-1 transition ${
-                                        clickable ? "hover:opacity-95" : "cursor-not-allowed opacity-80"
-                                      } ${segClass}`}
-                                    >
-                                      {isActive && (
-                                        <>
-                                          <span className="absolute inset-y-[-6px] left-1/2 w-[3px] -translate-x-1/2 rounded-full bg-fuchsia-300 shadow-[0_0_18px_rgba(232,121,249,0.9)]" />
-                                          <span className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-fuchsia-300/20 blur-md" />
-                                        </>
-                                      )}
-                                    </button>
-                                  );
-                                })}
+                                  {selectedPercent != null && (
+                                    <>
+                                      <div
+                                        className="absolute top-1/2 h-8 w-[3px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-fuchsia-300"
+                                        style={{
+                                          left: `${selectedPercent}%`,
+                                          boxShadow: "0 0 18px rgba(232,121,249,0.95)",
+                                        }}
+                                      />
+                                      <div
+                                        className="absolute top-1/2 h-8 w-8 -translate-x-1/2 -translate-y-1/2 rounded-full blur-md"
+                                        style={{
+                                          left: `${selectedPercent}%`,
+                                          background: "rgba(232,121,249,0.28)",
+                                        }}
+                                      />
+                                    </>
+                                  )}
+                                </div>
                               </div>
                             </div>
 
@@ -1151,21 +1183,23 @@ export default function TimetableClient() {
 
                             <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[11px] text-white/40">
                               <span className="inline-flex items-center gap-1.5">
-                                <span className="h-2.5 w-5 rounded-full bg-emerald-400/75" />
-                                Good
+                                <span className="h-2.5 w-5 rounded-full bg-[#374151]/80" />
+                                Busy / unavailable
                               </span>
                               <span className="inline-flex items-center gap-1.5">
-                                <span className="h-2.5 w-5 rounded-full bg-amber-300/75" />
+                                <span className="h-2.5 w-5 rounded-full bg-amber-300/80" />
                                 Limited
                               </span>
                               <span className="inline-flex items-center gap-1.5">
-                                <span className="h-2.5 w-5 rounded-full bg-rose-500/55" />
-                                Unavailable
+                                <span className="h-2.5 w-5 rounded-full bg-teal-300/85" />
+                                Easier to book
                               </span>
-                              <span className="inline-flex items-center gap-1.5">
-                                <span className="h-3 w-[3px] rounded-full bg-fuchsia-300 shadow-[0_0_10px_rgba(232,121,249,0.7)]" />
-                                Selected
-                              </span>
+                              {selectedPercent != null && (
+                                <span className="inline-flex items-center gap-1.5">
+                                  <span className="h-3 w-[3px] rounded-full bg-fuchsia-300 shadow-[0_0_8px_rgba(232,121,249,0.8)]" />
+                                  Selected time
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>
