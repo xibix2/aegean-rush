@@ -738,7 +738,7 @@ export default function TimetableClient() {
               />
             </div>
 
-            <div className="flex w-full justify-center items-center gap-3">
+            <div className="mt-4 flex w-full justify-center items-center gap-3">
               <button
                 type="button"
                 onClick={goPrevDay}
@@ -747,7 +747,7 @@ export default function TimetableClient() {
               >
                 ‹ Previous day
               </button>
-       
+
               <input
                 type="date"
                 value={safeDate}
