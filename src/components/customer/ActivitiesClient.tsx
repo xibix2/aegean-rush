@@ -4,16 +4,33 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { getT } from "@/components/I18nProvider";
 
+type ActivityDurationOption = {
+  id: string;
+  label: string | null;
+  durationMin: number;
+  priceCents: number;
+};
+
 type ActivityCard = {
   id: string;
   name: string;
   slug: string | null;
   description: string | null;
   durationMin: number | null;
+  minParty: number | null;
   maxParty: number | null;
-  basePrice: number | null; // cents
+  basePrice: number | null;
   coverImageUrl: string | null;
   locationId: string | null;
+  mode: "FIXED_SEAT_EVENT" | "DYNAMIC_RENTAL" | "HYBRID_UNIT_BOOKING";
+  requiresInstructor: boolean;
+  meetingPoint: string | null;
+  skillLevel: string | null;
+  pricingNotes: string | null;
+  guestsPerUnit: number | null;
+  maxUnitsPerBooking: number | null;
+  slotIntervalMin: number | null;
+  durationOptions: ActivityDurationOption[];
 };
 
 type TFn = (key: string) => string;
@@ -39,6 +56,11 @@ const RESERVED = new Set([
   "courts",
   "locations",
 ]);
+
+function formatMoney(currency: string, cents: number | null | undefined) {
+  if (typeof cents !== "number") return null;
+  return `${currency}${(cents / 100).toFixed(2)}`;
+}
 
 export default function ActivitiesClient({
   tenantSlug,
@@ -163,25 +185,71 @@ export default function ActivitiesClient({
       <section className="grid grid-cols-1 gap-6 md:gap-7">
         {activities.map((a, idx) => {
           const img = a.coverImageUrl ?? null;
-          const price =
-            typeof a.basePrice === "number"
-              ? `${currency}${(a.basePrice / 100).toFixed(2)}`
-              : null;
+
+          const fallbackPrice = a.durationOptions[0]?.priceCents;
+          const price = formatMoney(
+            currency,
+            typeof a.basePrice === "number" ? a.basePrice : fallbackPrice
+          );
 
           const shortDescription =
-            a.description && a.description.length > 130
-              ? `${a.description.slice(0, 127)}...`
+            a.description && a.description.length > 110
+              ? `${a.description.slice(0, 107)}...`
               : a.description;
 
           const bookingHref = `${tenantHref("/timetable")}?activityId=${a.id}&date=${date}&partySize=1`;
-          const detailsHref = tenantHref(`/activities/${encodeURIComponent(a.slug || a.id)}`);
+          const detailsHref = tenantHref(
+            `/activities/${encodeURIComponent(a.slug || a.id)}`
+          );
 
           const badge =
-            (a.maxParty ?? 0) >= 6
-              ? "Great for groups"
-              : (a.durationMin ?? 0) >= 90
-              ? "Premium experience"
-              : "Popular";
+            a.mode === "FIXED_SEAT_EVENT"
+              ? "Guided experience"
+              : a.mode === "DYNAMIC_RENTAL"
+              ? "Flexible rental"
+              : "Shared unit booking";
+
+          const pills: string[] = [];
+
+          if (a.durationMin) {
+            pills.push(`⏱ ${a.durationMin} ${t("activities.minutes")}`);
+          }
+
+          if (a.mode === "FIXED_SEAT_EVENT" && a.minParty && a.maxParty) {
+            pills.push(`👥 ${a.minParty}-${a.maxParty} guests`);
+          } else if (a.mode === "DYNAMIC_RENTAL" && a.maxUnitsPerBooking) {
+            pills.push(`🛶 Up to ${a.maxUnitsPerBooking} units`);
+          } else if (a.mode === "HYBRID_UNIT_BOOKING" && a.guestsPerUnit) {
+            pills.push(`👥 ${a.guestsPerUnit} guests / unit`);
+          }
+
+          pills.push(a.meetingPoint ? "📍 Meeting point set" : "📍 Club meeting point");
+
+          const highlights: string[] = [];
+
+          if (a.skillLevel) {
+            highlights.push(a.skillLevel);
+          }
+
+          if (a.requiresInstructor) {
+            highlights.push("Instructor guided");
+          }
+
+          if (a.slotIntervalMin && a.mode === "DYNAMIC_RENTAL") {
+            highlights.push(`${a.slotIntervalMin} min booking intervals`);
+          }
+
+          if (a.durationOptions.length > 1) {
+            highlights.push(`${a.durationOptions.length} duration options`);
+          }
+
+          if (a.pricingNotes) {
+            highlights.push(
+              a.pricingNotes.length > 44
+                ? `${a.pricingNotes.slice(0, 41)}...`
+                : a.pricingNotes
+            );
+          }
 
           return (
             <article
@@ -210,25 +278,6 @@ export default function ActivitiesClient({
                   )}
 
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/18 to-black/10" />
-                  <div className="absolute left-4 top-4 flex flex-wrap gap-2">
-                    <span className="rounded-full border border-white/10 bg-black/35 px-3 py-1 text-[11px] font-medium text-white/90 backdrop-blur">
-                      {badge}
-                    </span>
-                    <span className="rounded-full border border-white/10 bg-black/35 px-3 py-1 text-[11px] font-medium text-white/90 backdrop-blur">
-                      Instant booking
-                    </span>
-                  </div>
-
-                  {price && (
-                    <div className="absolute right-4 top-4 rounded-2xl border border-white/10 bg-black/40 px-3 py-2 text-right backdrop-blur-xl">
-                      <div className="text-[10px] uppercase tracking-[0.18em] text-white/55">
-                        From
-                      </div>
-                      <div className="text-base font-semibold text-white sm:text-lg">
-                        {price}
-                      </div>
-                    </div>
-                  )}
                 </div>
 
                 <div className="relative flex flex-col p-5 sm:p-6 lg:p-7">
@@ -236,9 +285,28 @@ export default function ActivitiesClient({
 
                   <div className="relative z-10 flex h-full flex-col">
                     <div>
-                      <h2 className="text-2xl font-semibold tracking-tight text-white">
-                        {a.name}
-                      </h2>
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="inline-flex rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-[11px] font-medium text-white/78">
+                            {badge}
+                          </div>
+
+                          <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white">
+                            {a.name}
+                          </h2>
+                        </div>
+
+                        {price && (
+                          <div className="rounded-2xl border border-white/10 bg-black/25 px-3 py-2 text-right backdrop-blur-xl">
+                            <div className="text-[10px] uppercase tracking-[0.18em] text-white/45">
+                              From
+                            </div>
+                            <div className="text-base font-semibold text-white">
+                              {price}
+                            </div>
+                          </div>
+                        )}
+                      </div>
 
                       <p className="mt-3 text-sm leading-relaxed text-white/64 sm:text-[15px]">
                         {shortDescription ||
@@ -247,91 +315,43 @@ export default function ActivitiesClient({
                     </div>
 
                     <div className="mt-5 flex flex-wrap gap-2.5">
-                      {a.durationMin ? (
-                        <span className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white/78">
-                          ⏱ {a.durationMin} {t("activities.minutes")}
+                      {pills.slice(0, 3).map((pill) => (
+                        <span
+                          key={pill}
+                          className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white/78"
+                        >
+                          {pill}
                         </span>
-                      ) : null}
-
-                      {a.maxParty ? (
-                        <span className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white/78">
-                          👥 Up to {a.maxParty} guests
-                        </span>
-                      ) : null}
-
-                      <span className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white/78">
-                        📍 Club meeting point
-                      </span>
+                      ))}
                     </div>
 
-                    <div className="mt-5 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
-                      <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
-                        <div className="text-[10px] uppercase tracking-[0.18em] text-white/42">
-                          Good to know
-                        </div>
-                        <div className="mt-1 text-sm font-medium text-white/88">
-                          Beginner friendly
-                        </div>
-                      </div>
-
-                      <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
-                        <div className="text-[10px] uppercase tracking-[0.18em] text-white/42">
-                          Booking
-                        </div>
-                        <div className="mt-1 text-sm font-medium text-white/88">
-                          Instant confirmation
-                        </div>
-                      </div>
-
-                      <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
-                        <div className="text-[10px] uppercase tracking-[0.18em] text-white/42">
-                          Experience
-                        </div>
-                        <div className="mt-1 text-sm font-medium text-white/88">
-                          Safety first
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mt-6 flex flex-col gap-3 border-t border-white/10 pt-5 sm:flex-row sm:items-end sm:justify-between">
-                      <div>
-                        {price ? (
-                          <>
-                            <div className="text-[11px] uppercase tracking-[0.18em] text-white/42">
-                              Starting from
-                            </div>
-                            <div className="mt-1 text-2xl font-semibold text-white">
-                              {price}
-                            </div>
-                          </>
-                        ) : (
-                          <div className="text-sm text-white/58">
-                            Pricing available during booking
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex flex-col gap-2 sm:items-end">
-                        <div className="flex flex-col gap-2 sm:flex-row">
-                          <Link
-                            href={detailsHref}
-                            className="inline-flex h-12 items-center justify-center rounded-2xl border border-white/12 bg-white/[0.05] px-5 text-sm font-medium text-white/90 transition hover:bg-white/[0.08]"
+                    {highlights.length > 0 && (
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {highlights.slice(0, 2).map((item) => (
+                          <span
+                            key={item}
+                            className="inline-flex items-center rounded-full bg-white/[0.045] px-3 py-1.5 text-xs text-white/62 ring-1 ring-white/8"
                           >
-                            Learn more
-                          </Link>
-
-                          <Link
-                            href={bookingHref}
-                            className="inline-flex h-12 items-center justify-center rounded-2xl bg-gradient-to-r from-pink-500 via-fuchsia-500 to-violet-500 px-6 text-sm font-medium text-white shadow-[0_18px_50px_-18px_rgba(236,72,153,0.75)] transition hover:scale-[1.02]"
-                          >
-                            {t("activities.select")}
-                          </Link>
-                        </div>
-
-                        <p className="text-xs text-white/45">
-                          Cancellation subject to booking policy
-                        </p>
+                            {item}
+                          </span>
+                        ))}
                       </div>
+                    )}
+
+                    <div className="mt-6 flex flex-col gap-2 border-t border-white/10 pt-5 sm:flex-row sm:items-center sm:justify-end">
+                      <Link
+                        href={detailsHref}
+                        className="inline-flex h-12 items-center justify-center rounded-2xl border border-white/12 bg-white/[0.05] px-5 text-sm font-medium text-white/90 transition hover:bg-white/[0.08]"
+                      >
+                        Learn more
+                      </Link>
+
+                      <Link
+                        href={bookingHref}
+                        className="inline-flex h-12 items-center justify-center rounded-2xl bg-gradient-to-r from-pink-500 via-fuchsia-500 to-violet-500 px-6 text-sm font-medium text-white shadow-[0_18px_50px_-18px_rgba(236,72,153,0.75)] transition hover:scale-[1.02]"
+                      >
+                        {t("activities.select")}
+                      </Link>
                     </div>
                   </div>
                 </div>
