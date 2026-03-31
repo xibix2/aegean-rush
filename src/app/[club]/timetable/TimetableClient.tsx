@@ -227,6 +227,27 @@ function fieldClass() {
   return "rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-3";
 }
 
+function chunkTimeOptions(options: TimeOption[], size = 24) {
+  if (options.length <= size) return options;
+
+  const result: TimeOption[] = [];
+  const step = options.length / size;
+
+  for (let i = 0; i < size; i++) {
+    const index = Math.min(options.length - 1, Math.floor(i * step));
+    result.push(options[index]);
+  }
+
+  return result;
+}
+
+function availabilityTone(opt: TimeOption, requestedUnits: number) {
+  if (!opt.canFit) return "bg-white/10";
+  if (opt.availableUnits >= requestedUnits + 2) return "bg-emerald-400/85";
+  if (opt.availableUnits >= requestedUnits + 1) return "bg-emerald-300/70";
+  return "bg-amber-300/75";
+}
+
 export default function TimetableClient() {
   const t = useT();
 
@@ -1040,8 +1061,61 @@ export default function TimetableClient() {
                         </>
                       )}
 
-                      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                        <div className="text-sm text-white/54">
+                      {validOptions.length > 0 && (
+                        <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                          <div className="flex items-center justify-between gap-3">
+                            <div>
+                              <div className="text-sm font-medium text-white/88">Availability across the window</div>
+                              <div className="mt-1 text-xs text-white/50">
+                                Darker bars mean less availability. Highlighted bar = selected start time.
+                              </div>
+                            </div>
+
+                            <div className="text-xs text-white/48">
+                              {validOptions[0]?.label} – {validOptions[validOptions.length - 1]?.label}
+                            </div>
+                          </div>
+
+                          <div className="mt-4 flex items-end gap-1">
+                            {chunkTimeOptions(validOptions, 28).map((opt) => {
+                              const isActive = activeOption === opt.value;
+                              const barHeight = Math.max(
+                                14,
+                                Math.min(42, 14 + opt.availableUnits * 6)
+                              );
+
+                              return (
+                                <button
+                                  key={`${s.id}-availability-${opt.value}`}
+                                  type="button"
+                                  onClick={() => setSelectedTime(opt.value)}
+                                  disabled={loading}
+                                  title={`${opt.label} · ${opt.availableUnits} free`}
+                                  className={`group relative flex-1 rounded-full transition ${
+                                    isActive ? "ring-2 ring-fuchsia-300/70" : ""
+                                  }`}
+                                >
+                                  <div
+                                    className={`w-full rounded-full transition group-hover:opacity-90 ${availabilityTone(
+                                      opt,
+                                      requestedUnits
+                                    )}`}
+                                    style={{ height: `${barHeight}px` }}
+                                  />
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          <div className="mt-3 flex items-center justify-between text-[11px] text-white/42">
+                            <span>Lower availability</span>
+                            <span>Higher availability</span>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="flex flex-col items-center gap-4 border-t border-white/10 pt-4">
+                        <div className="text-center text-sm text-white/54">
                           {selectedDuration
                             ? "Choose a valid start time, then continue."
                             : "Pick a duration above to continue."}
@@ -1050,7 +1124,7 @@ export default function TimetableClient() {
                         <button
                           disabled={disabled || loading}
                           onClick={() => handleChooseSlot(s.id)}
-                          className={`inline-flex h-11 items-center justify-center rounded-full px-5 text-sm font-medium text-white transition ${
+                          className={`inline-flex h-11 min-w-[180px] items-center justify-center rounded-full px-6 text-sm font-medium text-white transition ${
                             disabled || loading
                               ? "cursor-not-allowed border border-white/10 bg-white/10 opacity-40"
                               : "bg-gradient-to-r from-pink-500 via-fuchsia-500 to-violet-500 shadow-[0_18px_50px_-18px_rgba(236,72,153,0.75)] hover:scale-[1.02]"
