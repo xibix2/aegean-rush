@@ -147,19 +147,19 @@ export default function ActivityDetailsClient({
 
   if (activity.mode === "DYNAMIC_RENTAL") {
     if (activity.maxUnitsPerBooking) {
-      overviewItems.push(`Up to ${activity.maxUnitsPerBooking} units per booking`);
+      overviewItems.push(`Up to ${activity.maxUnitsPerBooking} units`);
     }
     if (activity.slotIntervalMin) {
-      overviewItems.push(`${activity.slotIntervalMin} min booking interval`);
+      overviewItems.push(`${activity.slotIntervalMin} min interval`);
     }
   }
 
   if (activity.mode === "HYBRID_UNIT_BOOKING") {
     if (activity.guestsPerUnit) {
-      overviewItems.push(`${activity.guestsPerUnit} guests per unit`);
+      overviewItems.push(`${activity.guestsPerUnit} guests / unit`);
     }
     if (activity.maxUnitsPerBooking) {
-      overviewItems.push(`Up to ${activity.maxUnitsPerBooking} units per booking`);
+      overviewItems.push(`Up to ${activity.maxUnitsPerBooking} units`);
     }
   }
 
@@ -167,26 +167,29 @@ export default function ActivityDetailsClient({
     overviewItems.push(activity.skillLevel);
   }
 
+  if (activity.requiresInstructor) {
+    overviewItems.push("Instructor guided");
+  }
+
   const infoCards = [
     activity.meetingPoint
       ? { title: "Meeting point", body: activity.meetingPoint }
       : null,
-    activity.ageInfo
-      ? { title: "Age info", body: activity.ageInfo }
-      : null,
-    activity.safetyInfo
-      ? { title: "Safety", body: activity.safetyInfo }
-      : null,
+    activity.ageInfo ? { title: "Age info", body: activity.ageInfo } : null,
+    activity.safetyInfo ? { title: "Safety", body: activity.safetyInfo } : null,
     activity.cancellationText
       ? { title: "Cancellation", body: activity.cancellationText }
+      : null,
+    activity.pricingNotes
+      ? { title: "Pricing notes", body: activity.pricingNotes }
       : null,
   ].filter(Boolean) as { title: string; body: string }[];
 
   return (
-    <main className="mx-auto max-w-7xl px-4 pb-16 pt-8 sm:px-6">
-      <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#070b16]">
-        <div className="grid grid-cols-1 lg:grid-cols-[1.08fr_0.92fr]">
-          <div className="relative min-h-[320px] sm:min-h-[420px]">
+    <main className="mx-auto max-w-6xl px-4 pb-12 pt-6 sm:px-6">
+      <section className="overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#070b16] shadow-[0_24px_80px_-45px_rgba(0,0,0,0.95)]">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="relative min-h-[260px] sm:min-h-[340px]">
             {activity.coverImageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -195,78 +198,75 @@ export default function ActivityDetailsClient({
                 className="h-full w-full object-cover"
               />
             ) : (
-              <div className="grid h-full min-h-[320px] place-items-center bg-white/[0.03] text-sm text-white/45 sm:min-h-[420px]">
+              <div className="grid h-full min-h-[260px] place-items-center bg-white/[0.03] text-sm text-white/45 sm:min-h-[340px]">
                 {t("activities.preview")}
               </div>
             )}
 
-            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-black/10" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-black/5" />
 
-            <div className="absolute left-5 top-5 flex flex-wrap gap-2">
+            <div className="absolute left-4 top-4 flex flex-wrap gap-2">
               <Link
                 href={tenantHref("/activities")}
-                className="inline-flex h-11 items-center justify-center rounded-2xl border border-white/12 bg-black/35 px-5 text-sm font-medium text-white/90 backdrop-blur transition hover:bg-black/45"
+                className="inline-flex h-10 items-center justify-center rounded-full border border-white/12 bg-black/35 px-4 text-sm font-medium text-white/90 backdrop-blur transition hover:bg-black/45"
               >
-                ← Back to activities
+                ← Back
               </Link>
 
-              <span className="inline-flex h-11 items-center justify-center rounded-2xl border border-white/12 bg-black/35 px-5 text-sm font-medium text-white/80 backdrop-blur">
+              <span className="inline-flex h-10 items-center justify-center rounded-full border border-white/12 bg-black/35 px-4 text-sm text-white/75 backdrop-blur">
                 {activity.mode === "FIXED_SEAT_EVENT"
                   ? "Experience"
                   : activity.mode === "DYNAMIC_RENTAL"
                   ? "Rental"
-                  : "Hybrid booking"}
+                  : "Hybrid"}
               </span>
             </div>
           </div>
 
-          <div className="relative p-6 sm:p-8 lg:p-10">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(236,72,153,0.08),transparent_30%),radial-gradient(circle_at_bottom_left,rgba(56,189,248,0.07),transparent_32%)]" />
+          <div className="relative p-5 sm:p-6 lg:p-7">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(236,72,153,0.06),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(56,189,248,0.06),transparent_30%)]" />
 
             <div className="relative z-10">
-              <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+              <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
                 {activity.name}
               </h1>
 
-              <p className="mt-4 text-sm leading-relaxed text-white/68 sm:text-base">
-                {activity.description ||
-                  "A premium watersports experience designed for guests who want something memorable, exciting, and easy to book."}
-              </p>
+              {activity.description && (
+                <p className="mt-3 text-sm leading-relaxed text-white/66 sm:text-[15px]">
+                  {activity.description}
+                </p>
+              )}
 
-              <div className="mt-6 flex flex-wrap gap-2.5">
-                {overviewItems.map((item) => (
-                  <span
-                    key={item}
-                    className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white/78"
-                  >
-                    {item}
-                  </span>
-                ))}
+              {overviewItems.length > 0 && (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {overviewItems.map((item) => (
+                    <span
+                      key={item}
+                      className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white/78"
+                    >
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              )}
 
-                {activity.requiresInstructor && (
-                  <span className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white/78">
-                    Instructor required
-                  </span>
-                )}
-              </div>
-
-              {activity.durationOptions.length > 0 && (
-                <div className="mt-8 rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-5">
-                  <h2 className="text-lg font-semibold text-white">
-                    Duration & pricing options
+              {activity.durationOptions.length > 0 ? (
+                <div className="mt-5 rounded-[1.25rem] border border-white/10 bg-white/[0.035] p-4">
+                  <h2 className="text-sm font-semibold text-white">
+                    Duration & pricing
                   </h2>
 
-                  <div className="mt-4 grid gap-3">
+                  <div className="mt-3 space-y-2">
                     {activity.durationOptions.map((opt) => (
                       <div
                         key={opt.id}
-                        className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 px-4 py-3"
+                        className="flex items-center justify-between rounded-xl border border-white/8 bg-black/20 px-3 py-2.5"
                       >
                         <div>
-                          <div className="text-sm font-medium text-white/90">
+                          <div className="text-sm font-medium text-white/88">
                             {opt.label || `${opt.durationMin} ${t("activities.minutes")}`}
                           </div>
-                          <div className="text-xs text-white/50">
+                          <div className="text-xs text-white/45">
                             {opt.durationMin} {t("activities.minutes")}
                           </div>
                         </div>
@@ -278,37 +278,21 @@ export default function ActivityDetailsClient({
                     ))}
                   </div>
                 </div>
-              )}
-
-              {basePrice && activity.durationOptions.length === 0 && (
-                <div className="mt-8 rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-5">
-                  <div className="text-[11px] uppercase tracking-[0.18em] text-white/42">
+              ) : basePrice ? (
+                <div className="mt-5 rounded-[1.25rem] border border-white/10 bg-white/[0.035] p-4">
+                  <div className="text-[10px] uppercase tracking-[0.18em] text-white/40">
                     Starting from
                   </div>
-                  <div className="mt-1 text-3xl font-semibold text-white">
+                  <div className="mt-1 text-2xl font-semibold text-white">
                     {basePrice}
                   </div>
-                  {activity.pricingNotes && (
-                    <p className="mt-3 text-sm leading-relaxed text-white/60">
-                      {activity.pricingNotes}
-                    </p>
-                  )}
                 </div>
-              )}
-
-              {!basePrice && activity.pricingNotes && (
-                <div className="mt-8 rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-5">
-                  <h2 className="text-lg font-semibold text-white">Pricing notes</h2>
-                  <p className="mt-3 text-sm leading-relaxed text-white/60">
-                    {activity.pricingNotes}
-                  </p>
-                </div>
-              )}
+              ) : null}
 
               {includedItems.length > 0 && (
-                <div className="mt-8 rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-5">
-                  <h2 className="text-lg font-semibold text-white">What’s included</h2>
-                  <ul className="mt-4 space-y-3 text-sm leading-relaxed text-white/66">
+                <div className="mt-5">
+                  <h2 className="text-sm font-semibold text-white">What’s included</h2>
+                  <ul className="mt-2 space-y-1.5 text-sm text-white/64">
                     {includedItems.map((item) => (
                       <li key={item}>• {item}</li>
                     ))}
@@ -317,55 +301,53 @@ export default function ActivityDetailsClient({
               )}
 
               {bringItems.length > 0 && (
-                <div className="mt-8 rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-5">
-                  <h2 className="text-lg font-semibold text-white">What to bring</h2>
-                  <ul className="mt-4 space-y-3 text-sm leading-relaxed text-white/66">
+                <div className="mt-5">
+                  <h2 className="text-sm font-semibold text-white">What to bring</h2>
+                  <ul className="mt-2 space-y-1.5 text-sm text-white/64">
                     {bringItems.map((item) => (
                       <li key={item}>• {item}</li>
                     ))}
                   </ul>
                 </div>
               )}
+
+              <div className="mt-6 flex flex-col gap-3 border-t border-white/10 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm font-medium text-white">
+                    Ready to book?
+                  </p>
+                  <p className="mt-1 text-xs text-white/48">
+                    Check live availability and pick your time.
+                  </p>
+                </div>
+
+                <Link
+                  href={bookingHref}
+                  className="inline-flex h-11 items-center justify-center rounded-full bg-gradient-to-r from-pink-500 via-fuchsia-500 to-violet-500 px-5 text-sm font-medium text-white shadow-[0_18px_50px_-18px_rgba(236,72,153,0.7)] transition hover:scale-[1.02]"
+                >
+                  {t("activities.select")}
+                </Link>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {infoCards.length > 0 && (
-        <section className="mt-8 grid gap-4 md:grid-cols-2">
+        <section className="mt-5 grid gap-3 md:grid-cols-2">
           {infoCards.map((card) => (
             <div
               key={card.title}
-              className="rounded-[1.6rem] border border-white/10 bg-[#070b16] p-5"
+              className="rounded-[1.25rem] border border-white/10 bg-[#070b16] p-4"
             >
-              <h2 className="text-lg font-semibold text-white">{card.title}</h2>
-              <p className="mt-3 text-sm leading-relaxed text-white/66">
+              <h2 className="text-sm font-semibold text-white">{card.title}</h2>
+              <p className="mt-2 text-sm leading-relaxed text-white/64">
                 {card.body}
               </p>
             </div>
           ))}
         </section>
       )}
-
-      <section className="mt-8 rounded-[1.8rem] border border-white/10 bg-[#070b16] p-5 sm:p-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h2 className="text-xl font-semibold text-white">
-              Ready to book this activity?
-            </h2>
-            <p className="mt-2 text-sm text-white/60">
-              Check live availability and choose the best time for your booking.
-            </p>
-          </div>
-
-          <Link
-            href={bookingHref}
-            className="inline-flex h-12 items-center justify-center rounded-2xl bg-gradient-to-r from-pink-500 via-fuchsia-500 to-violet-500 px-6 text-sm font-medium text-white shadow-[0_18px_50px_-18px_rgba(236,72,153,0.75)] transition hover:scale-[1.02]"
-          >
-            {t("activities.select")}
-          </Link>
-        </div>
-      </section>
     </main>
   );
 }
