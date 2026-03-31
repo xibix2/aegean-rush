@@ -7,6 +7,7 @@ import { formatInTimeZone } from "date-fns-tz";
 import { toast } from "sonner";
 import MonthCalendar from "@/components/MonthCalendar";
 import { useT } from "@/components/I18nProvider";
+import Link from "next/link";
 
 type DayBucket = "none" | "low" | "medium" | "high" | "full";
 type DayInfo = { capacity: number; paid: number; remaining: number; bucket: DayBucket };
@@ -677,7 +678,12 @@ export default function TimetableClient() {
               <span className="h-2 w-2 rounded-full bg-sky-300 shadow-[0_0_14px_rgba(56,189,248,0.65)]" />
               Booking flow
             </div>
-
+            <Link
+              href={`/${tenantSlug}/activities`}
+              className="absolute right-4 top-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-gradient-to-r from-indigo-500/10 to-fuchsia-500/10 px-4 py-2 text-sm text-white/90 backdrop-blur-md transition hover:from-indigo-500/20 hover:to-fuchsia-500/20"
+            >
+              ← Back to Experiences
+            </Link>
             <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
               {t("timetable.title")}
             </h1>
@@ -732,7 +738,7 @@ export default function TimetableClient() {
               />
             </div>
 
-            <div className="mt-4 flex flex-wrap items-center gap-2">
+            <div className="flex w-full justify-center items-center gap-3">
               <button
                 type="button"
                 onClick={goPrevDay}
