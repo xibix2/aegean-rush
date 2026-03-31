@@ -747,7 +747,7 @@ export default function TimetableClient() {
               >
                 ‹ Previous day
               </button>
-
+       
               <input
                 type="date"
                 value={safeDate}
