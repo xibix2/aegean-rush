@@ -1065,9 +1065,9 @@ export default function TimetableClient() {
                         <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                           <div className="flex items-center justify-between gap-3">
                             <div>
-                              <div className="text-sm font-medium text-white/88">Availability across the window</div>
+                              <div className="text-sm font-medium text-white/88">Availability window</div>
                               <div className="mt-1 text-xs text-white/50">
-                                Darker bars mean less availability. Highlighted bar = selected start time.
+                                Tap anywhere on the line to pick a better time.
                               </div>
                             </div>
 
@@ -1076,40 +1076,51 @@ export default function TimetableClient() {
                             </div>
                           </div>
 
-                          <div className="mt-4 flex items-end gap-1">
-                            {chunkTimeOptions(validOptions, 28).map((opt) => {
-                              const isActive = activeOption === opt.value;
-                              const barHeight = Math.max(
-                                14,
-                                Math.min(42, 14 + opt.availableUnits * 6)
-                              );
+                          <div className="relative mt-5 px-1">
+                            <div className="absolute left-0 right-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-gradient-to-r from-fuchsia-400/25 via-sky-300/20 to-violet-400/25" />
 
-                              return (
-                                <button
-                                  key={`${s.id}-availability-${opt.value}`}
-                                  type="button"
-                                  onClick={() => setSelectedTime(opt.value)}
-                                  disabled={loading}
-                                  title={`${opt.label} · ${opt.availableUnits} free`}
-                                  className={`group relative flex-1 rounded-full transition ${
-                                    isActive ? "ring-2 ring-fuchsia-300/70" : ""
-                                  }`}
-                                >
-                                  <div
-                                    className={`w-full rounded-full transition group-hover:opacity-90 ${availabilityTone(
-                                      opt,
-                                      requestedUnits
-                                    )}`}
-                                    style={{ height: `${barHeight}px` }}
-                                  />
-                                </button>
-                              );
-                            })}
-                          </div>
+                            <div className="relative flex items-center justify-between gap-1">
+                              {chunkTimeOptions(validOptions, 14).map((opt) => {
+                                const isActive = activeOption === opt.value;
+                                const strength =
+                                  opt.availableUnits >= requestedUnits + 2
+                                    ? "high"
+                                    : opt.availableUnits >= requestedUnits + 1
+                                    ? "mid"
+                                    : "low";
 
-                          <div className="mt-3 flex items-center justify-between text-[11px] text-white/42">
-                            <span>Lower availability</span>
-                            <span>Higher availability</span>
+                                return (
+                                  <button
+                                    key={`${s.id}-timeline-${opt.value}`}
+                                    type="button"
+                                    onClick={() => setSelectedTime(opt.value)}
+                                    disabled={loading}
+                                    title={`${opt.label} · ${opt.availableUnits} free`}
+                                    className="group relative flex flex-col items-center"
+                                  >
+                                    <span
+                                      className={`rounded-full transition-all duration-200 ${
+                                        isActive
+                                          ? "h-4 w-4 bg-fuchsia-300 shadow-[0_0_18px_rgba(232,121,249,0.8)] ring-4 ring-fuchsia-400/20"
+                                          : strength === "high"
+                                          ? "h-3 w-3 bg-emerald-300/90 shadow-[0_0_10px_rgba(110,231,183,0.35)] group-hover:scale-110"
+                                          : strength === "mid"
+                                          ? "h-3 w-3 bg-amber-300/85 shadow-[0_0_10px_rgba(252,211,77,0.28)] group-hover:scale-110"
+                                          : "h-2.5 w-2.5 bg-white/35 group-hover:scale-110"
+                                      }`}
+                                    />
+
+                                    <span
+                                      className={`mt-2 text-[10px] transition ${
+                                        isActive ? "text-fuchsia-100" : "text-white/38 group-hover:text-white/62"
+                                      }`}
+                                    >
+                                      {opt.label}
+                                    </span>
+                                  </button>
+                                );
+                              })}
+                            </div>
                           </div>
                         </div>
                       )}
