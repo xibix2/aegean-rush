@@ -266,20 +266,20 @@ function buildAvailabilityRibbonBackground(
   requestedUnits: number,
 ) {
   if (!options.length) {
-    return "linear-gradient(90deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04))";
+    return "linear-gradient(90deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06))";
   }
 
   const stops = options.map((opt, index) => {
     const pct =
       options.length === 1 ? 0 : (index / (options.length - 1)) * 100;
 
-    let color = "rgba(39, 39, 42, 0.72)"; // unavailable / dark graphite
+    let color = "rgba(71, 85, 105, 0.55)"; // unavailable softer slate
 
     if (opt.canFit) {
       if (opt.availableUnits >= requestedUnits + 2) {
-        color = "rgba(34, 211, 238, 0.82)"; // cyan / teal
+        color = "rgba(45, 212, 191, 0.95)"; // bright teal
       } else if (opt.availableUnits >= requestedUnits) {
-        color = "rgba(99, 102, 241, 0.72)"; // indigo / violet
+        color = "rgba(129, 140, 248, 0.88)"; // bright indigo
       }
     }
 
@@ -1140,24 +1140,24 @@ export default function TimetableClient() {
                                       className="absolute inset-y-0 left-[-20%] w-[30%] rounded-full"
                                       style={{
                                         background:
-                                          "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.02) 20%, rgba(255,255,255,0.18) 50%, rgba(255,255,255,0.05) 75%, transparent 100%)",
+                                          "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 20%, rgba(255,255,255,0.24) 50%, rgba(255,255,255,0.08) 75%, transparent 100%)",
                                         filter: "blur(6px)",
                                         animation: "ribbonSheen 7s ease-in-out infinite",
                                       }}
                                     />
 
                                     <div
-                                      className="absolute left-[18%] top-1/2 h-6 w-16 -translate-y-1/2 rounded-full blur-md"
+                                      className="absolute left-[18%] top-1/2 h-7 w-20 -translate-y-1/2 rounded-full blur-md"
                                       style={{
-                                        background: "rgba(34,211,238,0.16)",
+                                        background: "rgba(45,212,191,0.28)",
                                         animation: "ribbonPulse 4.8s ease-in-out infinite",
                                       }}
                                     />
 
                                     <div
-                                      className="absolute left-[62%] top-1/2 h-6 w-20 -translate-y-1/2 rounded-full blur-md"
+                                      className="absolute left-[62%] top-1/2 h-7 w-24 -translate-y-1/2 rounded-full blur-md"
                                       style={{
-                                        background: "rgba(99,102,241,0.18)",
+                                        background: "rgba(129,140,248,0.28)",
                                         animation: "ribbonPulse 5.6s ease-in-out infinite",
                                       }}
                                     />
