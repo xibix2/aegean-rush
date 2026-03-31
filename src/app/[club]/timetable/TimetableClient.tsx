@@ -960,7 +960,8 @@ export default function TimetableClient() {
                   stepMin,
                   requestedUnits,
                 });
-
+                
+                const visualOptions = chunkTimeOptions(timeOptions, 14);
                 const validOptions = timeOptions.filter((opt) => opt.canFit);
                 const activeOption =
                   selectedTime && validOptions.find((opt) => opt.value === selectedTime)
@@ -1061,58 +1062,72 @@ export default function TimetableClient() {
                         </>
                       )}
 
-                      {validOptions.length > 0 && (
+                      {timeOptions.length > 0 && (
                         <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                           <div className="flex items-center justify-between gap-3">
                             <div>
                               <div className="text-sm font-medium text-white/88">Availability window</div>
                               <div className="mt-1 text-xs text-white/50">
-                                Tap anywhere on the line to pick a better time.
+                                Bright points are easier to book. Dim points are already full or unavailable.
                               </div>
                             </div>
 
                             <div className="text-xs text-white/48">
-                              {validOptions[0]?.label} – {validOptions[validOptions.length - 1]?.label}
+                              {timeOptions[0]?.label} – {timeOptions[timeOptions.length - 1]?.label}
                             </div>
                           </div>
 
                           <div className="relative mt-5 px-1">
-                            <div className="absolute left-0 right-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-gradient-to-r from-fuchsia-400/25 via-sky-300/20 to-violet-400/25" />
+                            <div className="absolute left-0 right-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-gradient-to-r from-fuchsia-400/20 via-sky-300/20 to-violet-400/20" />
 
                             <div className="relative flex items-center justify-between gap-1">
-                              {chunkTimeOptions(validOptions, 14).map((opt) => {
+                              {visualOptions.map((opt) => {
                                 const isActive = activeOption === opt.value;
-                                const strength =
-                                  opt.availableUnits >= requestedUnits + 2
-                                    ? "high"
-                                    : opt.availableUnits >= requestedUnits + 1
-                                    ? "mid"
-                                    : "low";
+                                const isUnavailable = !opt.canFit;
+
+                                let toneClass = "bg-white/30";
+                                let glowClass = "";
+
+                                if (isUnavailable) {
+                                  toneClass = "bg-white/18";
+                                  glowClass = "";
+                                } else if (opt.availableUnits >= requestedUnits + 2) {
+                                  toneClass = "bg-emerald-300";
+                                  glowClass = "shadow-[0_0_12px_rgba(110,231,183,0.45)]";
+                                } else if (opt.availableUnits >= requestedUnits) {
+                                  toneClass = "bg-amber-300";
+                                  glowClass = "shadow-[0_0_10px_rgba(252,211,77,0.35)]";
+                                }
 
                                 return (
                                   <button
                                     key={`${s.id}-timeline-${opt.value}`}
                                     type="button"
-                                    onClick={() => setSelectedTime(opt.value)}
-                                    disabled={loading}
+                                    onClick={() => {
+                                      if (!opt.canFit || loading) return;
+                                      setSelectedTime(opt.value);
+                                    }}
+                                    disabled={loading || !opt.canFit}
                                     title={`${opt.label} · ${opt.availableUnits} free`}
-                                    className="group relative flex flex-col items-center"
+                                    className="group relative flex flex-col items-center disabled:cursor-not-allowed"
                                   >
                                     <span
-                                      className={`rounded-full transition-all duration-200 ${
+                                      className={`transition-all duration-200 rounded-full ${
                                         isActive
-                                          ? "h-4 w-4 bg-fuchsia-300 shadow-[0_0_18px_rgba(232,121,249,0.8)] ring-4 ring-fuchsia-400/20"
-                                          : strength === "high"
-                                          ? "h-3 w-3 bg-emerald-300/90 shadow-[0_0_10px_rgba(110,231,183,0.35)] group-hover:scale-110"
-                                          : strength === "mid"
-                                          ? "h-3 w-3 bg-amber-300/85 shadow-[0_0_10px_rgba(252,211,77,0.28)] group-hover:scale-110"
-                                          : "h-2.5 w-2.5 bg-white/35 group-hover:scale-110"
+                                          ? "h-4 w-4 bg-fuchsia-300 ring-4 ring-fuchsia-400/20 shadow-[0_0_18px_rgba(232,121,249,0.8)]"
+                                          : isUnavailable
+                                          ? "h-2.5 w-2.5 bg-white/18"
+                                          : `h-3 w-3 ${toneClass} ${glowClass} group-hover:scale-110`
                                       }`}
                                     />
 
                                     <span
                                       className={`mt-2 text-[10px] transition ${
-                                        isActive ? "text-fuchsia-100" : "text-white/38 group-hover:text-white/62"
+                                        isActive
+                                          ? "text-fuchsia-100"
+                                          : isUnavailable
+                                          ? "text-white/22"
+                                          : "text-white/38 group-hover:text-white/62"
                                       }`}
                                     >
                                       {opt.label}
@@ -1121,6 +1136,25 @@ export default function TimetableClient() {
                                 );
                               })}
                             </div>
+                          </div>
+
+                          <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[11px] text-white/42">
+                            <span className="inline-flex items-center gap-1.5">
+                              <span className="h-2.5 w-2.5 rounded-full bg-emerald-300 shadow-[0_0_8px_rgba(110,231,183,0.4)]" />
+                              Good availability
+                            </span>
+                            <span className="inline-flex items-center gap-1.5">
+                              <span className="h-2.5 w-2.5 rounded-full bg-amber-300 shadow-[0_0_8px_rgba(252,211,77,0.3)]" />
+                              Limited
+                            </span>
+                            <span className="inline-flex items-center gap-1.5">
+                              <span className="h-2.5 w-2.5 rounded-full bg-white/20" />
+                              Booked / unavailable
+                            </span>
+                            <span className="inline-flex items-center gap-1.5">
+                              <span className="h-3 w-3 rounded-full bg-fuchsia-300 shadow-[0_0_10px_rgba(232,121,249,0.6)]" />
+                              Selected
+                            </span>
                           </div>
                         </div>
                       )}
