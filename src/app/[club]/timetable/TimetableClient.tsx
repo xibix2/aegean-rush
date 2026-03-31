@@ -642,212 +642,144 @@ export default function TimetableClient() {
     if (selectedDuration) summaryBits.push(selectedDuration.label || `${selectedDuration.durationMin} min`);
     if (selectedTime) summaryBits.push(`Start ${selectedTime}`);
   }
-
   return (
-    <main className="mx-auto max-w-5xl px-4 pb-12 pt-6 sm:px-6">
-      <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#070b16] px-5 py-7 sm:px-7 md:px-8 md:py-8">
-        <div
-          className="pointer-events-none absolute inset-0"
-          aria-hidden
-          style={{
-            background:
-              "radial-gradient(900px 320px at 50% -10%, rgba(56,189,248,0.14), transparent 60%), radial-gradient(700px 260px at 85% 10%, rgba(236,72,153,0.10), transparent 55%)",
-          }}
-        />
-        <div className="relative z-10">
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-[11px] uppercase tracking-[0.22em] text-white/72 backdrop-blur-xl">
-            <span className="h-2 w-2 rounded-full bg-sky-300 shadow-[0_0_14px_rgba(56,189,248,0.65)]" />
-            Booking flow
-          </div>
+    <>
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+            @keyframes ribbonSheen {
+              0% { transform: translateX(-120%); opacity: 0; }
+              15% { opacity: .14; }
+              50% { opacity: .22; }
+              85% { opacity: .12; }
+              100% { transform: translateX(140%); opacity: 0; }
+            }
 
-          <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-            {t("timetable.title")}
-          </h1>
+            @keyframes ribbonPulse {
+              0%, 100% { opacity: .55; }
+              50% { opacity: .9; }
+            }
+          `,
+        }}
+      />
+      <main className="mx-auto max-w-5xl px-4 pb-12 pt-6 sm:px-6">
+        <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#070b16] px-5 py-7 sm:px-7 md:px-8 md:py-8">
+          <div
+            className="pointer-events-none absolute inset-0"
+            aria-hidden
+            style={{
+              background:
+                "radial-gradient(900px 320px at 50% -10%, rgba(56,189,248,0.14), transparent 60%), radial-gradient(700px 260px at 85% 10%, rgba(236,72,153,0.10), transparent 55%)",
+            }}
+          />
+          <div className="relative z-10">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-[11px] uppercase tracking-[0.22em] text-white/72 backdrop-blur-xl">
+              <span className="h-2 w-2 rounded-full bg-sky-300 shadow-[0_0_14px_rgba(56,189,248,0.65)]" />
+              Booking flow
+            </div>
 
-          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/64 sm:text-base">
-            Choose your date and time, then continue to secure checkout.
-          </p>
+            <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+              {t("timetable.title")}
+            </h1>
 
-          <div className="mt-5 flex flex-wrap gap-2">
-            <span className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white/78">
-              {modeLabel(mode)}
-            </span>
-            <span className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white/78">
-              {pretty}
-            </span>
-            {summaryBits.slice(0, 3).map((bit) => (
-              <span
-                key={bit}
-                className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white/78"
-              >
-                {bit}
+            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/64 sm:text-base">
+              Choose your date and time, then continue to secure checkout.
+            </p>
+
+            <div className="mt-5 flex flex-wrap gap-2">
+              <span className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white/78">
+                {modeLabel(mode)}
               </span>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="mt-6 grid gap-5">
-        <div className={cardClass()}>
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <div>
-              <p className="text-[11px] uppercase tracking-[0.18em] text-white/42">Step 1</p>
-              <h2 className="mt-1 text-lg font-semibold text-white">Choose your date</h2>
-            </div>
-
-            <div className="text-xs text-white/48">
-              All times in <span className="text-white/72">{TIMEZONE}</span>
+              <span className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white/78">
+                {pretty}
+              </span>
+              {summaryBits.slice(0, 3).map((bit) => (
+                <span
+                  key={bit}
+                  className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white/78"
+                >
+                  {bit}
+                </span>
+              ))}
             </div>
           </div>
+        </section>
 
-          <div className="rounded-[1.4rem] border border-white/10 bg-white/[0.03] p-2 sm:p-3">
-            <MonthCalendar
-              key={`${year}-${month}-${safeDate}`}
-              year={year}
-              month={month}
-              data={heat}
-              onPick={onPickDay}
-              onPrevMonth={prevMonth}
-              onNextMonth={nextMonth}
-              minDate={minBookable}
-              selectedDate={safeDate}
-            />
-          </div>
-
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={goPrevDay}
-              disabled={loading || isAtMin}
-              className="inline-flex h-10 items-center justify-center rounded-full border border-white/12 bg-white/[0.05] px-4 text-sm text-white/90 transition hover:bg-white/[0.08] disabled:opacity-40"
-            >
-              ‹ Previous day
-            </button>
-
-            <input
-              type="date"
-              value={safeDate}
-              min={minBookable}
-              onChange={(e) => onDateInputChange(e.target.value)}
-              className="inline-flex h-10 rounded-full border border-white/12 bg-white/[0.05] px-4 text-sm text-white/90 outline-none focus:ring-2 focus:ring-fuchsia-400/25"
-            />
-
-            <button
-              type="button"
-              onClick={goNextDay}
-              disabled={loading}
-              className="inline-flex h-10 items-center justify-center rounded-full border border-white/12 bg-white/[0.05] px-4 text-sm text-white/90 transition hover:bg-white/[0.08] disabled:opacity-40"
-            >
-              Next day ›
-            </button>
-          </div>
-        </div>
-
-        <div className={cardClass()}>
-          <div className="mb-4">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-white/42">Step 2</p>
-            <h2 className="mt-1 text-lg font-semibold text-white">
-              {mode === "FIXED_SEAT_EVENT"
-                ? "Choose your party size"
-                : mode === "DYNAMIC_RENTAL"
-                ? "Set your booking details"
-                : "Set guests, units and duration"}
-            </h2>
-          </div>
-
-          {mode === "FIXED_SEAT_EVENT" && (
-            <div className={fieldClass()}>
-              <div className="mb-2 text-sm font-medium text-white/88">Guests</div>
-              <div className="flex items-center rounded-2xl border border-white/10 bg-black/20">
-                <button
-                  className="px-4 py-3 text-base text-white/80 transition hover:bg-white/5"
-                  onClick={() => onPartyChange(partySize - 1)}
-                  disabled={loading}
-                  type="button"
-                >
-                  −
-                </button>
-                <input
-                  type="number"
-                  min={1}
-                  max={20}
-                  value={partySize}
-                  onChange={(e) => onPartyChange(Number(e.target.value))}
-                  className="no-spin w-20 bg-transparent px-2 py-3 text-center text-white outline-none"
-                />
-                <button
-                  className="px-4 py-3 text-base text-white/80 transition hover:bg-white/5"
-                  onClick={() => onPartyChange(partySize + 1)}
-                  disabled={loading}
-                  type="button"
-                >
-                  +
-                </button>
-              </div>
-            </div>
-          )}
-
-          {mode === "DYNAMIC_RENTAL" && (
-            <div className="grid gap-3">
-              <div className={fieldClass()}>
-                <div className="mb-2 text-sm font-medium text-white/88">Duration</div>
-                <select
-                  value={selectedDurationId}
-                  onChange={(e) => {
-                    setSelectedTime("");
-                    setSelectedDurationId(e.target.value);
-                  }}
-                  className="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none"
-                >
-                  <option value="">Choose duration</option>
-                  {activity?.durationOptions.map((d) => (
-                    <option key={d.id} value={d.id}>
-                      {d.label || `${d.durationMin} min`} — €{formatMoney(d.priceCents)}
-                    </option>
-                  ))}
-                </select>
+        <section className="mt-6 grid gap-5">
+          <div className={cardClass()}>
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.18em] text-white/42">Step 1</p>
+                <h2 className="mt-1 text-lg font-semibold text-white">Choose your date</h2>
               </div>
 
-              <div className={fieldClass()}>
-                <div className="mb-2 text-sm font-medium text-white/88">Units</div>
-                <div className="flex items-center rounded-2xl border border-white/10 bg-black/20">
-                  <button
-                    className="px-4 py-3 text-base text-white/80 transition hover:bg-white/5"
-                    onClick={() => onUnitsChange(units - 1)}
-                    disabled={loading}
-                    type="button"
-                  >
-                    −
-                  </button>
-                  <input
-                    type="number"
-                    min={1}
-                    max={activity?.maxUnitsPerBooking ?? 20}
-                    value={units}
-                    onChange={(e) => onUnitsChange(Number(e.target.value))}
-                    className="no-spin w-20 bg-transparent px-2 py-3 text-center text-white outline-none"
-                  />
-                  <button
-                    className="px-4 py-3 text-base text-white/80 transition hover:bg-white/5"
-                    onClick={() => onUnitsChange(units + 1)}
-                    disabled={loading}
-                    type="button"
-                  >
-                    +
-                  </button>
-                </div>
+              <div className="text-xs text-white/48">
+                All times in <span className="text-white/72">{TIMEZONE}</span>
               </div>
             </div>
-          )}
 
-          {mode === "HYBRID_UNIT_BOOKING" && (
-            <div className="grid gap-3">
+            <div className="rounded-[1.4rem] border border-white/10 bg-white/[0.03] p-2 sm:p-3">
+              <MonthCalendar
+                key={`${year}-${month}-${safeDate}`}
+                year={year}
+                month={month}
+                data={heat}
+                onPick={onPickDay}
+                onPrevMonth={prevMonth}
+                onNextMonth={nextMonth}
+                minDate={minBookable}
+                selectedDate={safeDate}
+              />
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={goPrevDay}
+                disabled={loading || isAtMin}
+                className="inline-flex h-10 items-center justify-center rounded-full border border-white/12 bg-white/[0.05] px-4 text-sm text-white/90 transition hover:bg-white/[0.08] disabled:opacity-40"
+              >
+                ‹ Previous day
+              </button>
+
+              <input
+                type="date"
+                value={safeDate}
+                min={minBookable}
+                onChange={(e) => onDateInputChange(e.target.value)}
+                className="inline-flex h-10 rounded-full border border-white/12 bg-white/[0.05] px-4 text-sm text-white/90 outline-none focus:ring-2 focus:ring-fuchsia-400/25"
+              />
+
+              <button
+                type="button"
+                onClick={goNextDay}
+                disabled={loading}
+                className="inline-flex h-10 items-center justify-center rounded-full border border-white/12 bg-white/[0.05] px-4 text-sm text-white/90 transition hover:bg-white/[0.08] disabled:opacity-40"
+              >
+                Next day ›
+              </button>
+            </div>
+          </div>
+
+          <div className={cardClass()}>
+            <div className="mb-4">
+              <p className="text-[11px] uppercase tracking-[0.18em] text-white/42">Step 2</p>
+              <h2 className="mt-1 text-lg font-semibold text-white">
+                {mode === "FIXED_SEAT_EVENT"
+                  ? "Choose your party size"
+                  : mode === "DYNAMIC_RENTAL"
+                  ? "Set your booking details"
+                  : "Set guests, units and duration"}
+              </h2>
+            </div>
+
+            {mode === "FIXED_SEAT_EVENT" && (
               <div className={fieldClass()}>
                 <div className="mb-2 text-sm font-medium text-white/88">Guests</div>
                 <div className="flex items-center rounded-2xl border border-white/10 bg-black/20">
                   <button
                     className="px-4 py-3 text-base text-white/80 transition hover:bg-white/5"
-                    onClick={() => onGuestsChange(guests - 1)}
+                    onClick={() => onPartyChange(partySize - 1)}
                     disabled={loading}
                     type="button"
                   >
@@ -856,14 +788,14 @@ export default function TimetableClient() {
                   <input
                     type="number"
                     min={1}
-                    max={50}
-                    value={guests}
-                    onChange={(e) => onGuestsChange(Number(e.target.value))}
+                    max={20}
+                    value={partySize}
+                    onChange={(e) => onPartyChange(Number(e.target.value))}
                     className="no-spin w-20 bg-transparent px-2 py-3 text-center text-white outline-none"
                   />
                   <button
                     className="px-4 py-3 text-base text-white/80 transition hover:bg-white/5"
-                    onClick={() => onGuestsChange(guests + 1)}
+                    onClick={() => onPartyChange(partySize + 1)}
                     disabled={loading}
                     type="button"
                   >
@@ -871,124 +803,427 @@ export default function TimetableClient() {
                   </button>
                 </div>
               </div>
+            )}
 
-              <div className={fieldClass()}>
-                <div className="mb-2 text-sm font-medium text-white/88">Units</div>
-                <div className="flex items-center rounded-2xl border border-white/10 bg-black/20">
-                  <button
-                    className="px-4 py-3 text-base text-white/80 transition hover:bg-white/5"
-                    onClick={() => onUnitsChange(units - 1)}
-                    disabled={loading}
-                    type="button"
+            {mode === "DYNAMIC_RENTAL" && (
+              <div className="grid gap-3">
+                <div className={fieldClass()}>
+                  <div className="mb-2 text-sm font-medium text-white/88">Duration</div>
+                  <select
+                    value={selectedDurationId}
+                    onChange={(e) => {
+                      setSelectedTime("");
+                      setSelectedDurationId(e.target.value);
+                    }}
+                    className="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none"
                   >
-                    −
-                  </button>
-                  <input
-                    type="number"
-                    min={hybridMinUnits}
-                    max={activity?.maxUnitsPerBooking ?? 20}
-                    value={units}
-                    onChange={(e) => onUnitsChange(Number(e.target.value))}
-                    className="no-spin w-20 bg-transparent px-2 py-3 text-center text-white outline-none"
-                  />
-                  <button
-                    className="px-4 py-3 text-base text-white/80 transition hover:bg-white/5"
-                    onClick={() => onUnitsChange(units + 1)}
-                    disabled={loading}
-                    type="button"
-                  >
-                    +
-                  </button>
+                    <option value="">Choose duration</option>
+                    {activity?.durationOptions.map((d) => (
+                      <option key={d.id} value={d.id}>
+                        {d.label || `${d.durationMin} min`} — €{formatMoney(d.priceCents)}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-                <p className="mt-2 text-xs text-white/48">Minimum units needed: {hybridMinUnits}</p>
-              </div>
 
-              <div className={fieldClass()}>
-                <div className="mb-2 text-sm font-medium text-white/88">Duration</div>
-                <select
-                  value={selectedDurationId}
-                  onChange={(e) => {
-                    setSelectedTime("");
-                    setSelectedDurationId(e.target.value);
-                  }}
-                  className="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none"
-                >
-                  <option value="">Choose duration</option>
-                  {activity?.durationOptions.map((d) => (
-                    <option key={d.id} value={d.id}>
-                      {d.label || `${d.durationMin} min`} — €{formatMoney(d.priceCents)}
-                    </option>
-                  ))}
-                </select>
+                <div className={fieldClass()}>
+                  <div className="mb-2 text-sm font-medium text-white/88">Units</div>
+                  <div className="flex items-center rounded-2xl border border-white/10 bg-black/20">
+                    <button
+                      className="px-4 py-3 text-base text-white/80 transition hover:bg-white/5"
+                      onClick={() => onUnitsChange(units - 1)}
+                      disabled={loading}
+                      type="button"
+                    >
+                      −
+                    </button>
+                    <input
+                      type="number"
+                      min={1}
+                      max={activity?.maxUnitsPerBooking ?? 20}
+                      value={units}
+                      onChange={(e) => onUnitsChange(Number(e.target.value))}
+                      className="no-spin w-20 bg-transparent px-2 py-3 text-center text-white outline-none"
+                    />
+                    <button
+                      className="px-4 py-3 text-base text-white/80 transition hover:bg-white/5"
+                      onClick={() => onUnitsChange(units + 1)}
+                      disabled={loading}
+                      type="button"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
 
-        <div className={cardClass()}>
-          <div className="mb-4">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-white/42">Step 3</p>
-            <h2 className="mt-1 text-lg font-semibold text-white">
-              {mode === "FIXED_SEAT_EVENT" ? "Choose a time slot" : "Choose your start time"}
-            </h2>
-            <p className="mt-2 text-sm text-white/56">{pretty}</p>
+            {mode === "HYBRID_UNIT_BOOKING" && (
+              <div className="grid gap-3">
+                <div className={fieldClass()}>
+                  <div className="mb-2 text-sm font-medium text-white/88">Guests</div>
+                  <div className="flex items-center rounded-2xl border border-white/10 bg-black/20">
+                    <button
+                      className="px-4 py-3 text-base text-white/80 transition hover:bg-white/5"
+                      onClick={() => onGuestsChange(guests - 1)}
+                      disabled={loading}
+                      type="button"
+                    >
+                      −
+                    </button>
+                    <input
+                      type="number"
+                      min={1}
+                      max={50}
+                      value={guests}
+                      onChange={(e) => onGuestsChange(Number(e.target.value))}
+                      className="no-spin w-20 bg-transparent px-2 py-3 text-center text-white outline-none"
+                    />
+                    <button
+                      className="px-4 py-3 text-base text-white/80 transition hover:bg-white/5"
+                      onClick={() => onGuestsChange(guests + 1)}
+                      disabled={loading}
+                      type="button"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                <div className={fieldClass()}>
+                  <div className="mb-2 text-sm font-medium text-white/88">Units</div>
+                  <div className="flex items-center rounded-2xl border border-white/10 bg-black/20">
+                    <button
+                      className="px-4 py-3 text-base text-white/80 transition hover:bg-white/5"
+                      onClick={() => onUnitsChange(units - 1)}
+                      disabled={loading}
+                      type="button"
+                    >
+                      −
+                    </button>
+                    <input
+                      type="number"
+                      min={hybridMinUnits}
+                      max={activity?.maxUnitsPerBooking ?? 20}
+                      value={units}
+                      onChange={(e) => onUnitsChange(Number(e.target.value))}
+                      className="no-spin w-20 bg-transparent px-2 py-3 text-center text-white outline-none"
+                    />
+                    <button
+                      className="px-4 py-3 text-base text-white/80 transition hover:bg-white/5"
+                      onClick={() => onUnitsChange(units + 1)}
+                      disabled={loading}
+                      type="button"
+                    >
+                      +
+                    </button>
+                  </div>
+                  <p className="mt-2 text-xs text-white/48">Minimum units needed: {hybridMinUnits}</p>
+                </div>
+
+                <div className={fieldClass()}>
+                  <div className="mb-2 text-sm font-medium text-white/88">Duration</div>
+                  <select
+                    value={selectedDurationId}
+                    onChange={(e) => {
+                      setSelectedTime("");
+                      setSelectedDurationId(e.target.value);
+                    }}
+                    className="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none"
+                  >
+                    <option value="">Choose duration</option>
+                    {activity?.durationOptions.map((d) => (
+                      <option key={d.id} value={d.id}>
+                        {d.label || `${d.durationMin} min`} — €{formatMoney(d.priceCents)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
           </div>
 
-          {mode !== "FIXED_SEAT_EVENT" && !selectedDuration && (
-            <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-sm text-white/62">
-              Pick a duration first to unlock the available start times.
+          <div className={cardClass()}>
+            <div className="mb-4">
+              <p className="text-[11px] uppercase tracking-[0.18em] text-white/42">Step 3</p>
+              <h2 className="mt-1 text-lg font-semibold text-white">
+                {mode === "FIXED_SEAT_EVENT" ? "Choose a time slot" : "Choose your start time"}
+              </h2>
+              <p className="mt-2 text-sm text-white/56">{pretty}</p>
             </div>
-          )}
 
-          <div className="grid gap-4">
-            {loading && (
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-                <div className="h-4 w-40 animate-pulse rounded bg-white/10" />
-                <div className="mt-4 h-14 animate-pulse rounded-2xl bg-white/10" />
+            {mode !== "FIXED_SEAT_EVENT" && !selectedDuration && (
+              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-sm text-white/62">
+                Pick a duration first to unlock the available start times.
               </div>
             )}
 
-            {!loading && slots.length === 0 && (
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center text-sm text-white/62">
-                {t("timetable.noSlots")}
-              </div>
-            )}
+            <div className="grid gap-4">
+              {loading && (
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+                  <div className="h-4 w-40 animate-pulse rounded bg-white/10" />
+                  <div className="mt-4 h-14 animate-pulse rounded-2xl bg-white/10" />
+                </div>
+              )}
 
-            {!loading &&
-              slots.map((s) => {
-                if (s.kind === "fixed") {
-                  const disabled = !s.canFit;
-                  const start = new Date(s.start);
-                  const end = s.end ? new Date(s.end) : null;
+              {!loading && slots.length === 0 && (
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center text-sm text-white/62">
+                  {t("timetable.noSlots")}
+                </div>
+              )}
+
+              {!loading &&
+                slots.map((s) => {
+                  if (s.kind === "fixed") {
+                    const disabled = !s.canFit;
+                    const start = new Date(s.start);
+                    const end = s.end ? new Date(s.end) : null;
+
+                    return (
+                      <div key={s.id} className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                          <div>
+                            <div className="text-xl font-semibold text-white">
+                              {format(start, "HH:mm")}
+                              {end ? `–${format(end, "HH:mm")}` : ""}
+                            </div>
+                            <div className="mt-1 text-sm text-white/56">
+                              {s.remaining} spot{s.remaining === 1 ? "" : "s"} left
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col gap-3 sm:items-end">
+                            <div className="text-right">
+                              <div className="text-xs uppercase tracking-[0.18em] text-white/40">Total</div>
+                              <div className="mt-1 text-2xl font-semibold text-white">
+                                €{formatMoney(s.totalPrice)}
+                              </div>
+                              <div className="mt-1 text-xs text-white/50">
+                                €{formatMoney(s.unitPrice)} {t("timetable.perPerson")}
+                              </div>
+                            </div>
+
+                            <button
+                              disabled={disabled || loading}
+                              onClick={() => handleChooseSlot(s.id)}
+                              className={`inline-flex h-11 items-center justify-center rounded-full px-5 text-sm font-medium text-white transition ${
+                                disabled || loading
+                                  ? "cursor-not-allowed border border-white/10 bg-white/10 opacity-40"
+                                  : "bg-gradient-to-r from-pink-500 via-fuchsia-500 to-violet-500 shadow-[0_18px_50px_-18px_rgba(236,72,153,0.75)] hover:scale-[1.02]"
+                              }`}
+                            >
+                              {disabled ? t("timetable.notEnough") : t("timetable.choose")}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  const timeOptions = buildTimeOptions({
+                    slot: s,
+                    safeDate,
+                    durationMin: selectedDuration?.durationMin ?? null,
+                    stepMin,
+                    requestedUnits,
+                  });
+                  
+                  const visualOptions = chunkTimeOptions(timeOptions, 14);
+                  const validOptions = timeOptions.filter((opt) => opt.canFit);
+                  const visualSegments = buildVisualTimeSegments(timeOptions, 56);
+                  
+                  const activeOption =
+                    selectedTime && validOptions.find((opt) => opt.value === selectedTime)
+                      ? selectedTime
+                      : "";
+                  const selectedPercent = getSelectedTimePercent(timeOptions, activeOption);
+                  const disabled = !selectedDuration || !activeOption || !s.canFit;
 
                   return (
                     <div key={s.id} className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5">
-                      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                          <div className="text-xl font-semibold text-white">
-                            {format(start, "HH:mm")}
-                            {end ? `–${format(end, "HH:mm")}` : ""}
+                      <div className="flex flex-col gap-5">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                          <div>
+                            <div className="text-xl font-semibold text-white">
+                              {format(new Date(s.availableWindowStart), "HH:mm")}
+                              {s.availableWindowEnd ? `–${format(new Date(s.availableWindowEnd), "HH:mm")}` : ""}
+                            </div>
+                            {!!s.errors?.length && (
+                              <div className="mt-2 text-xs text-amber-300">{s.errors[0]}</div>
+                            )}
                           </div>
-                          <div className="mt-1 text-sm text-white/56">
-                            {s.remaining} spot{s.remaining === 1 ? "" : "s"} left
+
+                          <div className="text-left sm:text-right">
+                            <div className="text-xs uppercase tracking-[0.18em] text-white/40">Total</div>
+                            <div className="mt-1 text-2xl font-semibold text-white">
+                              €{formatMoney(s.totalPrice ?? 0)}
+                            </div>
+                            <div className="mt-1 text-xs text-white/50">
+                              €{formatMoney(s.unitPrice ?? 0)} / unit
+                            </div>
                           </div>
                         </div>
 
-                        <div className="flex flex-col gap-3 sm:items-end">
-                          <div className="text-right">
-                            <div className="text-xs uppercase tracking-[0.18em] text-white/40">Total</div>
-                            <div className="mt-1 text-2xl font-semibold text-white">
-                              €{formatMoney(s.totalPrice)}
+                        {selectedDuration && (
+                          <>
+
+                            {validOptions.length > 0 && (
+                              <div className={fieldClass()}>
+                                <div className="mb-2 text-sm font-medium text-white/88">Choose your start time</div>
+                                <select
+                                  value={activeOption}
+                                  onChange={(e) => setSelectedTime(e.target.value)}
+                                  disabled={loading}
+                                  className="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none"
+                                >
+                                  <option value="">Choose start time</option>
+                                  {validOptions.map((opt) => (
+                                    <option key={`${s.id}-${opt.value}`} value={opt.value}>
+                                      {opt.label} · {opt.availableUnits} free
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            )}
+
+                            {activeOption && (
+                              <div className="text-sm text-white/58">
+                                Selected start time: <span className="text-white/82">{activeOption}</span>
+                                {typeof s.requiredUnits === "number" && s.requiredUnits > 0 && (
+                                  <span className="ml-2">
+                                    · Required units: <span className="text-white/82">{s.requiredUnits}</span>
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </>
+                        )}
+
+                        {timeOptions.length > 0 && (
+                          <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                            <div className="flex items-center justify-between gap-3">
+                              <div>
+                                <div className="text-sm font-medium text-white/88">
+                                  Availability through the day
+                                </div>
+                                <div className="mt-1 text-xs text-white/50">
+                                  Brighter parts of the ribbon usually mean easier booking times.
+                                </div>
+                              </div>
+
+                              <div className="text-xs text-white/48">
+                                {timeOptions[0]?.label} – {timeOptions[timeOptions.length - 1]?.label}
+                              </div>
                             </div>
-                            <div className="mt-1 text-xs text-white/50">
-                              €{formatMoney(s.unitPrice)} {t("timetable.perPerson")}
+
+                            <div className="mt-5">
+                              <div className="relative">
+                                <div className="overflow-hidden rounded-full border border-white/10 bg-white/[0.04] p-[6px]">
+                                  <div
+                                    className="relative h-5 overflow-hidden rounded-full"
+                                    style={{
+                                      background: buildAvailabilityRibbonBackground(timeOptions, requestedUnits),
+                                      boxShadow:
+                                        "inset 0 1px 0 rgba(255,255,255,0.08), 0 0 30px rgba(0,0,0,0.18)",
+                                      filter: "saturate(125%)",
+                                    }}
+                                  >
+                                    <div
+                                      className="absolute inset-0 rounded-full opacity-35"
+                                      style={{
+                                        background:
+                                          "linear-gradient(180deg, rgba(255,255,255,0.24), rgba(255,255,255,0.03) 42%, rgba(0,0,0,0.14) 100%)",
+                                      }}
+                                    />
+
+                                    <div
+                                      className="absolute inset-y-0 left-[-20%] w-[30%] rounded-full"
+                                      style={{
+                                        background:
+                                          "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.02) 20%, rgba(255,255,255,0.18) 50%, rgba(255,255,255,0.05) 75%, transparent 100%)",
+                                        filter: "blur(6px)",
+                                        animation: "ribbonSheen 7s ease-in-out infinite",
+                                      }}
+                                    />
+
+                                    <div
+                                      className="absolute left-[18%] top-1/2 h-6 w-16 -translate-y-1/2 rounded-full blur-md"
+                                      style={{
+                                        background: "rgba(34,211,238,0.16)",
+                                        animation: "ribbonPulse 4.8s ease-in-out infinite",
+                                      }}
+                                    />
+
+                                    <div
+                                      className="absolute left-[62%] top-1/2 h-6 w-20 -translate-y-1/2 rounded-full blur-md"
+                                      style={{
+                                        background: "rgba(99,102,241,0.18)",
+                                        animation: "ribbonPulse 5.6s ease-in-out infinite",
+                                      }}
+                                    />
+
+                                    {selectedPercent != null && (
+                                      <>
+                                        <div
+                                          className="absolute top-1/2 h-8 w-[3px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-fuchsia-300"
+                                          style={{
+                                            left: `${selectedPercent}%`,
+                                            boxShadow: "0 0 18px rgba(232,121,249,0.95)",
+                                          }}
+                                        />
+                                        <div
+                                          className="absolute top-1/2 h-8 w-8 -translate-x-1/2 -translate-y-1/2 rounded-full blur-md"
+                                          style={{
+                                            left: `${selectedPercent}%`,
+                                            background: "rgba(232,121,249,0.30)",
+                                          }}
+                                        />
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="mt-3 flex items-center justify-between text-[11px] text-white/38">
+                                <span>{timeOptions[0]?.label}</span>
+                                <span>{timeOptions[timeOptions.length - 1]?.label}</span>
+                              </div>
+
+                              <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[11px] text-white/40">
+                                <span className="inline-flex items-center gap-1.5">
+                                  <span className="h-2.5 w-5 rounded-full bg-zinc-700/80" />
+                                  Unavailable
+                                </span>
+                                <span className="inline-flex items-center gap-1.5">
+                                  <span className="h-2.5 w-5 rounded-full bg-indigo-400/75" />
+                                  Limited
+                                </span>
+                                <span className="inline-flex items-center gap-1.5">
+                                  <span className="h-2.5 w-5 rounded-full bg-cyan-400/80" />
+                                  Easier to book
+                                </span>
+                                {selectedPercent != null && (
+                                  <span className="inline-flex items-center gap-1.5">
+                                    <span className="h-3 w-[3px] rounded-full bg-fuchsia-300 shadow-[0_0_8px_rgba(232,121,249,0.8)]" />
+                                    Selected time
+                                  </span>
+                                )}
+                              </div>
                             </div>
+                          </div>
+                        )}
+
+                        <div className="flex flex-col items-center gap-4 border-t border-white/10 pt-4">
+                          <div className="text-center text-sm text-white/54">
+                            {selectedDuration
+                              ? "Choose a valid start time, then continue."
+                              : "Pick a duration above to continue."}
                           </div>
 
                           <button
                             disabled={disabled || loading}
                             onClick={() => handleChooseSlot(s.id)}
-                            className={`inline-flex h-11 items-center justify-center rounded-full px-5 text-sm font-medium text-white transition ${
+                            className={`inline-flex h-11 min-w-[180px] items-center justify-center rounded-full px-6 text-sm font-medium text-white transition ${
                               disabled || loading
                                 ? "cursor-not-allowed border border-white/10 bg-white/10 opacity-40"
                                 : "bg-gradient-to-r from-pink-500 via-fuchsia-500 to-violet-500 shadow-[0_18px_50px_-18px_rgba(236,72,153,0.75)] hover:scale-[1.02]"
@@ -1000,204 +1235,11 @@ export default function TimetableClient() {
                       </div>
                     </div>
                   );
-                }
-
-                const timeOptions = buildTimeOptions({
-                  slot: s,
-                  safeDate,
-                  durationMin: selectedDuration?.durationMin ?? null,
-                  stepMin,
-                  requestedUnits,
-                });
-                
-                const visualOptions = chunkTimeOptions(timeOptions, 14);
-                const validOptions = timeOptions.filter((opt) => opt.canFit);
-                const visualSegments = buildVisualTimeSegments(timeOptions, 56);
-                
-                const activeOption =
-                  selectedTime && validOptions.find((opt) => opt.value === selectedTime)
-                    ? selectedTime
-                    : "";
-                const selectedPercent = getSelectedTimePercent(timeOptions, activeOption);
-                const disabled = !selectedDuration || !activeOption || !s.canFit;
-
-                return (
-                  <div key={s.id} className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5">
-                    <div className="flex flex-col gap-5">
-                      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                        <div>
-                          <div className="text-xl font-semibold text-white">
-                            {format(new Date(s.availableWindowStart), "HH:mm")}
-                            {s.availableWindowEnd ? `–${format(new Date(s.availableWindowEnd), "HH:mm")}` : ""}
-                          </div>
-                          {!!s.errors?.length && (
-                            <div className="mt-2 text-xs text-amber-300">{s.errors[0]}</div>
-                          )}
-                        </div>
-
-                        <div className="text-left sm:text-right">
-                          <div className="text-xs uppercase tracking-[0.18em] text-white/40">Total</div>
-                          <div className="mt-1 text-2xl font-semibold text-white">
-                            €{formatMoney(s.totalPrice ?? 0)}
-                          </div>
-                          <div className="mt-1 text-xs text-white/50">
-                            €{formatMoney(s.unitPrice ?? 0)} / unit
-                          </div>
-                        </div>
-                      </div>
-
-                      {selectedDuration && (
-                        <>
-
-                          {validOptions.length > 0 && (
-                            <div className={fieldClass()}>
-                              <div className="mb-2 text-sm font-medium text-white/88">Choose your start time</div>
-                              <select
-                                value={activeOption}
-                                onChange={(e) => setSelectedTime(e.target.value)}
-                                disabled={loading}
-                                className="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none"
-                              >
-                                <option value="">Choose start time</option>
-                                {validOptions.map((opt) => (
-                                  <option key={`${s.id}-${opt.value}`} value={opt.value}>
-                                    {opt.label} · {opt.availableUnits} free
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                          )}
-
-                          {activeOption && (
-                            <div className="text-sm text-white/58">
-                              Selected start time: <span className="text-white/82">{activeOption}</span>
-                              {typeof s.requiredUnits === "number" && s.requiredUnits > 0 && (
-                                <span className="ml-2">
-                                  · Required units: <span className="text-white/82">{s.requiredUnits}</span>
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </>
-                      )}
-
-                      {timeOptions.length > 0 && (
-                        <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                          <div className="flex items-center justify-between gap-3">
-                            <div>
-                              <div className="text-sm font-medium text-white/88">
-                                Availability through the day
-                              </div>
-                              <div className="mt-1 text-xs text-white/50">
-                                Brighter parts of the ribbon usually mean easier booking times.
-                              </div>
-                            </div>
-
-                            <div className="text-xs text-white/48">
-                              {timeOptions[0]?.label} – {timeOptions[timeOptions.length - 1]?.label}
-                            </div>
-                          </div>
-
-                          <div className="mt-5">
-                            <div className="relative">
-                              <div className="overflow-hidden rounded-full border border-white/10 bg-white/[0.04] p-[6px]">
-                                <div
-                                  className="relative h-5 rounded-full"
-                                  style={{
-                                    background: buildAvailabilityRibbonBackground(
-                                      timeOptions,
-                                      requestedUnits
-                                    ),
-                                    boxShadow:
-                                      "inset 0 1px 0 rgba(255,255,255,0.08), 0 0 30px rgba(0,0,0,0.18)",
-                                    filter: "saturate(120%)",
-                                  }}
-                                >
-                                  <div
-                                    className="absolute inset-0 rounded-full opacity-35"
-                                    style={{
-                                      background:
-                                        "linear-gradient(180deg, rgba(255,255,255,0.22), rgba(255,255,255,0.02) 45%, rgba(0,0,0,0.12) 100%)",
-                                    }}
-                                  />
-
-                                  {selectedPercent != null && (
-                                    <>
-                                      <div
-                                        className="absolute top-1/2 h-8 w-[3px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-fuchsia-300"
-                                        style={{
-                                          left: `${selectedPercent}%`,
-                                          boxShadow: "0 0 18px rgba(232,121,249,0.95)",
-                                        }}
-                                      />
-                                      <div
-                                        className="absolute top-1/2 h-8 w-8 -translate-x-1/2 -translate-y-1/2 rounded-full blur-md"
-                                        style={{
-                                          left: `${selectedPercent}%`,
-                                          background: "rgba(232,121,249,0.28)",
-                                        }}
-                                      />
-                                    </>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="mt-3 flex items-center justify-between text-[11px] text-white/38">
-                              <span>{timeOptions[0]?.label}</span>
-                              <span>{timeOptions[timeOptions.length - 1]?.label}</span>
-                            </div>
-
-                            <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[11px] text-white/40">
-                              <span className="inline-flex items-center gap-1.5">
-                                <span className="h-2.5 w-5 rounded-full bg-zinc-700/80" />
-                                Unavailable
-                              </span>
-                              <span className="inline-flex items-center gap-1.5">
-                                <span className="h-2.5 w-5 rounded-full bg-indigo-400/75" />
-                                Limited
-                              </span>
-                              <span className="inline-flex items-center gap-1.5">
-                                <span className="h-2.5 w-5 rounded-full bg-cyan-400/80" />
-                                Easier to book
-                              </span>
-                              {selectedPercent != null && (
-                                <span className="inline-flex items-center gap-1.5">
-                                  <span className="h-3 w-[3px] rounded-full bg-fuchsia-300 shadow-[0_0_8px_rgba(232,121,249,0.8)]" />
-                                  Selected time
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="flex flex-col items-center gap-4 border-t border-white/10 pt-4">
-                        <div className="text-center text-sm text-white/54">
-                          {selectedDuration
-                            ? "Choose a valid start time, then continue."
-                            : "Pick a duration above to continue."}
-                        </div>
-
-                        <button
-                          disabled={disabled || loading}
-                          onClick={() => handleChooseSlot(s.id)}
-                          className={`inline-flex h-11 min-w-[180px] items-center justify-center rounded-full px-6 text-sm font-medium text-white transition ${
-                            disabled || loading
-                              ? "cursor-not-allowed border border-white/10 bg-white/10 opacity-40"
-                              : "bg-gradient-to-r from-pink-500 via-fuchsia-500 to-violet-500 shadow-[0_18px_50px_-18px_rgba(236,72,153,0.75)] hover:scale-[1.02]"
-                          }`}
-                        >
-                          {disabled ? t("timetable.notEnough") : t("timetable.choose")}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+                })}
+            </div>
           </div>
-        </div>
-      </section>
-    </main>
+        </section>
+      </main>
+    </>
   );
 }
