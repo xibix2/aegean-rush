@@ -273,13 +273,13 @@ function buildAvailabilityRibbonBackground(
     const pct =
       options.length === 1 ? 0 : (index / (options.length - 1)) * 100;
 
-    let color = "rgba(55, 65, 81, 0.55)"; // unavailable / dark
+    let color = "rgba(39, 39, 42, 0.72)"; // unavailable / dark graphite
 
     if (opt.canFit) {
       if (opt.availableUnits >= requestedUnits + 2) {
-        color = "rgba(45, 212, 191, 0.88)"; // strong teal
+        color = "rgba(34, 211, 238, 0.82)"; // cyan / teal
       } else if (opt.availableUnits >= requestedUnits) {
-        color = "rgba(250, 204, 21, 0.82)"; // amber
+        color = "rgba(99, 102, 241, 0.72)"; // indigo / violet
       }
     }
 
@@ -1019,7 +1019,6 @@ export default function TimetableClient() {
                     ? selectedTime
                     : "";
                 const selectedPercent = getSelectedTimePercent(timeOptions, activeOption);
-                const quickOptions = validOptions.slice(0, 10);
                 const disabled = !selectedDuration || !activeOption || !s.canFit;
 
                 return (
@@ -1030,11 +1029,6 @@ export default function TimetableClient() {
                           <div className="text-xl font-semibold text-white">
                             {format(new Date(s.availableWindowStart), "HH:mm")}
                             {s.availableWindowEnd ? `–${format(new Date(s.availableWindowEnd), "HH:mm")}` : ""}
-                          </div>
-                          <div className="mt-1 text-sm text-white/56">
-                            {validOptions.length > 0
-                              ? `${validOptions.length} available start time${validOptions.length === 1 ? "" : "s"}`
-                              : "No start times available with the current setup"}
                           </div>
                           {!!s.errors?.length && (
                             <div className="mt-2 text-xs text-amber-300">{s.errors[0]}</div>
@@ -1054,37 +1048,10 @@ export default function TimetableClient() {
 
                       {selectedDuration && (
                         <>
-                          <div>
-                            <div className="mb-3 text-sm font-medium text-white/88">Quick start times</div>
-                            <div className="flex flex-wrap gap-2">
-                              {quickOptions.length > 0 ? (
-                                quickOptions.map((opt) => {
-                                  const active = activeOption === opt.value;
-                                  return (
-                                    <button
-                                      key={`${s.id}-quick-${opt.value}`}
-                                      type="button"
-                                      onClick={() => setSelectedTime(opt.value)}
-                                      disabled={loading}
-                                      className={`rounded-full border px-3 py-2 text-xs transition ${
-                                        active
-                                          ? "border-fuchsia-300/50 bg-fuchsia-400/15 text-fuchsia-100"
-                                          : "border-white/10 bg-white/5 text-white/78 hover:bg-white/10"
-                                      }`}
-                                    >
-                                      {opt.label}
-                                    </button>
-                                  );
-                                })
-                              ) : (
-                                <div className="text-sm text-white/52">No valid quick times available.</div>
-                              )}
-                            </div>
-                          </div>
 
                           {validOptions.length > 0 && (
                             <div className={fieldClass()}>
-                              <div className="mb-2 text-sm font-medium text-white/88">Or choose any available start time</div>
+                              <div className="mb-2 text-sm font-medium text-white/88">Choose your start time</div>
                               <select
                                 value={activeOption}
                                 onChange={(e) => setSelectedTime(e.target.value)}
@@ -1183,15 +1150,15 @@ export default function TimetableClient() {
 
                             <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[11px] text-white/40">
                               <span className="inline-flex items-center gap-1.5">
-                                <span className="h-2.5 w-5 rounded-full bg-[#374151]/80" />
-                                Busy / unavailable
+                                <span className="h-2.5 w-5 rounded-full bg-zinc-700/80" />
+                                Unavailable
                               </span>
                               <span className="inline-flex items-center gap-1.5">
-                                <span className="h-2.5 w-5 rounded-full bg-amber-300/80" />
+                                <span className="h-2.5 w-5 rounded-full bg-indigo-400/75" />
                                 Limited
                               </span>
                               <span className="inline-flex items-center gap-1.5">
-                                <span className="h-2.5 w-5 rounded-full bg-teal-300/85" />
+                                <span className="h-2.5 w-5 rounded-full bg-cyan-400/80" />
                                 Easier to book
                               </span>
                               {selectedPercent != null && (
