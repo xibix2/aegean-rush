@@ -1095,7 +1095,7 @@ export default function TimetableClient() {
                             <div>
                               <div className="text-sm font-medium text-white/88">Availability through the day</div>
                               <div className="mt-1 text-xs text-white/50">
-                                Green is easier to book, amber is limited, red is unavailable.
+                                Tap a brighter area to choose an easier booking time.
                               </div>
                             </div>
 
@@ -1105,11 +1105,18 @@ export default function TimetableClient() {
                           </div>
 
                           <div className="mt-5">
-                            <div className="relative">
-                              <div className="flex h-4 items-center gap-[2px]">
+                            <div className="relative overflow-hidden rounded-full border border-white/10 bg-white/[0.04] p-1.5">
+                              <div className="relative flex h-4 gap-[2px] overflow-hidden rounded-full">
                                 {visualSegments.map((opt) => {
                                   const isActive = activeOption === opt.value;
                                   const clickable = opt.canFit && !loading;
+
+                                  let segClass = "bg-rose-500/55";
+                                  if (opt.canFit && opt.availableUnits >= requestedUnits + 2) {
+                                    segClass = "bg-emerald-400/75";
+                                  } else if (opt.canFit && opt.availableUnits >= requestedUnits) {
+                                    segClass = "bg-amber-300/75";
+                                  }
 
                                   return (
                                     <button
@@ -1121,12 +1128,15 @@ export default function TimetableClient() {
                                       }}
                                       disabled={!clickable}
                                       title={`${opt.label} · ${opt.canFit ? `${opt.availableUnits} free` : "Unavailable"}`}
-                                      className={`group relative h-4 flex-1 rounded-full transition ${
-                                        !clickable ? "cursor-not-allowed" : "hover:opacity-95"
-                                      } ${getAvailabilitySegmentTone(opt, requestedUnits)}`}
+                                      className={`relative h-full flex-1 transition ${
+                                        clickable ? "hover:opacity-95" : "cursor-not-allowed opacity-80"
+                                      } ${segClass}`}
                                     >
                                       {isActive && (
-                                        <span className="absolute left-1/2 top-1/2 h-6 w-[3px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-fuchsia-300 shadow-[0_0_12px_rgba(232,121,249,0.9)]" />
+                                        <>
+                                          <span className="absolute inset-y-[-6px] left-1/2 w-[3px] -translate-x-1/2 rounded-full bg-fuchsia-300 shadow-[0_0_18px_rgba(232,121,249,0.9)]" />
+                                          <span className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-fuchsia-300/20 blur-md" />
+                                        </>
                                       )}
                                     </button>
                                   );
@@ -1134,29 +1144,26 @@ export default function TimetableClient() {
                               </div>
                             </div>
 
-                            <div className="mt-3 flex items-center justify-between text-[11px] text-white/42">
+                            <div className="mt-3 flex items-center justify-between text-[11px] text-white/38">
                               <span>{timeOptions[0]?.label}</span>
                               <span>{timeOptions[timeOptions.length - 1]?.label}</span>
                             </div>
 
-                            <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[11px] text-white/42">
+                            <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[11px] text-white/40">
                               <span className="inline-flex items-center gap-1.5">
-                                <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/85 shadow-[0_0_8px_rgba(52,211,153,0.35)]" />
-                                Good availability
+                                <span className="h-2.5 w-5 rounded-full bg-emerald-400/75" />
+                                Good
                               </span>
-
                               <span className="inline-flex items-center gap-1.5">
-                                <span className="h-2.5 w-2.5 rounded-full bg-amber-300/85 shadow-[0_0_8px_rgba(252,211,77,0.3)]" />
+                                <span className="h-2.5 w-5 rounded-full bg-amber-300/75" />
                                 Limited
                               </span>
-
                               <span className="inline-flex items-center gap-1.5">
-                                <span className="h-2.5 w-2.5 rounded-full bg-rose-500/70 shadow-[0_0_8px_rgba(244,63,94,0.25)]" />
-                                Booked / unavailable
+                                <span className="h-2.5 w-5 rounded-full bg-rose-500/55" />
+                                Unavailable
                               </span>
-
                               <span className="inline-flex items-center gap-1.5">
-                                <span className="h-3 w-[3px] rounded-full bg-fuchsia-300 shadow-[0_0_8px_rgba(232,121,249,0.6)]" />
+                                <span className="h-3 w-[3px] rounded-full bg-fuchsia-300 shadow-[0_0_10px_rgba(232,121,249,0.7)]" />
                                 Selected
                               </span>
                             </div>
