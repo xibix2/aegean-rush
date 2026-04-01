@@ -60,7 +60,7 @@ model Club {
 
   homepageSections HomepageSection[]
 
-  subscriptionPlan    SubscriptionPlan   @default(BASIC)
+  subscriptionPlan    SubscriptionPlan   @default(ENTERPRISE)
   subscriptionStatus  SubscriptionStatus @default(INACTIVE)
 
   stripeCustomerId      String? @unique
