@@ -56,8 +56,8 @@ export default async function RootLayout({
     prefs.accent === "pink"
       ? "#ec4899"
       : prefs.accent === "blue"
-      ? "#3b82f6"
-      : "#22c55e";
+        ? "#3b82f6"
+        : "#22c55e";
 
   let brandPrimary = defaultAccentPrimary;
   let brandLogo: string | null = null;
@@ -90,12 +90,13 @@ export default async function RootLayout({
         } as React.CSSProperties)
       : ({} as React.CSSProperties);
 
-  const particles = Array.from({ length: 22 }, (_, i) => {
-    const size = (i % 3) + 1;
-    const left = (i * 37) % 100;
-    const top = (i * 19) % 100;
-    const duration = 8 + (i % 6) * 2;
-    const delay = (i % 5) * 1.3;
+  const smallParticles = Array.from({ length: 72 }, (_, i) => {
+    const size = (i % 4) + 1;
+    const left = (i * 17) % 100;
+    const top = (i * 23) % 100;
+    const duration = 10 + (i % 8) * 2;
+    const delay = (i % 7) * 0.9;
+    const opacity = i % 5 === 0 ? 0.32 : i % 2 === 0 ? 0.18 : 0.12;
 
     return {
       id: i,
@@ -104,7 +105,25 @@ export default async function RootLayout({
       top,
       duration,
       delay,
-      opacity: i % 2 === 0 ? 0.16 : 0.1,
+      opacity,
+    };
+  });
+
+  const mediumOrbs = Array.from({ length: 20 }, (_, i) => {
+    const size = 6 + (i % 4) * 3;
+    const left = (i * 29) % 100;
+    const top = 12 + ((i * 31) % 76);
+    const duration = 16 + (i % 5) * 3;
+    const delay = (i % 6) * 1.1;
+
+    return {
+      id: i,
+      size,
+      left,
+      top,
+      duration,
+      delay,
+      color: i % 2 === 0 ? "rgba(125,211,252,0.9)" : "rgba(244,114,182,0.85)",
     };
   });
 
@@ -129,7 +148,7 @@ export default async function RootLayout({
           <div className="relative min-h-screen overflow-x-hidden bg-[#030712] text-[--color-text]">
             {/* GLOBAL BACKGROUND */}
             <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-              {/* BASE */}
+              {/* BASE GRADIENT */}
               <div
                 className="absolute inset-0"
                 style={{
@@ -143,7 +162,7 @@ export default async function RootLayout({
                 }}
               />
 
-              {/* BOTTOM GLOW */}
+              {/* LOWER CENTER GLOW */}
               <div
                 className="absolute bottom-[-140px] left-1/2 h-[460px] w-[1200px] -translate-x-1/2 opacity-45 blur-[120px]"
                 style={{
@@ -152,25 +171,25 @@ export default async function RootLayout({
                 }}
               />
 
-              {/* MOVING LIGHT BLOBS */}
-              <div className="absolute left-[8%] top-[18%] h-40 w-40 rounded-full bg-cyan-300/10 blur-[90px] animate-drift-slow" />
-              <div className="absolute right-[10%] top-[26%] h-52 w-52 rounded-full bg-fuchsia-400/10 blur-[110px] animate-drift-medium" />
-              <div className="absolute left-[22%] bottom-[12%] h-56 w-56 rounded-full blur-[120px] animate-drift-slow"
+              {/* DRIFTING LIGHT BLOBS */}
+              <div className="animate-drift-slow absolute left-[8%] top-[18%] h-40 w-40 rounded-full bg-cyan-300/10 blur-[90px]" />
+              <div className="animate-drift-medium absolute right-[10%] top-[26%] h-52 w-52 rounded-full bg-fuchsia-400/10 blur-[110px]" />
+              <div
+                className="animate-drift-slow absolute bottom-[12%] left-[22%] h-56 w-56 rounded-full blur-[120px]"
                 style={{
-                  background:
-                    "color-mix(in srgb, var(--brand-primary) 22%, transparent)",
+                  background: "color-mix(in srgb, var(--brand-primary) 22%, transparent)",
                 }}
               />
-              <div className="absolute right-[18%] bottom-[8%] h-44 w-44 rounded-full bg-sky-300/10 blur-[100px] animate-drift-medium" />
+              <div className="animate-drift-medium absolute right-[18%] bottom-[8%] h-44 w-44 rounded-full bg-sky-300/10 blur-[100px]" />
 
               {/* WAVE / LIGHT STREAKS */}
               <div className="absolute inset-x-0 bottom-[10%] h-40 opacity-20">
-                <div className="absolute left-[8%] top-10 h-px w-[28%] rotate-[2deg] bg-gradient-to-r from-transparent via-cyan-300/60 to-transparent blur-sm animate-wave-shift" />
-                <div className="absolute left-[32%] top-16 h-px w-[34%] -rotate-[1deg] bg-gradient-to-r from-transparent via-white/50 to-transparent blur-sm animate-wave-shift-delayed" />
-                <div className="absolute left-[52%] top-24 h-px w-[26%] rotate-[1.5deg] bg-gradient-to-r from-transparent via-fuchsia-300/50 to-transparent blur-sm animate-wave-shift" />
+                <div className="animate-wave-shift absolute left-[8%] top-10 h-px w-[28%] rotate-[2deg] bg-gradient-to-r from-transparent via-cyan-300/60 to-transparent blur-sm" />
+                <div className="animate-wave-shift-delayed absolute left-[32%] top-16 h-px w-[34%] -rotate-[1deg] bg-gradient-to-r from-transparent via-white/50 to-transparent blur-sm" />
+                <div className="animate-wave-shift absolute left-[52%] top-24 h-px w-[26%] rotate-[1.5deg] bg-gradient-to-r from-transparent via-fuchsia-300/50 to-transparent blur-sm" />
               </div>
 
-              {/* GRID / TEXTURE */}
+              {/* GRID TEXTURE */}
               <div
                 className="absolute inset-0 opacity-[0.045]"
                 style={{
@@ -182,63 +201,43 @@ export default async function RootLayout({
                 }}
               />
 
-              {/* MANY SMALL PARTICLES */}
-              {Array.from({ length: 60 }).map((_, i) => {
-                const size = (i % 4) + 1;
-                const left = (i * 17) % 100;
-                const top = (i * 23) % 100;
-                const duration = 10 + (i % 8) * 2;
-                const delay = (i % 7) * 0.9;
-                const opacity = i % 5 === 0 ? 0.28 : i % 2 === 0 ? 0.18 : 0.12;
+              {/* SMALL PARTICLES */}
+              {smallParticles.map((p) => (
+                <span
+                  key={`small-${p.id}`}
+                  className="absolute rounded-full bg-white"
+                  style={{
+                    width: `${p.size}px`,
+                    height: `${p.size}px`,
+                    left: `${p.left}%`,
+                    top: `${p.top}%`,
+                    opacity: p.opacity,
+                    animation: `floatParticle ${p.duration}s ease-in-out ${p.delay}s infinite`,
+                    boxShadow:
+                      p.size > 2
+                        ? "0 0 18px rgba(255,255,255,0.22)"
+                        : "0 0 10px rgba(255,255,255,0.16)",
+                  }}
+                />
+              ))}
 
-                return (
-                  <span
-                    key={i}
-                    className="absolute rounded-full bg-white"
-                    style={{
-                      width: `${size}px`,
-                      height: `${size}px`,
-                      left: `${left}%`,
-                      top: `${top}%`,
-                      opacity,
-                      animation: `floatParticle ${duration}s ease-in-out ${delay}s infinite`,
-                      boxShadow:
-                        size > 2
-                          ? "0 0 18px rgba(255,255,255,0.22)"
-                          : "0 0 10px rgba(255,255,255,0.16)",
-                    }}
-                  />
-                );
-              })}
-
-              {/* MEDIUM PARTICLES */}
-              {Array.from({ length: 18 }).map((_, i) => {
-                const size = 6 + (i % 4) * 3;
-                const left = (i * 29) % 100;
-                const top = 12 + ((i * 31) % 76);
-                const duration = 16 + (i % 5) * 3;
-                const delay = (i % 6) * 1.1;
-
-                return (
-                  <span
-                    key={`orb-${i}`}
-                    className="absolute rounded-full blur-sm"
-                    style={{
-                      width: `${size}px`,
-                      height: `${size}px`,
-                      left: `${left}%`,
-                      top: `${top}%`,
-                      opacity: 0.12,
-                      background:
-                        i % 2 === 0
-                          ? "rgba(125,211,252,0.9)"
-                          : "rgba(244,114,182,0.85)",
-                      animation: `floatOrb ${duration}s ease-in-out ${delay}s infinite`,
-                      boxShadow: "0 0 30px rgba(255,255,255,0.10)",
-                    }}
-                  />
-                );
-              })}
+              {/* MEDIUM ORBS */}
+              {mediumOrbs.map((orb) => (
+                <span
+                  key={`orb-${orb.id}`}
+                  className="absolute rounded-full blur-sm"
+                  style={{
+                    width: `${orb.size}px`,
+                    height: `${orb.size}px`,
+                    left: `${orb.left}%`,
+                    top: `${orb.top}%`,
+                    opacity: 0.12,
+                    background: orb.color,
+                    animation: `floatOrb ${orb.duration}s ease-in-out ${orb.delay}s infinite`,
+                    boxShadow: "0 0 30px rgba(255,255,255,0.10)",
+                  }}
+                />
+              ))}
             </div>
 
             {/* HEADER */}
