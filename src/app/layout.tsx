@@ -90,13 +90,13 @@ export default async function RootLayout({
         } as React.CSSProperties)
       : ({} as React.CSSProperties);
 
-  const smallParticles = Array.from({ length: 72 }, (_, i) => {
-    const size = (i % 4) + 1;
+  const smallParticles = Array.from({ length: 110 }, (_, i) => {
+    const size = i % 8 === 0 ? 3 : i % 3 === 0 ? 2 : 1;
     const left = (i * 17) % 100;
     const top = (i * 23) % 100;
-    const duration = 10 + (i % 8) * 2;
-    const delay = (i % 7) * 0.9;
-    const opacity = i % 5 === 0 ? 0.32 : i % 2 === 0 ? 0.18 : 0.12;
+    const duration = 12 + (i % 10) * 1.8;
+    const delay = (i % 9) * 0.7;
+    const opacity = i % 6 === 0 ? 0.22 : i % 2 === 0 ? 0.14 : 0.09;
 
     return {
       id: i,
@@ -109,12 +109,12 @@ export default async function RootLayout({
     };
   });
 
-  const mediumOrbs = Array.from({ length: 20 }, (_, i) => {
-    const size = 6 + (i % 4) * 3;
+  const mediumOrbs = Array.from({ length: 34 }, (_, i) => {
+    const size = 4 + (i % 5) * 2;
     const left = (i * 29) % 100;
-    const top = 12 + ((i * 31) % 76);
-    const duration = 16 + (i % 5) * 3;
-    const delay = (i % 6) * 1.1;
+    const top = 6 + ((i * 31) % 88);
+    const duration = 18 + (i % 7) * 2.5;
+    const delay = (i % 8) * 0.9;
 
     return {
       id: i,
@@ -123,7 +123,25 @@ export default async function RootLayout({
       top,
       duration,
       delay,
-      color: i % 2 === 0 ? "rgba(125,211,252,0.9)" : "rgba(244,114,182,0.85)",
+    };
+  });
+
+  const microParticles = Array.from({ length: 90 }, (_, i) => {
+    const size = i % 6 === 0 ? 3 : i % 3 === 0 ? 2 : 1;
+    const left = (i * 13) % 100;
+    const top = (i * 11) % 100;
+    const duration = 7 + (i % 9) * 1.2;
+    const delay = (i % 8) * 0.55;
+    const opacity = i % 5 === 0 ? 0.24 : 0.12;
+
+    return {
+      id: i,
+      size,
+      left,
+      top,
+      duration,
+      delay,
+      opacity,
     };
   });
 
@@ -146,62 +164,70 @@ export default async function RootLayout({
       >
         <I18nProvider lang={prefs.lang as "en" | "el"}>
           <div className="relative min-h-screen overflow-x-hidden bg-[#030712] text-[--color-text]">
-            {/* GLOBAL BACKGROUND */}
+            {/* BACKGROUND */}
             <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-              {/* BASE GRADIENT */}
+              {/* base */}
               <div
                 className="absolute inset-0"
                 style={{
                   background: `
-                    radial-gradient(circle at 18% 10%, rgba(236,72,153,0.10), transparent 26%),
-                    radial-gradient(circle at 82% 14%, rgba(56,189,248,0.08), transparent 24%),
-                    radial-gradient(circle at 50% 86%, color-mix(in srgb, var(--brand-primary) 18%, transparent), transparent 36%),
-                    radial-gradient(circle at 15% 100%, rgba(14,165,233,0.10), transparent 30%),
-                    linear-gradient(180deg, #040714 0%, #030712 48%, #02040a 100%)
+                    radial-gradient(circle at 20% 8%, rgba(255,255,255,0.025), transparent 20%),
+                    radial-gradient(circle at 80% 16%, rgba(255,255,255,0.02), transparent 18%),
+                    linear-gradient(180deg, #050816 0%, #040815 38%, #030712 68%, #02040a 100%)
                   `,
                 }}
               />
 
-              {/* LOWER CENTER GLOW */}
+              {/* very subtle lower atmosphere */}
               <div
-                className="absolute bottom-[-140px] left-1/2 h-[460px] w-[1200px] -translate-x-1/2 opacity-45 blur-[120px]"
+                className="absolute bottom-[-120px] left-1/2 h-[320px] w-[1000px] -translate-x-1/2 opacity-20 blur-[110px]"
                 style={{
                   background:
-                    "radial-gradient(circle, color-mix(in srgb, var(--brand-primary) 38%, transparent), transparent 68%)",
+                    "radial-gradient(circle, color-mix(in srgb, var(--brand-primary) 14%, transparent), transparent 72%)",
                 }}
               />
 
-              {/* DRIFTING LIGHT BLOBS */}
-              <div className="animate-drift-slow absolute left-[8%] top-[18%] h-40 w-40 rounded-full bg-cyan-300/10 blur-[90px]" />
-              <div className="animate-drift-medium absolute right-[10%] top-[26%] h-52 w-52 rounded-full bg-fuchsia-400/10 blur-[110px]" />
-              <div
-                className="animate-drift-slow absolute bottom-[12%] left-[22%] h-56 w-56 rounded-full blur-[120px]"
-                style={{
-                  background: "color-mix(in srgb, var(--brand-primary) 22%, transparent)",
-                }}
-              />
-              <div className="animate-drift-medium absolute right-[18%] bottom-[8%] h-44 w-44 rounded-full bg-sky-300/10 blur-[100px]" />
-
-              {/* WAVE / LIGHT STREAKS */}
-              <div className="absolute inset-x-0 bottom-[10%] h-40 opacity-20">
-                <div className="animate-wave-shift absolute left-[8%] top-10 h-px w-[28%] rotate-[2deg] bg-gradient-to-r from-transparent via-cyan-300/60 to-transparent blur-sm" />
-                <div className="animate-wave-shift-delayed absolute left-[32%] top-16 h-px w-[34%] -rotate-[1deg] bg-gradient-to-r from-transparent via-white/50 to-transparent blur-sm" />
-                <div className="animate-wave-shift absolute left-[52%] top-24 h-px w-[26%] rotate-[1.5deg] bg-gradient-to-r from-transparent via-fuchsia-300/50 to-transparent blur-sm" />
+              {/* wave panels */}
+              <div className="animate-wave-pan-slow absolute inset-x-[-10%] bottom-[8%] h-[220px] opacity-[0.08]">
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background:
+                      "repeating-linear-gradient(175deg, transparent 0px, transparent 22px, rgba(255,255,255,0.12) 23px, transparent 24px, transparent 46px)",
+                    maskImage:
+                      "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.7) 20%, rgba(0,0,0,1) 65%, transparent 100%)",
+                  }}
+                />
               </div>
 
-              {/* GRID TEXTURE */}
-              <div
-                className="absolute inset-0 opacity-[0.045]"
-                style={{
-                  backgroundImage:
-                    "linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)",
-                  backgroundSize: "64px 64px",
-                  maskImage:
-                    "linear-gradient(to bottom, rgba(0,0,0,0.25), rgba(0,0,0,0.7), transparent)",
-                }}
-              />
+              <div className="animate-wave-pan-reverse absolute inset-x-[-15%] bottom-[2%] h-[260px] opacity-[0.06]">
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background:
+                      "repeating-linear-gradient(178deg, transparent 0px, transparent 28px, rgba(255,255,255,0.1) 29px, transparent 30px, transparent 58px)",
+                    maskImage:
+                      "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.85) 28%, rgba(0,0,0,1) 75%, transparent 100%)",
+                  }}
+                />
+              </div>
 
-              {/* SMALL PARTICLES */}
+              {/* drifting streaks */}
+              <div className="absolute inset-0">
+                <div className="animate-streak-drift absolute left-[6%] top-[18%] h-px w-[22%] rotate-[8deg] bg-gradient-to-r from-transparent via-white/40 to-transparent blur-[1px]" />
+                <div className="animate-streak-drift-delayed absolute right-[10%] top-[28%] h-px w-[18%] -rotate-[7deg] bg-gradient-to-r from-transparent via-white/30 to-transparent blur-[1px]" />
+                <div className="animate-streak-drift absolute left-[14%] top-[52%] h-px w-[26%] rotate-[4deg] bg-gradient-to-r from-transparent via-white/25 to-transparent blur-[1px]" />
+                <div className="animate-streak-drift-delayed absolute right-[14%] top-[66%] h-px w-[24%] -rotate-[5deg] bg-gradient-to-r from-transparent via-white/28 to-transparent blur-[1px]" />
+                <div className="animate-streak-drift absolute left-[42%] bottom-[16%] h-px w-[18%] rotate-[2deg] bg-gradient-to-r from-transparent via-white/32 to-transparent blur-[1px]" />
+              </div>
+
+              {/* ripple rings */}
+              <div className="animate-spin-ultra-slow absolute left-[-120px] top-[18%] h-[380px] w-[380px] rounded-full border border-white/[0.045]" />
+              <div className="animate-spin-reverse-ultra-slow absolute left-[-70px] top-[22%] h-[280px] w-[280px] rounded-full border border-white/[0.04]" />
+              <div className="animate-spin-ultra-slow absolute bottom-[10%] right-[-140px] h-[420px] w-[420px] rounded-full border border-white/[0.04]" />
+              <div className="animate-spin-reverse-ultra-slow absolute bottom-[16%] right-[-80px] h-[300px] w-[300px] rounded-full border border-white/[0.035]" />
+
+              {/* small particles */}
               {smallParticles.map((p) => (
                 <span
                   key={`small-${p.id}`}
@@ -213,31 +239,69 @@ export default async function RootLayout({
                     top: `${p.top}%`,
                     opacity: p.opacity,
                     animation: `floatParticle ${p.duration}s ease-in-out ${p.delay}s infinite`,
-                    boxShadow:
-                      p.size > 2
-                        ? "0 0 18px rgba(255,255,255,0.22)"
-                        : "0 0 10px rgba(255,255,255,0.16)",
+                    boxShadow: "0 0 6px rgba(255,255,255,0.08)",
                   }}
                 />
               ))}
 
-              {/* MEDIUM ORBS */}
+              {/* medium particles */}
               {mediumOrbs.map((orb) => (
                 <span
                   key={`orb-${orb.id}`}
-                  className="absolute rounded-full blur-sm"
+                  className="absolute rounded-full"
                   style={{
                     width: `${orb.size}px`,
                     height: `${orb.size}px`,
                     left: `${orb.left}%`,
                     top: `${orb.top}%`,
-                    opacity: 0.12,
-                    background: orb.color,
+                    opacity: 0.16,
+                    background: "rgba(255,255,255,0.75)",
                     animation: `floatOrb ${orb.duration}s ease-in-out ${orb.delay}s infinite`,
-                    boxShadow: "0 0 30px rgba(255,255,255,0.10)",
+                    boxShadow: "0 0 14px rgba(255,255,255,0.08)",
+                    filter: "blur(0.6px)",
                   }}
                 />
               ))}
+
+              {/* fast micro particles */}
+              {microParticles.map((p) => (
+                <span
+                  key={`micro-${p.id}`}
+                  className="absolute rounded-full bg-white"
+                  style={{
+                    width: `${p.size}px`,
+                    height: `${p.size}px`,
+                    left: `${p.left}%`,
+                    top: `${p.top}%`,
+                    opacity: p.opacity,
+                    animation: `floatParticleFast ${p.duration}s linear ${p.delay}s infinite`,
+                  }}
+                />
+              ))}
+
+              {/* grain / film texture */}
+              <div className="animate-grain absolute inset-0 opacity-[0.045] mix-blend-screen">
+                <div
+                  className="absolute inset-[-50%]"
+                  style={{
+                    backgroundImage:
+                      "radial-gradient(rgba(255,255,255,0.18) 0.6px, transparent 0.8px)",
+                    backgroundSize: "18px 18px",
+                  }}
+                />
+              </div>
+
+              {/* grid texture */}
+              <div
+                className="absolute inset-0 opacity-[0.03]"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)",
+                  backgroundSize: "72px 72px",
+                  maskImage:
+                    "linear-gradient(to bottom, rgba(0,0,0,0.25), rgba(0,0,0,0.7), transparent)",
+                }}
+              />
             </div>
 
             {/* HEADER */}
@@ -260,8 +324,8 @@ export default async function RootLayout({
                       aria-hidden="true"
                       style={{
                         background: `
-                          radial-gradient(circle at 30% 25%, rgba(255,255,255,0.25), transparent 45%),
-                          linear-gradient(135deg, color-mix(in oklab, var(--brand-primary) 82%, #1e293b), #020617)
+                          radial-gradient(circle at 30% 25%, rgba(255,255,255,0.18), transparent 45%),
+                          linear-gradient(135deg, color-mix(in oklab, var(--brand-primary) 72%, #1e293b), #020617)
                         `,
                       }}
                     >
@@ -289,10 +353,10 @@ export default async function RootLayout({
               <div className="relative mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
                 <div
                   aria-hidden
-                  className="h-px w-full opacity-70"
+                  className="h-px w-full opacity-60"
                   style={{
                     background:
-                      "linear-gradient(90deg, transparent, color-mix(in srgb, var(--brand-primary) 50%, white), transparent)",
+                      "linear-gradient(90deg, transparent, rgba(255,255,255,0.22), transparent)",
                   }}
                 />
               </div>
