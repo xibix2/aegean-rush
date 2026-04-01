@@ -165,11 +165,11 @@ export default async function RootLayout({
                 }}
               />
 
-              {/* mobile-safe simple color atmosphere */}
+              {/* mobile-safe atmosphere */}
               <div className="absolute inset-x-0 top-0 h-[38vh] bg-gradient-to-b from-cyan-400/[0.04] via-fuchsia-400/[0.02] to-transparent sm:hidden" />
               <div className="absolute inset-x-0 bottom-0 h-[34vh] bg-gradient-to-t from-violet-500/[0.05] via-cyan-400/[0.03] to-transparent sm:hidden" />
 
-              {/* desktop richer layers */}
+              {/* desktop aurora layers */}
               <div
                 className="animate-aurora-pan absolute -left-[12%] top-[8%] hidden h-[320px] w-[620px] rotate-[-10deg] rounded-full opacity-[0.12] blur-[90px] sm:block"
                 style={{
@@ -192,7 +192,7 @@ export default async function RootLayout({
                 }}
               />
 
-              {/* desktop wave bands */}
+              {/* wave bands */}
               <div className="animate-wave-pan-slow absolute inset-x-[-10%] bottom-[6%] hidden h-[240px] opacity-[0.1] md:block">
                 <div
                   className="absolute inset-0"
@@ -217,19 +217,41 @@ export default async function RootLayout({
                 />
               </div>
 
-              {/* streaks */}
+              {/* light streaks */}
               <div className="absolute inset-0 hidden sm:block">
                 <div className="animate-streak-drift absolute left-[4%] top-[16%] h-px w-[24%] rotate-[8deg] bg-gradient-to-r from-transparent via-cyan-300/45 to-transparent blur-[1px]" />
                 <div className="animate-streak-drift-delayed absolute right-[8%] top-[24%] h-px w-[20%] -rotate-[8deg] bg-gradient-to-r from-transparent via-pink-300/40 to-transparent blur-[1px]" />
                 <div className="animate-streak-drift absolute left-[12%] top-[50%] h-px w-[28%] rotate-[5deg] bg-gradient-to-r from-transparent via-violet-300/35 to-transparent blur-[1px]" />
                 <div className="animate-streak-drift-delayed absolute right-[14%] top-[62%] h-px w-[22%] -rotate-[5deg] bg-gradient-to-r from-transparent via-sky-200/40 to-transparent blur-[1px]" />
+                <div className="animate-streak-drift absolute left-[36%] top-[34%] h-px w-[18%] rotate-[2deg] bg-gradient-to-r from-transparent via-cyan-200/35 to-transparent blur-[1px]" />
+                <div className="animate-streak-drift-delayed absolute left-[44%] top-[72%] h-px w-[16%] -rotate-[3deg] bg-gradient-to-r from-transparent via-pink-200/30 to-transparent blur-[1px]" />
               </div>
 
-              {/* desktop ripple rings */}
+              {/* center futuristic rings - desktop */}
+              <div className="hidden sm:block">
+                <div className="animate-spin-ultra-slow absolute left-1/2 top-[12%] h-[220px] w-[220px] -translate-x-1/2 rounded-full border border-cyan-300/[0.09]" />
+                <div className="animate-spin-reverse-ultra-slow absolute left-1/2 top-[15%] h-[150px] w-[150px] -translate-x-1/2 rounded-full border border-violet-300/[0.08]" />
+                <div className="animate-spin-ultra-slow absolute left-1/2 top-[26%] h-[340px] w-[340px] -translate-x-1/2 rounded-full border border-white/[0.05]" />
+                <div className="animate-spin-reverse-ultra-slow absolute left-1/2 top-[30%] h-[240px] w-[240px] -translate-x-1/2 rounded-full border border-cyan-200/[0.07]" />
+                <div className="animate-spin-ultra-slow absolute left-1/2 top-[44%] h-[300px] w-[300px] -translate-x-1/2 rounded-full border border-pink-300/[0.08]" />
+                <div className="animate-spin-reverse-ultra-slow absolute left-1/2 top-[49%] h-[190px] w-[190px] -translate-x-1/2 rounded-full border border-sky-200/[0.08]" />
+                <div className="animate-spin-ultra-slow absolute left-1/2 top-[62%] h-[360px] w-[360px] -translate-x-1/2 rounded-full border border-violet-300/[0.07]" />
+                <div className="animate-spin-reverse-ultra-slow absolute left-1/2 top-[68%] h-[250px] w-[250px] -translate-x-1/2 rounded-full border border-cyan-300/[0.08]" />
+              </div>
+
+              {/* extra side rings */}
               <div className="animate-spin-ultra-slow absolute left-[-120px] top-[18%] hidden h-[420px] w-[420px] rounded-full border border-cyan-300/[0.08] md:block" />
               <div className="animate-spin-reverse-ultra-slow absolute left-[-70px] top-[23%] hidden h-[300px] w-[300px] rounded-full border border-violet-300/[0.07] lg:block" />
               <div className="animate-spin-ultra-slow absolute bottom-[8%] right-[-140px] hidden h-[440px] w-[440px] rounded-full border border-pink-300/[0.08] md:block" />
               <div className="animate-spin-reverse-ultra-slow absolute bottom-[16%] right-[-80px] hidden h-[320px] w-[320px] rounded-full border border-sky-200/[0.07] lg:block" />
+
+              {/* mobile center rings */}
+              <div className="sm:hidden">
+                <div className="animate-spin-ultra-slow absolute left-1/2 top-[18%] h-[160px] w-[160px] -translate-x-1/2 rounded-full border border-cyan-300/[0.08]" />
+                <div className="animate-spin-reverse-ultra-slow absolute left-1/2 top-[22%] h-[108px] w-[108px] -translate-x-1/2 rounded-full border border-violet-300/[0.07]" />
+                <div className="animate-spin-ultra-slow absolute left-1/2 top-[48%] h-[210px] w-[210px] -translate-x-1/2 rounded-full border border-pink-300/[0.07]" />
+                <div className="animate-spin-reverse-ultra-slow absolute left-1/2 top-[54%] h-[138px] w-[138px] -translate-x-1/2 rounded-full border border-sky-200/[0.07]" />
+              </div>
 
               {/* horizon */}
               <div className="absolute inset-x-0 bottom-[18%] h-px opacity-[0.16] bg-gradient-to-r from-transparent via-cyan-200/50 to-transparent sm:hidden" />
