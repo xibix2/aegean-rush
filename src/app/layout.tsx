@@ -11,8 +11,15 @@ import type React from "react";
 
 export const dynamic = "force-dynamic";
 
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
-const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
   title: "Aegean Rush — Book activities in seconds",
@@ -25,7 +32,11 @@ function isValidTenantSlug(slug: string | null) {
   return /^[a-z0-9]+(?:-[a-z0-9]+)*$/i.test(slug);
 }
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const prefs = await readUiPrefsFromCookies();
   const themeAttr = prefs.theme === "auto" ? "auto" : prefs.theme;
 
@@ -54,7 +65,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   let plan: "BASIC" | "PRO" | "ENTERPRISE" | null = null;
 
   if (tenant && hasTenant) {
-    plan = (tenant.subscriptionPlan as any) ?? "BASIC";
+    plan = (tenant.subscriptionPlan as "BASIC" | "PRO" | "ENTERPRISE") ?? "BASIC";
 
     if (plan === "ENTERPRISE") {
       brandPrimary = tenant.primaryHex || defaultAccentPrimary;
@@ -88,7 +99,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       suppressHydrationWarning
     >
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased text-white`}
         style={
           {
             "--brand-primary": brandPrimary,
@@ -97,72 +108,108 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         }
       >
         <I18nProvider lang={prefs.lang as "en" | "el"}>
-          {/* ---- NAVBAR ---- */}
-          <header className="sticky top-0 z-50 backdrop-blur-md bg-[--color-card]/65 border-b border-[--color-border]">
-            <div className="relative">
+          <div className="relative min-h-screen overflow-x-hidden bg-[#030712] text-[--color-text]">
+            {/* GLOBAL BACKGROUND */}
+            <div aria-hidden className="pointer-events-none absolute inset-0">
               <div
-                aria-hidden
-                className="absolute left-1/2 top-0 h-[2px] w-40 -translate-x-1/2 rounded-full anim-accent"
+                className="absolute inset-0"
                 style={{
-                  background:
-                    "linear-gradient(90deg, transparent, var(--brand-primary), var(--brand-primary), transparent)",
-                  animation: "accent-slide 3.4s ease-in-out infinite",
+                  background: `
+                    radial-gradient(circle at 15% 10%, color-mix(in srgb, var(--brand-primary) 22%, transparent), transparent 28%),
+                    radial-gradient(circle at 85% 12%, rgba(56, 189, 248, 0.16), transparent 24%),
+                    radial-gradient(circle at 50% 100%, rgba(236, 72, 153, 0.10), transparent 30%),
+                    linear-gradient(180deg, #050816 0%, #030712 45%, #02040a 100%)
+                  `,
+                }}
+              />
+              <div
+                className="absolute inset-0 opacity-[0.06]"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)",
+                  backgroundSize: "64px 64px",
+                  maskImage: "linear-gradient(to bottom, rgba(0,0,0,0.7), transparent)",
                 }}
               />
             </div>
 
-            <div className="container-page h-16 flex items-center justify-between gap-3">
-              {/* Brand (allow shrink) */}
-              <Link
-                href={tHref("/")}
-                className="group flex min-w-0 items-center gap-2 font-semibold"
-              >
-                {brandLogo ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={brandLogo}
-                    alt={effectiveBrandName}
-                    className="inline-block h-7 w-7 rounded-xl object-contain bg-black/40 shrink-0"
-                  />
-                ) : (
-                  <span
-                    className="inline-flex h-7 w-7 items-center justify-center rounded-xl bg-black/40 ring-1 ring-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.7)] shrink-0"
-                    aria-hidden="true"
-                    style={{
-                      background:
-                        "radial-gradient(circle at 30% 20%, rgba(255,255,255,0.35), transparent 55%), " +
-                        "radial-gradient(circle at 70% 80%, rgba(255,255,255,0.18), transparent 60%), " +
-                        "linear-gradient(135deg, color-mix(in oklab, var(--brand-primary) 80%, #1e293b), #020617)",
-                    }}
-                  >
-                    <span className="text-base leading-none">🌊</span>
-                  </span>
-                )}
+            {/* TOP BAR */}
+            <header className="sticky top-0 z-50">
+              <div className="absolute inset-x-0 top-0 h-px bg-white/10" />
+              <div className="absolute inset-x-0 top-0 h-20 bg-[rgba(3,7,18,0.55)] backdrop-blur-xl" />
 
-                <span className="min-w-0 truncate tracking-tight group-hover:opacity-100 opacity-90 transition">
-                  {effectiveBrandName}
-                </span>
-              </Link>
-
-              {/* ✅ Always show nav; compact on mobile; never shrink away */}
-              <nav className="shrink-0 flex items-center gap-3 sm:gap-6 text-xs sm:text-sm opacity-85">
-                <Link href={tHref("/")} className="hover:opacity-100 transition whitespace-nowrap">
-                  Activities
-                </Link>
+              <div className="relative mx-auto flex h-20 w-full max-w-[1280px] items-center justify-between px-4 sm:px-6 lg:px-8">
                 <Link
-                  href={tHref("/contact")}
-                  className="hover:opacity-100 transition whitespace-nowrap"
+                  href={tHref("/")}
+                  className="group flex min-w-0 items-center gap-3"
                 >
-                  Contact
-                </Link>
-              </nav>
-            </div>
-          </header>
+                  {brandLogo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={brandLogo}
+                      alt={effectiveBrandName}
+                      className="h-10 w-10 shrink-0 rounded-2xl border border-white/10 bg-black/30 object-contain shadow-[0_10px_30px_rgba(0,0,0,0.35)]"
+                    />
+                  ) : (
+                    <span
+                      className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.45)]"
+                      aria-hidden="true"
+                      style={{
+                        background: `
+                          radial-gradient(circle at 30% 25%, rgba(255,255,255,0.25), transparent 45%),
+                          linear-gradient(135deg, color-mix(in oklab, var(--brand-primary) 82%, #1e293b), #020617)
+                        `,
+                      }}
+                    >
+                      <span className="text-base leading-none">🌊</span>
+                    </span>
+                  )}
 
-          {/* ---- PAGE CONTENT ---- */}
-          <main className="container-page py-4 ">
-            {children}
-          </main>
+                  <div className="min-w-0">
+                    <div className="truncate text-[15px] font-semibold tracking-tight text-white/95 transition group-hover:text-white">
+                      {effectiveBrandName}
+                    </div>
+                    <div className="hidden text-xs text-white/45 sm:block">
+                      Premium water experiences
+                    </div>
+                  </div>
+                </Link>
+
+                <nav className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 p-1 shadow-[0_10px_30px_rgba(0,0,0,0.18)] backdrop-blur-md">
+                  <Link
+                    href={tHref("/")}
+                    className="rounded-full px-4 py-2 text-sm font-medium text-white/75 transition hover:bg-white/10 hover:text-white"
+                  >
+                    Activities
+                  </Link>
+                  <Link
+                    href={tHref("/contact")}
+                    className="rounded-full px-4 py-2 text-sm font-medium text-white/75 transition hover:bg-white/10 hover:text-white"
+                  >
+                    Contact
+                  </Link>
+                </nav>
+              </div>
+
+              <div className="relative mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
+                <div
+                  aria-hidden
+                  className="h-px w-full opacity-70"
+                  style={{
+                    background:
+                      "linear-gradient(90deg, transparent, color-mix(in srgb, var(--brand-primary) 58%, white), transparent)",
+                  }}
+                />
+              </div>
+            </header>
+
+            {/* PAGE WRAPPER */}
+            <main className="relative">
+              <div className="mx-auto w-full max-w-[1280px] px-4 pb-10 pt-6 sm:px-6 sm:pb-14 sm:pt-8 lg:px-8 lg:pb-20 lg:pt-10">
+                {children}
+              </div>
+            </main>
+          </div>
         </I18nProvider>
       </body>
     </html>
