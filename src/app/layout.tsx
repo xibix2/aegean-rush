@@ -90,6 +90,24 @@ export default async function RootLayout({
         } as React.CSSProperties)
       : ({} as React.CSSProperties);
 
+  const particles = Array.from({ length: 22 }, (_, i) => {
+    const size = (i % 3) + 1;
+    const left = (i * 37) % 100;
+    const top = (i * 19) % 100;
+    const duration = 8 + (i % 6) * 2;
+    const delay = (i % 5) * 1.3;
+
+    return {
+      id: i,
+      size,
+      left,
+      top,
+      duration,
+      delay,
+      opacity: i % 2 === 0 ? 0.16 : 0.1,
+    };
+  });
+
   return (
     <html
       lang={prefs.lang}
@@ -110,39 +128,63 @@ export default async function RootLayout({
         <I18nProvider lang={prefs.lang as "en" | "el"}>
           <div className="relative min-h-screen overflow-x-hidden bg-[#030712] text-[--color-text]">
             {/* GLOBAL BACKGROUND */}
-            <div aria-hidden className="pointer-events-none absolute inset-0">
+            <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
               <div
                 className="absolute inset-0"
                 style={{
                   background: `
-                    radial-gradient(circle at 15% 10%, color-mix(in srgb, var(--brand-primary) 22%, transparent), transparent 28%),
-                    radial-gradient(circle at 85% 12%, rgba(56, 189, 248, 0.16), transparent 24%),
-                    radial-gradient(circle at 50% 100%, rgba(236, 72, 153, 0.10), transparent 30%),
-                    linear-gradient(180deg, #050816 0%, #030712 45%, #02040a 100%)
+                    radial-gradient(circle at 18% 8%, rgba(236,72,153,0.08), transparent 26%),
+                    radial-gradient(circle at 82% 14%, rgba(56,189,248,0.07), transparent 24%),
+                    radial-gradient(circle at 50% 82%, color-mix(in srgb, var(--brand-primary) 16%, transparent), transparent 34%),
+                    radial-gradient(circle at 15% 100%, rgba(14,165,233,0.08), transparent 28%),
+                    linear-gradient(180deg, #040714 0%, #030712 48%, #02040a 100%)
                   `,
                 }}
               />
+
               <div
-                className="absolute inset-0 opacity-[0.06]"
+                className="absolute bottom-[-140px] left-1/2 h-[420px] w-[1100px] -translate-x-1/2 opacity-40 blur-[120px]"
+                style={{
+                  background:
+                    "radial-gradient(circle, color-mix(in srgb, var(--brand-primary) 34%, transparent), transparent 68%)",
+                }}
+              />
+
+              <div
+                className="absolute inset-0 opacity-[0.05]"
                 style={{
                   backgroundImage:
                     "linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)",
                   backgroundSize: "64px 64px",
-                  maskImage: "linear-gradient(to bottom, rgba(0,0,0,0.7), transparent)",
+                  maskImage:
+                    "linear-gradient(to bottom, rgba(0,0,0,0.35), rgba(0,0,0,0.75), transparent)",
                 }}
               />
+
+              {particles.map((p) => (
+                <span
+                  key={p.id}
+                  className="absolute rounded-full bg-white"
+                  style={{
+                    width: `${p.size}px`,
+                    height: `${p.size}px`,
+                    left: `${p.left}%`,
+                    top: `${p.top}%`,
+                    opacity: p.opacity,
+                    animation: `floatParticle ${p.duration}s ease-in-out ${p.delay}s infinite`,
+                    boxShadow: "0 0 12px rgba(255,255,255,0.18)",
+                  }}
+                />
+              ))}
             </div>
 
-            {/* TOP BAR */}
+            {/* HEADER */}
             <header className="sticky top-0 z-50">
               <div className="absolute inset-x-0 top-0 h-px bg-white/10" />
-              <div className="absolute inset-x-0 top-0 h-20 bg-[rgba(3,7,18,0.55)] backdrop-blur-xl" />
+              <div className="absolute inset-x-0 top-0 h-20 bg-[rgba(3,7,18,0.58)] backdrop-blur-xl" />
 
               <div className="relative mx-auto flex h-20 w-full max-w-[1280px] items-center justify-between px-4 sm:px-6 lg:px-8">
-                <Link
-                  href={tHref("/")}
-                  className="group flex min-w-0 items-center gap-3"
-                >
+                <Link href={tHref("/")} className="group flex min-w-0 items-center gap-3">
                   {brandLogo ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -169,19 +211,10 @@ export default async function RootLayout({
                     <div className="truncate text-[15px] font-semibold tracking-tight text-white/95 transition group-hover:text-white">
                       {effectiveBrandName}
                     </div>
-                    <div className="hidden text-xs text-white/45 sm:block">
-                      Premium water experiences
-                    </div>
                   </div>
                 </Link>
 
                 <nav className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 p-1 shadow-[0_10px_30px_rgba(0,0,0,0.18)] backdrop-blur-md">
-                  <Link
-                    href={tHref("/")}
-                    className="rounded-full px-4 py-2 text-sm font-medium text-white/75 transition hover:bg-white/10 hover:text-white"
-                  >
-                    Activities
-                  </Link>
                   <Link
                     href={tHref("/contact")}
                     className="rounded-full px-4 py-2 text-sm font-medium text-white/75 transition hover:bg-white/10 hover:text-white"
@@ -197,13 +230,13 @@ export default async function RootLayout({
                   className="h-px w-full opacity-70"
                   style={{
                     background:
-                      "linear-gradient(90deg, transparent, color-mix(in srgb, var(--brand-primary) 58%, white), transparent)",
+                      "linear-gradient(90deg, transparent, color-mix(in srgb, var(--brand-primary) 50%, white), transparent)",
                   }}
                 />
               </div>
             </header>
 
-            {/* PAGE WRAPPER */}
+            {/* PAGE CONTENT */}
             <main className="relative">
               <div className="mx-auto w-full max-w-[1280px] px-4 pb-10 pt-6 sm:px-6 sm:pb-14 sm:pt-8 lg:px-8 lg:pb-20 lg:pt-10">
                 {children}
