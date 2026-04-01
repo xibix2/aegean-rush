@@ -129,53 +129,116 @@ export default async function RootLayout({
           <div className="relative min-h-screen overflow-x-hidden bg-[#030712] text-[--color-text]">
             {/* GLOBAL BACKGROUND */}
             <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+              {/* BASE */}
               <div
                 className="absolute inset-0"
                 style={{
                   background: `
-                    radial-gradient(circle at 18% 8%, rgba(236,72,153,0.08), transparent 26%),
-                    radial-gradient(circle at 82% 14%, rgba(56,189,248,0.07), transparent 24%),
-                    radial-gradient(circle at 50% 82%, color-mix(in srgb, var(--brand-primary) 16%, transparent), transparent 34%),
-                    radial-gradient(circle at 15% 100%, rgba(14,165,233,0.08), transparent 28%),
+                    radial-gradient(circle at 18% 10%, rgba(236,72,153,0.10), transparent 26%),
+                    radial-gradient(circle at 82% 14%, rgba(56,189,248,0.08), transparent 24%),
+                    radial-gradient(circle at 50% 86%, color-mix(in srgb, var(--brand-primary) 18%, transparent), transparent 36%),
+                    radial-gradient(circle at 15% 100%, rgba(14,165,233,0.10), transparent 30%),
                     linear-gradient(180deg, #040714 0%, #030712 48%, #02040a 100%)
                   `,
                 }}
               />
 
+              {/* BOTTOM GLOW */}
               <div
-                className="absolute bottom-[-140px] left-1/2 h-[420px] w-[1100px] -translate-x-1/2 opacity-40 blur-[120px]"
+                className="absolute bottom-[-140px] left-1/2 h-[460px] w-[1200px] -translate-x-1/2 opacity-45 blur-[120px]"
                 style={{
                   background:
-                    "radial-gradient(circle, color-mix(in srgb, var(--brand-primary) 34%, transparent), transparent 68%)",
+                    "radial-gradient(circle, color-mix(in srgb, var(--brand-primary) 38%, transparent), transparent 68%)",
                 }}
               />
 
+              {/* MOVING LIGHT BLOBS */}
+              <div className="absolute left-[8%] top-[18%] h-40 w-40 rounded-full bg-cyan-300/10 blur-[90px] animate-drift-slow" />
+              <div className="absolute right-[10%] top-[26%] h-52 w-52 rounded-full bg-fuchsia-400/10 blur-[110px] animate-drift-medium" />
+              <div className="absolute left-[22%] bottom-[12%] h-56 w-56 rounded-full blur-[120px] animate-drift-slow"
+                style={{
+                  background:
+                    "color-mix(in srgb, var(--brand-primary) 22%, transparent)",
+                }}
+              />
+              <div className="absolute right-[18%] bottom-[8%] h-44 w-44 rounded-full bg-sky-300/10 blur-[100px] animate-drift-medium" />
+
+              {/* WAVE / LIGHT STREAKS */}
+              <div className="absolute inset-x-0 bottom-[10%] h-40 opacity-20">
+                <div className="absolute left-[8%] top-10 h-px w-[28%] rotate-[2deg] bg-gradient-to-r from-transparent via-cyan-300/60 to-transparent blur-sm animate-wave-shift" />
+                <div className="absolute left-[32%] top-16 h-px w-[34%] -rotate-[1deg] bg-gradient-to-r from-transparent via-white/50 to-transparent blur-sm animate-wave-shift-delayed" />
+                <div className="absolute left-[52%] top-24 h-px w-[26%] rotate-[1.5deg] bg-gradient-to-r from-transparent via-fuchsia-300/50 to-transparent blur-sm animate-wave-shift" />
+              </div>
+
+              {/* GRID / TEXTURE */}
               <div
-                className="absolute inset-0 opacity-[0.05]"
+                className="absolute inset-0 opacity-[0.045]"
                 style={{
                   backgroundImage:
                     "linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)",
                   backgroundSize: "64px 64px",
                   maskImage:
-                    "linear-gradient(to bottom, rgba(0,0,0,0.35), rgba(0,0,0,0.75), transparent)",
+                    "linear-gradient(to bottom, rgba(0,0,0,0.25), rgba(0,0,0,0.7), transparent)",
                 }}
               />
 
-              {particles.map((p) => (
-                <span
-                  key={p.id}
-                  className="absolute rounded-full bg-white"
-                  style={{
-                    width: `${p.size}px`,
-                    height: `${p.size}px`,
-                    left: `${p.left}%`,
-                    top: `${p.top}%`,
-                    opacity: p.opacity,
-                    animation: `floatParticle ${p.duration}s ease-in-out ${p.delay}s infinite`,
-                    boxShadow: "0 0 12px rgba(255,255,255,0.18)",
-                  }}
-                />
-              ))}
+              {/* MANY SMALL PARTICLES */}
+              {Array.from({ length: 60 }).map((_, i) => {
+                const size = (i % 4) + 1;
+                const left = (i * 17) % 100;
+                const top = (i * 23) % 100;
+                const duration = 10 + (i % 8) * 2;
+                const delay = (i % 7) * 0.9;
+                const opacity = i % 5 === 0 ? 0.28 : i % 2 === 0 ? 0.18 : 0.12;
+
+                return (
+                  <span
+                    key={i}
+                    className="absolute rounded-full bg-white"
+                    style={{
+                      width: `${size}px`,
+                      height: `${size}px`,
+                      left: `${left}%`,
+                      top: `${top}%`,
+                      opacity,
+                      animation: `floatParticle ${duration}s ease-in-out ${delay}s infinite`,
+                      boxShadow:
+                        size > 2
+                          ? "0 0 18px rgba(255,255,255,0.22)"
+                          : "0 0 10px rgba(255,255,255,0.16)",
+                    }}
+                  />
+                );
+              })}
+
+              {/* MEDIUM PARTICLES */}
+              {Array.from({ length: 18 }).map((_, i) => {
+                const size = 6 + (i % 4) * 3;
+                const left = (i * 29) % 100;
+                const top = 12 + ((i * 31) % 76);
+                const duration = 16 + (i % 5) * 3;
+                const delay = (i % 6) * 1.1;
+
+                return (
+                  <span
+                    key={`orb-${i}`}
+                    className="absolute rounded-full blur-sm"
+                    style={{
+                      width: `${size}px`,
+                      height: `${size}px`,
+                      left: `${left}%`,
+                      top: `${top}%`,
+                      opacity: 0.12,
+                      background:
+                        i % 2 === 0
+                          ? "rgba(125,211,252,0.9)"
+                          : "rgba(244,114,182,0.85)",
+                      animation: `floatOrb ${duration}s ease-in-out ${delay}s infinite`,
+                      boxShadow: "0 0 30px rgba(255,255,255,0.10)",
+                    }}
+                  />
+                );
+              })}
             </div>
 
             {/* HEADER */}
