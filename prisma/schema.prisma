@@ -7,6 +7,278 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Club {
+  id                     String             @id @default(cuid())
+  slug                   String             @unique
+  name                   String
+  currency               String
+  primaryHex             String?
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+  subscriptionPlan       SubscriptionPlan   @default(ENTERPRISE)
+  subscriptionStatus     SubscriptionStatus @default(INACTIVE)
+  stripeCustomerId       String?            @unique
+  stripeSubscriptionId   String?            @unique
+  stripePriceId          String?
+  trialEndsAt            DateTime?
+  stripeConnectAccountId String?            @unique
+  emailFromEmail         String?
+  emailFromName          String?
+  logoKey                String?
+  location               String?
+  activities             Activity[]
+  setting                AppSetting?        @relation("ClubSetting")
+  customers              Customer[]         @relation("ClubCustomers")
+  homepageSections       HomepageSection[]
+  staffInvites           StaffInvite[]
+  users                  User[]
+}
+
+model HomepageSection {
+  id                String                 @id @default(cuid())
+  clubId            String
+  type              HomepageSectionType
+  enabled           Boolean                @default(true)
+  sortOrder         Int                    @default(0)
+  title             String?
+  subtitle          String?
+  body              String?
+  primaryCtaLabel   String?
+  primaryCtaHref    String?
+  secondaryCtaLabel String?
+  secondaryCtaHref  String?
+  badgeText         String?
+  dataJson          Json?
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+  faqItems          HomepageFaqItem[]
+  featureItems      HomepageFeatureItem[]
+  galleryImages     HomepageGalleryImage[]
+  club              Club                   @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  @@unique([clubId, type], name: "clubId_type")
+  @@index([clubId, sortOrder])
+}
+
+model HomepageGalleryImage {
+  id        String          @id @default(cuid())
+  sectionId String
+  imageUrl  String
+  altText   String?
+  caption   String?
+  sortOrder Int             @default(0)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  section   HomepageSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  @@index([sectionId, sortOrder])
+}
+
+model HomepageFaqItem {
+  id        String          @id @default(cuid())
+  sectionId String
+  question  String
+  answer    String
+  sortOrder Int             @default(0)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  section   HomepageSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  @@index([sectionId, sortOrder])
+}
+
+model HomepageFeatureItem {
+  id          String          @id @default(cuid())
+  sectionId   String
+  title       String
+  description String?
+  icon        String?
+  sortOrder   Int             @default(0)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  section     HomepageSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  @@index([sectionId, sortOrder])
+}
+
+model User {
+  id          String               @id @default(cuid())
+  email       String
+  password    String
+  role        UserRole             @default(ADMIN)
+  clubId      String?
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  resetTokens PasswordResetToken[]
+  club        Club?                @relation(fields: [clubId], references: [id])
+
+  @@unique([email, clubId])
+  @@index([clubId])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  token     String    @unique
+  userId    String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Customer {
+  id        String    @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  createdAt DateTime  @default(now())
+  clubId    String
+  bookings  Booking[]
+  club      Club      @relation("ClubCustomers", fields: [clubId], references: [id])
+
+  @@unique([clubId, email])
+  @@index([clubId])
+}
+
+model Activity {
+  id                 String                   @id @default(cuid())
+  name               String
+  slug               String
+  description        String?
+  durationMin        Int
+  minParty           Int
+  maxParty           Int
+  basePrice          Int?
+  requiresInstructor Boolean
+  coverImageUrl      String?
+  locationId         String
+  active             Boolean                  @default(true)
+  createdAt          DateTime                 @default(now())
+  sport              String                   @default("tennis")
+  updatedAt          DateTime                 @updatedAt
+  clubId             String
+  ageInfo            String?
+  bringText          String?
+  cancellationText   String?
+  guestsPerUnit      Int?
+  includedText       String?
+  maxUnitsPerBooking Int?
+  meetingPoint       String?
+  mode               ActivityMode             @default(FIXED_SEAT_EVENT)
+  pricingNotes       String?
+  safetyInfo         String?
+  skillLevel         String?
+  slotIntervalMin    Int?
+  club               Club                     @relation(fields: [clubId], references: [id])
+  durationOptions    ActivityDurationOption[]
+  bookings           Booking[]
+  timeSlots          TimeSlot[]
+
+  @@unique([clubId, slug])
+  @@index([clubId])
+}
+
+model ActivityDurationOption {
+  id          String   @id @default(cuid())
+  activityId  String
+  label       String?
+  durationMin Int
+  priceCents  Int
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  activity    Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@index([activityId, sortOrder])
+}
+
+model TimeSlot {
+  id         String     @id @default(cuid())
+  activityId String
+  startAt    DateTime
+  capacity   Int
+  endAt      DateTime?
+  priceCents Int
+  status     SlotStatus @default(open)
+  bookings   Booking[]
+  activity   Activity   @relation(fields: [activityId], references: [id])
+
+  @@unique([activityId, startAt])
+  @@index([activityId, startAt])
+}
+
+model Booking {
+  id                   String        @id @default(cuid())
+  customerId           String
+  activityId           String
+  timeSlotId           String
+  partySize            Int
+  totalPrice           Int
+  status               BookingStatus @default(pending)
+  notes                String?
+  createdAt            DateTime      @default(now())
+  bookingEndAt         DateTime?
+  bookingStartAt       DateTime?
+  durationMinSnapshot  Int?
+  pricingLabelSnapshot String?
+  reservedUnits        Int           @default(1)
+  unitPriceSnapshot    Int?
+  contactEmail         String?
+  contactName          String?
+  contactPhone         String?
+  cancelledAt          DateTime?
+  publicToken          String        @unique @default(cuid())
+  activity             Activity      @relation(fields: [activityId], references: [id])
+  customer             Customer      @relation(fields: [customerId], references: [id])
+  timeSlot             TimeSlot      @relation(fields: [timeSlotId], references: [id])
+  payment              Payment?
+
+  @@index([timeSlotId])
+  @@index([activityId, bookingStartAt, bookingEndAt])
+}
+
+model Payment {
+  id               String          @id @default(cuid())
+  bookingId        String          @unique
+  provider         PaymentProvider
+  providerIntentId String          @unique
+  amount           Int
+  currency         String          @default("EUR")
+  status           PaymentStatus
+  createdAt        DateTime        @default(now())
+  booking          Booking         @relation(fields: [bookingId], references: [id])
+}
+
+model AppSetting {
+  id        String   @id @default(cuid())
+  tz        String
+  lang      String?
+  currency  String?
+  theme     String?
+  accent    String?
+  updatedAt DateTime @updatedAt
+  clubId    String   @unique
+  club      Club     @relation("ClubSetting", fields: [clubId], references: [id])
+}
+
+model StaffInvite {
+  id        String    @id @default(cuid())
+  clubId    String
+  email     String
+  role      UserRole  @default(STAFF)
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  club      Club      @relation(fields: [clubId], references: [id])
+
+  @@unique([clubId, email, usedAt])
+  @@index([clubId])
+}
+
 enum SubscriptionPlan {
   BASIC
   PRO
@@ -38,287 +310,6 @@ enum HomepageSectionType {
   FINAL_CTA
 }
 
-model Club {
-  id         String       @id @default(cuid())
-  slug       String       @unique
-  name       String
-  currency   String
-  location   String?
-
-  primaryHex      String?
-  logoKey         String?
-  emailFromName   String?
-  emailFromEmail  String?
-
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  activities  Activity[]
-  setting     AppSetting?  @relation("ClubSetting")
-  customers   Customer[]   @relation("ClubCustomers")
-  users       User[]
-  staffInvites StaffInvite[]
-
-  homepageSections HomepageSection[]
-
-  subscriptionPlan    SubscriptionPlan   @default(ENTERPRISE)
-  subscriptionStatus  SubscriptionStatus @default(INACTIVE)
-
-  stripeCustomerId      String? @unique
-  stripeSubscriptionId  String? @unique
-  stripePriceId         String?
-  trialEndsAt           DateTime?
-
-  stripeConnectAccountId String? @unique
-}
-
-model HomepageSection {
-  id                 String              @id @default(cuid())
-  clubId             String
-  type               HomepageSectionType
-  enabled            Boolean             @default(true)
-  sortOrder          Int                 @default(0)
-
-  title              String?
-  subtitle           String?
-  body               String?
-
-  primaryCtaLabel    String?
-  primaryCtaHref     String?
-  secondaryCtaLabel  String?
-  secondaryCtaHref   String?
-
-  badgeText          String?
-  dataJson           Json?
-
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
-
-  club               Club                @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  galleryImages      HomepageGalleryImage[]
-  faqItems           HomepageFaqItem[]
-  featureItems       HomepageFeatureItem[]
-
-  @@index([clubId, sortOrder])
-  @@unique([clubId, type], name: "clubId_type")
-}
-
-model HomepageGalleryImage {
-  id          String           @id @default(cuid())
-  sectionId   String
-  imageUrl    String
-  altText     String?
-  caption     String?
-  sortOrder   Int              @default(0)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-
-  section     HomepageSection  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
-
-  @@index([sectionId, sortOrder])
-}
-
-model HomepageFaqItem {
-  id          String           @id @default(cuid())
-  sectionId   String
-  question    String
-  answer      String
-  sortOrder   Int              @default(0)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-
-  section     HomepageSection  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
-
-  @@index([sectionId, sortOrder])
-}
-
-model HomepageFeatureItem {
-  id          String           @id @default(cuid())
-  sectionId   String
-  title       String
-  description String?
-  icon        String?
-  sortOrder   Int              @default(0)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-
-  section     HomepageSection  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
-
-  @@index([sectionId, sortOrder])
-}
-
-model User {
-  id        String   @id @default(cuid())
-  email     String
-  password  String
-  role      UserRole @default(ADMIN)
-  clubId    String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  club      Club?    @relation(fields: [clubId], references: [id])
-
-  resetTokens PasswordResetToken[]
-
-  @@unique([email, clubId])
-  @@index([clubId])
-}
-
-model PasswordResetToken {
-  id        String    @id @default(cuid())
-  token     String    @unique
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    String
-  expiresAt DateTime
-  usedAt    DateTime?
-  createdAt DateTime  @default(now())
-
-  @@index([userId])
-}
-
-model Customer {
-  id        String    @id @default(cuid())
-  clubId    String
-  name      String
-  email     String
-  phone     String?
-  createdAt DateTime  @default(now())
-  bookings  Booking[]
-  club      Club      @relation("ClubCustomers", fields: [clubId], references: [id])
-
-  @@unique([clubId, email])
-  @@index([clubId])
-}
-
-model Activity {
-  id                 String       @id @default(cuid())
-  clubId             String
-  name               String
-  slug               String
-  description        String?
-  durationMin        Int
-  minParty           Int
-  maxParty           Int
-  basePrice          Int?
-  requiresInstructor Boolean
-  locationId         String
-  active             Boolean      @default(true)
-  sport              String       @default("tennis")
-  coverImageUrl      String?
-
-  mode               ActivityMode @default(FIXED_SEAT_EVENT)
-
-  meetingPoint       String?
-  includedText       String?
-  bringText          String?
-  cancellationText   String?
-  ageInfo            String?
-  skillLevel         String?
-  safetyInfo         String?
-  pricingNotes       String?
-
-  guestsPerUnit      Int?
-  maxUnitsPerBooking Int?
-  slotIntervalMin    Int?
-
-  createdAt          DateTime     @default(now())
-  updatedAt          DateTime     @updatedAt
-  club               Club         @relation(fields: [clubId], references: [id])
-  bookings           Booking[]
-  timeSlots          TimeSlot[]
-  durationOptions    ActivityDurationOption[]
-
-  @@unique([clubId, slug])
-  @@index([clubId])
-}
-
-model ActivityDurationOption {
-  id          String   @id @default(cuid())
-  activityId  String
-  label       String?
-  durationMin Int
-  priceCents  Int
-  isActive    Boolean  @default(true)
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  activity    Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
-
-  @@index([activityId, sortOrder])
-}
-
-model TimeSlot {
-  id         String     @id @default(cuid())
-  activityId String
-  startAt    DateTime
-  endAt      DateTime?
-  capacity   Int
-  priceCents Int
-  status     SlotStatus @default(open)
-  bookings   Booking[]
-  activity   Activity   @relation(fields: [activityId], references: [id])
-
-  @@unique([activityId, startAt])
-  @@index([activityId, startAt])
-}
-
-model Booking {
-  id                   String        @id @default(cuid())
-  customerId           String
-  activityId           String
-  timeSlotId           String
-  partySize            Int
-  totalPrice           Int
-  status               BookingStatus @default(pending)
-  notes                String?
-
-  contactName          String?
-  contactEmail         String?
-  contactPhone         String?
-
-  reservedUnits        Int           @default(1)
-  bookingStartAt       DateTime?
-  bookingEndAt         DateTime?
-  durationMinSnapshot  Int?
-  unitPriceSnapshot    Int?
-  pricingLabelSnapshot String?
-
-  publicToken          String        @unique @default(cuid())
-  cancelledAt          DateTime?
-
-  createdAt            DateTime      @default(now())
-  activity             Activity      @relation(fields: [activityId], references: [id])
-  customer             Customer      @relation(fields: [customerId], references: [id])
-  timeSlot             TimeSlot      @relation(fields: [timeSlotId], references: [id])
-  payment              Payment?
-
-  @@index([timeSlotId])
-  @@index([activityId, bookingStartAt, bookingEndAt])
-}
-
-model Payment {
-  id               String          @id @default(cuid())
-  bookingId        String          @unique
-  provider         PaymentProvider
-  providerIntentId String          @unique
-  amount           Int
-  currency         String          @default("EUR")
-  status           PaymentStatus
-  createdAt        DateTime        @default(now())
-  booking          Booking         @relation(fields: [bookingId], references: [id])
-}
-
-model AppSetting {
-  id        String   @id @default(cuid())
-  clubId    String   @unique
-  tz        String
-  lang      String?
-  currency  String?
-  theme     String?
-  accent    String?
-  updatedAt DateTime @updatedAt
-  club      Club     @relation("ClubSetting", fields: [clubId], references: [id])
-}
-
 enum UserRole {
   SUPERADMIN
   ADMIN
@@ -348,20 +339,4 @@ enum PaymentStatus {
   succeeded
   refunded
   failed
-}
-
-model StaffInvite {
-  id        String   @id @default(cuid())
-  clubId    String
-  email     String
-  role      UserRole @default(STAFF)
-  token     String   @unique
-  expiresAt DateTime
-  usedAt    DateTime?
-  createdAt DateTime @default(now())
-
-  club      Club     @relation(fields: [clubId], references: [id])
-
-  @@index([clubId])
-  @@unique([clubId, email, usedAt])
 }
