@@ -294,8 +294,8 @@ async function createSessionAndMaybeRedirect(
     select: { stripeConnectAccountId: true },
   });
 
-  const successUrl = `${baseUrl}${tenantBase}/booking/${booking.id}?status=success`;
-  const cancelUrl = `${baseUrl}${tenantBase}/booking/${booking.id}?status=cancelled`;
+  const successUrl = `${baseUrl}${tenantBase}/booking/${booking.publicToken}?status=success`;
+  const cancelUrl = `${baseUrl}${tenantBase}/booking/${booking.publicToken}?status=cancelled`;
 
   const paymentIntentData: Stripe.Checkout.SessionCreateParams.PaymentIntentData =
     {
