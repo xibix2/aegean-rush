@@ -242,6 +242,7 @@ async function sendConfirmationEmail(
         clubName: senderDisplayName,
         logoUrl,
         brandPrimary,
+        bookingToken: b.publicToken,
       }),
       ...(replyTo ? { reply_to: replyTo } : {}),
       attachments: icsBase64

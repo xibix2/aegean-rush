@@ -8,8 +8,8 @@ export default function BookingConfirmed({
   totalCents,
   clubName,
   logoUrl,
+  bookingToken,
   brandPrimary,
-  manageBookingUrl,
 }: {
   activity: string;
   startISO: string;
@@ -18,8 +18,8 @@ export default function BookingConfirmed({
   totalCents: number;
   clubName: string;
   logoUrl?: string | null;
+  bookingToken?: string;
   brandPrimary?: string | null;
-  manageBookingUrl?: string;
 }) {
   const start = new Date(startISO);
   const end = new Date(endISO);
@@ -86,10 +86,26 @@ export default function BookingConfirmed({
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 10,
+            gap: 12,
             marginBottom: 16,
           }}
         >
+          {logoUrl ? (
+            <img
+              src={logoUrl}
+              alt={clubName}
+              style={{
+                width: 44,
+                height: 44,
+                objectFit: "cover",
+                borderRadius: 12,
+                border: "1px solid rgba(148,163,184,0.35)",
+                backgroundColor: "#111827",
+                flexShrink: 0,
+              }}
+            />
+          ) : null}
+
           <div style={{ flex: 1, minWidth: 0 }}>
             <div
               style={{
@@ -105,6 +121,7 @@ export default function BookingConfirmed({
             >
               Booking confirmed
             </div>
+
             <h2
               style={{
                 margin: 0,
@@ -118,6 +135,7 @@ export default function BookingConfirmed({
             >
               Your activity is confirmed 🎉
             </h2>
+
             <p
               style={{
                 margin: "4px 0 0",
@@ -152,6 +170,7 @@ export default function BookingConfirmed({
             >
               Activity
             </div>
+
             <div
               style={{
                 fontSize: 14,
@@ -183,6 +202,7 @@ export default function BookingConfirmed({
               >
                 When
               </div>
+
               <div
                 style={{
                   fontSize: 13,
@@ -207,6 +227,7 @@ export default function BookingConfirmed({
               >
                 Details
               </div>
+
               <div
                 style={{
                   fontSize: 13,
@@ -216,6 +237,7 @@ export default function BookingConfirmed({
               >
                 Guests: <span style={{ fontWeight: 500 }}>{partySize}</span>
               </div>
+
               <div
                 style={{
                   fontSize: 13,
@@ -249,29 +271,59 @@ export default function BookingConfirmed({
             so there’s enough time for check-in and any pre-activity preparation
             at <span style={{ fontWeight: 500 }}>{clubName}</span>.
           </p>
+
           <p style={{ margin: 0 }}>
             Bring this email with you in case your booking needs to be verified.
             Follow any instructions shared by the operator before arrival.
           </p>
         </div>
 
-        {manageBookingUrl ? (
-          <div style={{ marginTop: 18 }}>
-            <a
-              href={manageBookingUrl}
+        {bookingToken ? (
+          <div
+            style={{
+              marginTop: 18,
+              padding: 14,
+              borderRadius: 12,
+              backgroundColor: "rgba(15, 23, 42, 0.6)",
+              border: "1px solid rgba(148, 163, 184, 0.35)",
+              textAlign: "center",
+            }}
+          >
+            <div
               style={{
-                display: "inline-block",
-                padding: "11px 16px",
-                borderRadius: 12,
-                background: color,
-                color: "#ffffff",
-                textDecoration: "none",
-                fontSize: 13,
-                fontWeight: 600,
+                fontSize: 11,
+                textTransform: "uppercase",
+                letterSpacing: "0.15em",
+                color: "#9ca3af",
+                marginBottom: 6,
               }}
             >
-              Manage booking
-            </a>
+              Your booking token
+            </div>
+
+            <div
+              style={{
+                fontSize: 16,
+                fontWeight: 700,
+                color: "#f9fafb",
+                letterSpacing: "0.05em",
+                wordBreak: "break-all",
+              }}
+            >
+              {bookingToken}
+            </div>
+
+            <p
+              style={{
+                margin: "8px 0 0",
+                fontSize: 12,
+                color: "#9ca3af",
+                lineHeight: 1.5,
+              }}
+            >
+              Keep this token safe. Use it on the website if you need to manage,
+              cancel, or refund your booking.
+            </p>
           </div>
         ) : null}
 
