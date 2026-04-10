@@ -6,7 +6,6 @@ import {
   CalendarDays,
   ShieldCheck,
   CircleDot,
-  Waves,
   MapPin,
   Sparkles,
 } from "lucide-react";
@@ -54,7 +53,7 @@ export function HeroSectionClient({
   const resolvedMicroText = microText || "No calls. No waiting. Book instantly.";
 
   return (
-    <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#050816] px-6 py-16 text-white shadow-[0_30px_120px_-40px_rgba(0,0,0,0.8)] sm:px-10 md:px-14 md:py-24">
+    <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#050816] px-6 py-10 text-white shadow-[0_30px_120px_-40px_rgba(0,0,0,0.8)] sm:px-10 md:px-14 md:py-14">
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -116,7 +115,7 @@ export function HeroSectionClient({
         />
 
         <div
-          className="hero-anim absolute inset-x-0 bottom-0 h-[38%] opacity-70"
+          className="hero-anim absolute inset-x-0 bottom-0 h-[34%] opacity-70"
           style={{
             background:
               "linear-gradient(180deg, transparent 0%, rgba(18,35,62,0.18) 20%, rgba(12,26,49,0.42) 50%, rgba(7,13,24,0.92) 100%)",
@@ -148,26 +147,26 @@ export function HeroSectionClient({
       </div>
 
       <div className="relative z-10 mx-auto max-w-4xl text-center">
-        <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/6 px-4 py-2 text-xs font-medium tracking-[0.18em] text-white/80 uppercase backdrop-blur-xl">
+        <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/6 px-4 py-2 text-[11px] font-medium uppercase tracking-[0.18em] text-white/80 backdrop-blur-xl">
           <Sparkles className="size-3.5 text-pink-300" />
           {resolvedBadgeText}
         </div>
 
-        <h1 className="text-4xl font-semibold leading-[1.02] tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
+        <h1 className="text-3xl font-semibold leading-[1.03] tracking-tight sm:text-4xl md:text-5xl lg:text-6xl">
           <span className="block">{resolvedTitle}</span>
-          <span className="mt-2 block bg-gradient-to-r from-cyan-200 via-white to-pink-300 bg-clip-text text-transparent">
+          <span className="mt-1.5 block bg-gradient-to-r from-cyan-200 via-white to-pink-300 bg-clip-text text-transparent">
             {resolvedHighlightTitle}
           </span>
         </h1>
 
-        <p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-white/72 md:text-lg">
+        <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-white/72 md:text-base">
           {resolvedSubtitle}
         </p>
 
-        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+        <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Link
             href={resolvedPrimaryCtaHref}
-            className="group relative inline-flex h-12 items-center justify-center overflow-hidden rounded-xl border border-pink-300/20 bg-gradient-to-r from-pink-500 to-fuchsia-500 px-6 font-medium text-white shadow-[0_10px_40px_-12px_rgba(236,72,153,0.75)] transition duration-300 hover:scale-[1.03] hover:shadow-[0_18px_60px_-16px_rgba(236,72,153,0.85)]"
+            className="group relative inline-flex h-11 items-center justify-center overflow-hidden rounded-xl border border-pink-300/20 bg-gradient-to-r from-pink-500 to-fuchsia-500 px-6 font-medium text-white shadow-[0_10px_40px_-12px_rgba(236,72,153,0.75)] transition duration-300 hover:scale-[1.03] hover:shadow-[0_18px_60px_-16px_rgba(236,72,153,0.85)]"
           >
             <span
               className="absolute inset-0 opacity-40"
@@ -183,27 +182,24 @@ export function HeroSectionClient({
 
           <a
             href={resolvedSecondaryCtaHref}
-            className="inline-flex h-12 items-center justify-center rounded-xl border border-white/12 bg-white/6 px-6 font-medium text-white/88 backdrop-blur-xl transition duration-300 hover:scale-[1.02] hover:bg-white/10"
+            className="inline-flex h-11 items-center justify-center rounded-xl border border-white/12 bg-white/6 px-6 font-medium text-white/88 backdrop-blur-xl transition duration-300 hover:scale-[1.02] hover:bg-white/10"
           >
             <MapPin className="mr-2 size-4" />
             {resolvedSecondaryCtaLabel}
           </a>
         </div>
 
-        <p className="mt-3 text-sm text-white/50">{resolvedMicroText}</p>
+        <p className="mt-2 text-xs text-white/50">{resolvedMicroText}</p>
 
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-4 py-2 text-sm text-white/80 backdrop-blur-xl">
-            <CalendarDays className="size-4 text-cyan-300" />
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-3.5 py-1.5 text-xs text-white/80 backdrop-blur-xl">
+            <CalendarDays className="size-3.5 text-cyan-300" />
             {t("home.trust.realTime")}
           </div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-4 py-2 text-sm text-white/80 backdrop-blur-xl">
-            <ShieldCheck className="size-4 text-pink-300" />
+
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-3.5 py-1.5 text-xs text-white/80 backdrop-blur-xl">
+            <ShieldCheck className="size-3.5 text-pink-300" />
             {t("home.trust.secureCheckout")}
-          </div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-4 py-2 text-sm text-white/80 backdrop-blur-xl">
-            <Waves className="size-4 text-cyan-300" />
-            Instant confirmation
           </div>
         </div>
       </div>
