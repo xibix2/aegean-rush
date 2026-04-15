@@ -1,5 +1,4 @@
 // src/app/[club]/admin/activities/[id]/page.tsx
-// src/app/[club]/admin/activities/[id]/page.tsx
 import prisma from "@/lib/prisma";
 import { revalidatePath, unstable_noStore as noStore } from "next/cache";
 import { writeFile, mkdir } from "node:fs/promises";
@@ -17,9 +16,12 @@ export const dynamic = "force-dynamic";
 /* ============ shared helpers ============ */
 async function saveImageFile(file: File | null): Promise<string | null> {
   if (!file || file.size === 0) return null;
+
   const isDev = process.env.NODE_ENV !== "production";
   const ext = path.extname(file.name || "upload.jpg") || ".jpg";
-  const filename = `${Date.now()}_${Math.random().toString(36).slice(2)}${ext}`;
+  const filename = `${Date.now()}_${Math.random()
+    .toString(36)
+    .slice(2)}${ext}`;
   const buf = Buffer.from(await file.arrayBuffer());
 
   if (isDev) {
@@ -117,7 +119,7 @@ async function updateActivityAction(
 
   const existing = await prisma.activity.findFirst({
     where: { id, clubId: tenant.id },
-    select: { id: true },
+    select: { id: true, coverImageUrl: true },
   });
 
   if (!existing) {
@@ -148,15 +150,22 @@ async function updateActivityAction(
   const pricingNotes = parseOptionalString(formData.get("pricingNotes"));
 
   const guestsPerUnit = parseOptionalInt(formData.get("guestsPerUnit"));
-  const maxUnitsPerBooking = parseOptionalInt(formData.get("maxUnitsPerBooking"));
+  const maxUnitsPerBooking = parseOptionalInt(
+    formData.get("maxUnitsPerBooking")
+  );
   const slotIntervalMin = parseOptionalInt(formData.get("slotIntervalMin"));
 
   const parsedDurationOptions = parseDurationOptions(formData);
 
-  let cover: string | undefined | null = undefined;
-  const uploaded = (formData.get("coverFile") as File) || null;
-  if (uploaded && uploaded.size > 0) {
-    cover = await saveImageFile(uploaded);
+  let newCoverUrl: string | undefined = undefined;
+  const uploaded = formData.get("coverFile");
+
+  if (uploaded instanceof File && uploaded.size > 0) {
+    const saved = await saveImageFile(uploaded);
+
+    if (saved) {
+      newCoverUrl = saved;
+    }
   }
 
   await prisma.$transaction(async (tx) => {
@@ -183,7 +192,9 @@ async function updateActivityAction(
         pricingNotes,
 
         guestsPerUnit:
-          mode === "HYBRID_UNIT_BOOKING" ? Math.max(1, guestsPerUnit ?? 1) : guestsPerUnit,
+          mode === "HYBRID_UNIT_BOOKING"
+            ? Math.max(1, guestsPerUnit ?? 1)
+            : guestsPerUnit,
         maxUnitsPerBooking:
           mode === "FIXED_SEAT_EVENT" ? null : maxUnitsPerBooking,
         slotIntervalMin:
@@ -191,7 +202,7 @@ async function updateActivityAction(
             ? slotIntervalMin
             : slotIntervalMin ?? 30,
 
-        ...(cover !== undefined ? { coverImageUrl: cover } : {}),
+        ...(newCoverUrl ? { coverImageUrl: newCoverUrl } : {}),
       },
     });
 
