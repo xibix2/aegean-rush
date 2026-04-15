@@ -1,7 +1,7 @@
 // src/app/[club]/admin/activities/[id]/page.tsx
 import prisma from "@/lib/prisma";
 import { revalidatePath, unstable_noStore as noStore } from "next/cache";
-import { writeFile, mkdir } from "node:fs/promises";
+import { put } from "@vercel/blob";
 import path from "node:path";
 import { ActivityDetailHeaderClient } from "@/components/admin/ActivityDetailHeaderClient";
 import { ActivityFormClient } from "@/components/admin/ActivityFormClient";
@@ -12,26 +12,23 @@ import { ActivityMode } from "@prisma/client";
 
 export const revalidate = 0;
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 /* ============ shared helpers ============ */
 async function saveImageFile(file: File | null): Promise<string | null> {
   if (!file || file.size === 0) return null;
+  if (!file.type?.startsWith("image/")) return null;
 
-  const isDev = process.env.NODE_ENV !== "production";
   const ext = path.extname(file.name || "upload.jpg") || ".jpg";
-  const filename = `${Date.now()}_${Math.random()
+  const filename = `activity_${Date.now()}_${Math.random()
     .toString(36)
     .slice(2)}${ext}`;
-  const buf = Buffer.from(await file.arrayBuffer());
 
-  if (isDev) {
-    const uploadsDir = path.join(process.cwd(), "public", "uploads");
-    await mkdir(uploadsDir, { recursive: true });
-    await writeFile(path.join(uploadsDir, filename), buf);
-    return `/uploads/${filename}`;
-  }
+  const blob = await put(filename, file, {
+    access: "public",
+  });
 
-  return null;
+  return blob.url;
 }
 
 function parseOptionalInt(value: FormDataEntryValue | null): number | null {
@@ -119,7 +116,7 @@ async function updateActivityAction(
 
   const existing = await prisma.activity.findFirst({
     where: { id, clubId: tenant.id },
-    select: { id: true, coverImageUrl: true },
+    select: { id: true },
   });
 
   if (!existing) {
@@ -150,21 +147,18 @@ async function updateActivityAction(
   const pricingNotes = parseOptionalString(formData.get("pricingNotes"));
 
   const guestsPerUnit = parseOptionalInt(formData.get("guestsPerUnit"));
-  const maxUnitsPerBooking = parseOptionalInt(
-    formData.get("maxUnitsPerBooking")
-  );
+  const maxUnitsPerBooking = parseOptionalInt(formData.get("maxUnitsPerBooking"));
   const slotIntervalMin = parseOptionalInt(formData.get("slotIntervalMin"));
 
   const parsedDurationOptions = parseDurationOptions(formData);
 
-  let newCoverUrl: string | undefined = undefined;
+  let coverImageUrl: string | undefined;
   const uploaded = formData.get("coverFile");
 
   if (uploaded instanceof File && uploaded.size > 0) {
     const saved = await saveImageFile(uploaded);
-
     if (saved) {
-      newCoverUrl = saved;
+      coverImageUrl = saved;
     }
   }
 
@@ -202,7 +196,7 @@ async function updateActivityAction(
             ? slotIntervalMin
             : slotIntervalMin ?? 30,
 
-        ...(newCoverUrl ? { coverImageUrl: newCoverUrl } : {}),
+        ...(coverImageUrl ? { coverImageUrl } : {}),
       },
     });
 
