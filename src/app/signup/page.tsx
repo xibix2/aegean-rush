@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import Link from "next/link";
+import { ensureHomepageDefaultsForClub } from "@/lib/homepageDefaults";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;

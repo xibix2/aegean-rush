@@ -62,7 +62,9 @@ export function ActivityFormClient({
   const t = useT();
 
   const [mode, setMode] = React.useState<ActivityMode>(activity.mode);
-  const [durationOptions, setDurationOptions] = React.useState<DurationOptionShape[]>(
+  const [durationOptions, setDurationOptions] = React.useState<
+    DurationOptionShape[]
+  >(
     activity.durationOptions?.length
       ? activity.durationOptions
       : activity.mode === "FIXED_SEAT_EVENT"
@@ -75,7 +77,7 @@ export function ActivityFormClient({
             isActive: true,
             sortOrder: 0,
           },
-        ],
+        ]
   );
   const [formKey, setFormKey] = React.useState(activity.id);
 
@@ -95,7 +97,7 @@ export function ActivityFormClient({
               isActive: true,
               sortOrder: 0,
             },
-          ],
+          ]
     );
   }, [activity]);
 
@@ -114,7 +116,7 @@ export function ActivityFormClient({
 
   const updateDurationOption = (
     index: number,
-    patch: Partial<DurationOptionShape>,
+    patch: Partial<DurationOptionShape>
   ) => {
     setDurationOptions((prev) =>
       prev.map((item, i) =>
@@ -123,8 +125,8 @@ export function ActivityFormClient({
               ...item,
               ...patch,
             }
-          : item,
-      ),
+          : item
+      )
     );
   };
 
@@ -135,7 +137,7 @@ export function ActivityFormClient({
         .map((item, i) => ({
           ...item,
           sortOrder: i,
-        })),
+        }))
     );
   };
 
@@ -147,7 +149,7 @@ export function ActivityFormClient({
       priceEuro: Number(opt.priceEuro) || 0,
       isActive: opt.isActive ?? true,
       sortOrder: typeof opt.sortOrder === "number" ? opt.sortOrder : index,
-    })),
+    }))
   );
 
   const isFixed = mode === "FIXED_SEAT_EVENT";
@@ -158,9 +160,14 @@ export function ActivityFormClient({
     <form
       key={formKey}
       action={updateAction}
+      encType="multipart/form-data"
       className="relative overflow-hidden rounded-2xl u-border u-surface backdrop-blur-md p-6 sm:p-8 space-y-6 glow-soft"
     >
-      <input type="hidden" name="durationOptionsJson" value={durationOptionsJson} />
+      <input
+        type="hidden"
+        name="durationOptionsJson"
+        value={durationOptionsJson}
+      />
 
       <div className="grid gap-6 sm:grid-cols-2">
         <div className="grid gap-4">
@@ -179,7 +186,9 @@ export function ActivityFormClient({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm opacity-80">{t("admin.activities.form.name")}</label>
+            <label className="text-sm opacity-80">
+              {t("admin.activities.form.name")}
+            </label>
             <input
               name="name"
               defaultValue={activity.name}
@@ -203,7 +212,9 @@ export function ActivityFormClient({
 
             <div className="flex flex-col gap-1.5">
               <label className="text-sm opacity-80">
-                {isFixed ? t("admin.activities.form.capacity") : "Maximum party"}
+                {isFixed
+                  ? t("admin.activities.form.capacity")
+                  : "Maximum party"}
               </label>
               <input
                 name="maxParty"
@@ -218,7 +229,9 @@ export function ActivityFormClient({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm opacity-80">{t("admin.activities.form.duration")}</label>
+              <label className="text-sm opacity-80">
+                {t("admin.activities.form.duration")}
+              </label>
               <input
                 name="durationMin"
                 type="number"
@@ -230,7 +243,9 @@ export function ActivityFormClient({
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm opacity-80">{t("admin.activities.form.price")}</label>
+              <label className="text-sm opacity-80">
+                {t("admin.activities.form.price")}
+              </label>
               <input
                 name="basePriceEuro"
                 type="number"
@@ -244,7 +259,9 @@ export function ActivityFormClient({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm opacity-80">{t("admin.activities.form.location")}</label>
+            <label className="text-sm opacity-80">
+              {t("admin.activities.form.location")}
+            </label>
             <input
               name="locationId"
               defaultValue={activity.locationId}
@@ -264,13 +281,17 @@ export function ActivityFormClient({
         </div>
 
         <div className="flex flex-col gap-3">
-          <label className="text-sm opacity-80">{t("admin.activities.form.cover")}</label>
+          <label className="text-sm opacity-80">
+            {t("admin.activities.form.cover")}
+          </label>
           <CoverPicker name="coverFile" size={280} />
         </div>
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm opacity-80">{t("admin.activities.form.description")}</label>
+        <label className="text-sm opacity-80">
+          {t("admin.activities.form.description")}
+        </label>
         <textarea
           name="description"
           defaultValue={activity.description}
@@ -286,7 +307,9 @@ export function ActivityFormClient({
           {isFixed && (
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm opacity-80">Slot interval (minutes)</label>
+                <label className="text-sm opacity-80">
+                  Slot interval (minutes)
+                </label>
                 <input
                   name="slotIntervalMin"
                   type="number"
@@ -302,7 +325,9 @@ export function ActivityFormClient({
           {(isRental || isHybrid) && (
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm opacity-80">Max units per booking</label>
+                <label className="text-sm opacity-80">
+                  Max units per booking
+                </label>
                 <input
                   name="maxUnitsPerBooking"
                   type="number"
@@ -314,7 +339,9 @@ export function ActivityFormClient({
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm opacity-80">Window interval hint (minutes)</label>
+                <label className="text-sm opacity-80">
+                  Window interval hint (minutes)
+                </label>
                 <input
                   name="slotIntervalMin"
                   type="number"
@@ -357,7 +384,8 @@ export function ActivityFormClient({
 
             {durationOptions.length === 0 ? (
               <div className="text-sm opacity-65">
-                No duration options yet. Add at least one option for rentals or hybrid activities.
+                No duration options yet. Add at least one option for rentals or
+                hybrid activities.
               </div>
             ) : (
               <div className="grid gap-3">
