@@ -68,6 +68,7 @@ async function generate(tenantSlug: string, formData: FormData) {
       durationMin: true,
       basePrice: true,
       maxParty: true,
+      slotIntervalMin: true,
       maxUnitsPerBooking: true,
       guestsPerUnit: true,
       durationOptions: {
@@ -103,8 +104,20 @@ async function generate(tenantSlug: string, formData: FormData) {
   const toCreate: NewSlot[] = [];
 
   if (activity.mode === "FIXED_SEAT_EVENT") {
-    const times = parseTimeList(formData.get("times"));
-    if (!times.length) throw new Error("At least one departure time is required.");
+    const windowStartTime = String(formData.get("windowStartTime") || "").trim();
+    const windowEndTime = String(formData.get("windowEndTime") || "").trim();
+    const intervalMin = parsePositiveInt(
+      formData.get("intervalMin"),
+      activity.slotIntervalMin ?? 10
+    );
+
+    if (!windowStartTime || !windowEndTime) {
+      throw new Error("Available from/to times are required.");
+    }
+
+    if (intervalMin <= 0) {
+      throw new Error("Interval must be greater than 0.");
+    }
 
     const durationMin = parsePositiveInt(
       formData.get("durationMin"),
@@ -121,20 +134,36 @@ async function generate(tenantSlug: string, formData: FormData) {
       Math.round(Number(formData.get("priceEuro") || 0) * 100)
     );
 
-    for (let cursor = new Date(start); cursor <= addDays(end, 1); cursor = addDays(cursor, 1)) {
+    for (
+      let cursor = new Date(start);
+      cursor <= addDays(end, 1);
+      cursor = addDays(cursor, 1)
+    ) {
       const ymd = toLocalYMD(cursor);
       const dow = String(weekdayInTz(ymd, tz)) as DayKey;
 
       if (!days.includes(dow)) continue;
 
-      for (const t of times) {
-        const startAt = wallToUTC(ymd, t, tz);
-        const endAt = new Date(startAt.getTime() + durationMin * 60 * 1000);
+      const dayWindowStart = wallToUTC(ymd, windowStartTime, tz);
+      const dayWindowEnd = wallToUTC(ymd, windowEndTime, tz);
+
+      if (dayWindowEnd <= dayWindowStart) {
+        throw new Error("Available-to time must be later than available-from time.");
+      }
+
+      for (
+        let slotStart = new Date(dayWindowStart);
+        slotStart < dayWindowEnd;
+        slotStart = new Date(slotStart.getTime() + intervalMin * 60 * 1000)
+      ) {
+        const slotEnd = new Date(slotStart.getTime() + durationMin * 60 * 1000);
+
+        if (slotEnd > dayWindowEnd) break;
 
         toCreate.push({
           activityId,
-          startAt,
-          endAt,
+          startAt: slotStart,
+          endAt: slotEnd,
           capacity,
           priceCents: priceCents > 0 ? priceCents : activity.basePrice ?? 0,
           status: "open",
@@ -346,9 +375,9 @@ export default async function GenerateSlotsPage({
   const defaults = {
     from: fmt(today),
     to: fmt(nextWeek),
-    departureTime: "09:00",
     availableFromTime: "09:00",
-    availableToTime: "21:00",
+    availableToTime: "18:00",
+    intervalMin: 10,
   };
 
   return (

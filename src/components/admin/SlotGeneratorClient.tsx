@@ -53,9 +53,9 @@ type Props = {
   defaults: {
     from: string;
     to: string;
-    departureTime: string;
     availableFromTime: string;
     availableToTime: string;
+    intervalMin?: number;
   };
   backHref: string;
   action: (formData: FormData) => Promise<void>;
@@ -99,13 +99,14 @@ export default function SlotGeneratorClient({
   const [durationMin, setDurationMin] = useState<number>(60);
   const [capacity, setCapacity] = useState<number>(4);
   const [priceEuro, setPriceEuro] = useState<number>(0);
+  const [intervalMin, setIntervalMin] = useState<number>(defaults.intervalMin ?? 10);
 
   const isFixed = selectedActivity?.mode === "FIXED_SEAT_EVENT";
   const isRental = selectedActivity?.mode === "DYNAMIC_RENTAL";
   const isHybrid = selectedActivity?.mode === "HYBRID_UNIT_BOOKING";
 
   const helperText = isFixed
-    ? "Generate scheduled departures where guests reserve seats."
+    ? "Generate repeated fixed-event departures inside a daily time range using the chosen interval."
     : isRental
     ? "Generate daily rental availability windows. Guests will later choose a start time and duration inside that window."
     : isHybrid
@@ -145,12 +146,8 @@ export default function SlotGeneratorClient({
     [pathname, router, searchParams, selectedDate, selectedActivityId, statusFilter]
   );
 
-  const handleActivityChange = useCallback(
-    (value: string) => {
-      setSelectedActivityId(value);
-      pushFiltersToUrl({ activityId: value });
-
-      const act = activities.find((a) => a.id === value) ?? null;
+  const syncActivityDefaults = useCallback(
+    (act: Activity | null) => {
       if (!act) return;
 
       const firstOption = act.durationOptions?.[0] ?? null;
@@ -159,6 +156,7 @@ export default function SlotGeneratorClient({
         setDurationMin(act.durationMin ?? 60);
         setCapacity(act.maxParty ?? 4);
         setPriceEuro(act.basePrice != null ? act.basePrice / 100 : 0);
+        setIntervalMin(act.slotIntervalMin ?? defaults.intervalMin ?? 10);
         return;
       }
 
@@ -171,13 +169,40 @@ export default function SlotGeneratorClient({
           ? act.basePrice / 100
           : 0
       );
+      setIntervalMin(act.slotIntervalMin ?? defaults.intervalMin ?? 10);
     },
-    [activities, pushFiltersToUrl]
+    [defaults.intervalMin]
+  );
+
+  const handleActivityChange = useCallback(
+    (value: string) => {
+      setSelectedActivityId(value);
+      pushFiltersToUrl({ activityId: value });
+
+      const act = activities.find((a) => a.id === value) ?? null;
+      syncActivityDefaults(act);
+    },
+    [activities, pushFiltersToUrl, syncActivityDefaults]
   );
 
   const handleCapacityChange = (val: string) => {
     const n = Number(val);
     setCapacity(Number.isFinite(n) && n > 0 ? n : 1);
+  };
+
+  const handleIntervalChange = (val: string) => {
+    const n = Number(val);
+    setIntervalMin(Number.isFinite(n) && n > 0 ? n : 10);
+  };
+
+  const handleDurationChange = (val: string) => {
+    const n = Number(val);
+    setDurationMin(Number.isFinite(n) && n > 0 ? n : 10);
+  };
+
+  const handlePriceChange = (val: string) => {
+    const n = Number(val);
+    setPriceEuro(Number.isFinite(n) && n >= 0 ? n : 0);
   };
 
   const handleStatusChange = (value: "all" | "open" | "closed") => {
@@ -191,27 +216,8 @@ export default function SlotGeneratorClient({
 
   useEffect(() => {
     const act = activities.find((a) => a.id === selectedActivityId) ?? null;
-    if (!act) return;
-
-    const firstOption = act.durationOptions?.[0] ?? null;
-
-    if (act.mode === "FIXED_SEAT_EVENT") {
-      setDurationMin(act.durationMin ?? 60);
-      setCapacity(act.maxParty ?? 4);
-      setPriceEuro(act.basePrice != null ? act.basePrice / 100 : 0);
-      return;
-    }
-
-    setCapacity(act.maxUnitsPerBooking ?? 1);
-    setDurationMin(firstOption?.durationMin ?? act.durationMin ?? 60);
-    setPriceEuro(
-      firstOption?.priceCents != null
-        ? firstOption.priceCents / 100
-        : act.basePrice != null
-        ? act.basePrice / 100
-        : 0
-    );
-  }, [activities, selectedActivityId]);
+    syncActivityDefaults(act);
+  }, [activities, selectedActivityId, syncActivityDefaults]);
 
   const filteredSlots = useMemo(() => {
     return slots.filter((slot) => {
@@ -222,7 +228,10 @@ export default function SlotGeneratorClient({
   }, [slots, statusFilter, selectedActivityId]);
 
   const groupedSlots = useMemo(() => {
-    const map = new Map<string, { activityName: string; activityMode: ActivityMode; rows: SlotRow[] }>();
+    const map = new Map<
+      string,
+      { activityName: string; activityMode: ActivityMode; rows: SlotRow[] }
+    >();
 
     for (const slot of filteredSlots) {
       if (!map.has(slot.activityId)) {
@@ -367,7 +376,10 @@ export default function SlotGeneratorClient({
         ) : (
           <div className="grid gap-4">
             {groupedSlots.map((group) => (
-              <div key={group.activityId} className="rounded-2xl u-border u-surface overflow-hidden">
+              <div
+                key={group.activityId}
+                className="rounded-2xl u-border u-surface overflow-hidden"
+              >
                 <div className="border-b border-white/10 px-4 py-3 flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
                     <div className="font-medium">{group.activityName}</div>
@@ -507,48 +519,33 @@ export default function SlotGeneratorClient({
               </select>
             </label>
 
-            {isFixed ? (
+            <div className="grid grid-cols-2 gap-3">
               <label className="text-sm">
-                Departure time
+                Available from
                 <input
-                  name="times"
+                  name="windowStartTime"
                   type="time"
                   step={60}
-                  defaultValue={defaults.departureTime}
+                  defaultValue={defaults.availableFromTime}
                   lang="en-GB"
                   inputMode="none"
                   className="mt-1 w-full rounded-lg u-border u-surface px-3 py-2 outline-none focus:ring-2 focus:ring-[var(--accent-500)]/40"
                 />
               </label>
-            ) : (
-              <div className="grid grid-cols-2 gap-3">
-                <label className="text-sm">
-                  Available from
-                  <input
-                    name="windowStartTime"
-                    type="time"
-                    step={60}
-                    defaultValue={defaults.availableFromTime}
-                    lang="en-GB"
-                    inputMode="none"
-                    className="mt-1 w-full rounded-lg u-border u-surface px-3 py-2 outline-none focus:ring-2 focus:ring-[var(--accent-500)]/40"
-                  />
-                </label>
 
-                <label className="text-sm">
-                  Available to
-                  <input
-                    name="windowEndTime"
-                    type="time"
-                    step={60}
-                    defaultValue={defaults.availableToTime}
-                    lang="en-GB"
-                    inputMode="none"
-                    className="mt-1 w-full rounded-lg u-border u-surface px-3 py-2 outline-none focus:ring-2 focus:ring-[var(--accent-500)]/40"
-                  />
-                </label>
-              </div>
-            )}
+              <label className="text-sm">
+                Available to
+                <input
+                  name="windowEndTime"
+                  type="time"
+                  step={60}
+                  defaultValue={defaults.availableToTime}
+                  lang="en-GB"
+                  inputMode="none"
+                  className="mt-1 w-full rounded-lg u-border u-surface px-3 py-2 outline-none focus:ring-2 focus:ring-[var(--accent-500)]/40"
+                />
+              </label>
+            </div>
 
             <label className="text-sm">
               {t("slots.generator.from")}
@@ -636,6 +633,79 @@ export default function SlotGeneratorClient({
                 )}
               </div>
 
+              {isFixed ? (
+                <div className="grid md:grid-cols-4 gap-3">
+                  <label className="text-sm">
+                    Duration (min)
+                    <input
+                      type="number"
+                      name="durationMin"
+                      min={1}
+                      value={durationMin}
+                      onChange={(e) => handleDurationChange(e.target.value)}
+                      className="mt-1 w-full rounded-lg u-border u-surface px-3 py-2 outline-none focus:ring-2 focus:ring-[var(--accent-500)]/40"
+                    />
+                  </label>
+
+                  <label className="text-sm">
+                    Capacity
+                    <input
+                      type="number"
+                      name="capacity"
+                      min={1}
+                      value={capacity}
+                      onChange={(e) => handleCapacityChange(e.target.value)}
+                      className="mt-1 w-full rounded-lg u-border u-surface px-3 py-2 outline-none focus:ring-2 focus:ring-[var(--accent-500)]/40"
+                    />
+                  </label>
+
+                  <label className="text-sm">
+                    Price (€)
+                    <input
+                      type="number"
+                      name="priceEuro"
+                      min={0}
+                      step="0.01"
+                      value={priceEuro}
+                      onChange={(e) => handlePriceChange(e.target.value)}
+                      className="mt-1 w-full rounded-lg u-border u-surface px-3 py-2 outline-none focus:ring-2 focus:ring-[var(--accent-500)]/40"
+                    />
+                  </label>
+
+                  <label className="text-sm">
+                    Interval (min)
+                    <input
+                      type="number"
+                      name="intervalMin"
+                      min={1}
+                      step={1}
+                      value={intervalMin}
+                      onChange={(e) => handleIntervalChange(e.target.value)}
+                      className="mt-1 w-full rounded-lg u-border u-surface px-3 py-2 outline-none focus:ring-2 focus:ring-[var(--accent-500)]/40"
+                    />
+                  </label>
+                </div>
+              ) : (
+                <div className="grid md:grid-cols-2 gap-3">
+                  <label className="text-sm">
+                    Units available
+                    <input
+                      type="number"
+                      name="capacity"
+                      min={1}
+                      value={capacity}
+                      onChange={(e) => handleCapacityChange(e.target.value)}
+                      className="mt-1 w-full rounded-lg u-border u-surface px-3 py-2 outline-none focus:ring-2 focus:ring-[var(--accent-500)]/40"
+                    />
+                  </label>
+
+                  <div className="rounded-xl u-border u-surface px-4 py-3 text-sm opacity-80 flex items-center">
+                    Daily availability windows use the activity’s configured
+                    duration options and pricing during booking.
+                  </div>
+                </div>
+              )}
+
               {(isRental || isHybrid) &&
                 selectedActivity.durationOptions.length > 0 && (
                   <div className="space-y-2">
@@ -671,27 +741,12 @@ export default function SlotGeneratorClient({
 
           {isFixed ? (
             <div className="rounded-xl u-border u-surface px-4 py-3 text-sm opacity-80">
-              This generator will create scheduled departures using the activity’s
-              default duration, seat price, and guest capacity.
+              This generator will create repeating fixed-event departures inside the
+              selected time range, using the chosen duration, price, capacity, and interval.
             </div>
           ) : (
-            <div className="grid md:grid-cols-2 gap-3">
-              <label className="text-sm">
-                Units available
-                <input
-                  type="number"
-                  name="capacity"
-                  min={1}
-                  value={capacity}
-                  onChange={(e) => handleCapacityChange(e.target.value)}
-                  className="mt-1 w-full rounded-lg u-border u-surface px-3 py-2 outline-none focus:ring-2 focus:ring-[var(--accent-500)]/40"
-                />
-              </label>
-
-              <div className="rounded-xl u-border u-surface px-4 py-3 text-sm opacity-80 flex items-center">
-                Daily availability windows use the activity’s configured
-                duration options and pricing during booking.
-              </div>
+            <div className="rounded-xl u-border u-surface px-4 py-3 text-sm opacity-80">
+              {helperText}
             </div>
           )}
 
