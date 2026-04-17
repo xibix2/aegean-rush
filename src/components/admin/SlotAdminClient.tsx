@@ -321,8 +321,6 @@ export default function SlotAdminClient({
                     name="startTime"
                     type="datetime-local"
                     defaultValue={toLocalDateTimeInputValue(start)}
-                    min={toLocalDateTimeInputValue(start)}
-                    max={toLocalDateTimeInputValue(end)}
                     className="w-full h-10 rounded-lg border border-white/10 bg-white/[0.05] px-3 focus:outline-none focus:ring-1 focus:ring-pink-400/50 disabled:cursor-not-allowed"
                   />
                 </div>
