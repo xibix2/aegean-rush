@@ -1,8 +1,9 @@
 "use client";
 
 import { format } from "date-fns";
-import { useMemo } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
 import { useT } from "@/components/I18nProvider";
+import type { AdminBookingActionState } from "@/app/[club]/admin/slots/[slotId]/page";
 
 /** DB mapping for consistent state logic */
 const DB = {
@@ -65,6 +66,12 @@ type SlotPayload =
     }
   | null;
 
+const initialAdminBookingState: AdminBookingActionState = {
+  ok: false,
+  error: null,
+  success: null,
+};
+
 export default function SlotAdminClient({
   currency,
   slot,
@@ -74,11 +81,25 @@ export default function SlotAdminClient({
 }: {
   currency: string;
   slot: SlotPayload;
-  createAdminBooking: (fd: FormData) => Promise<void>;
+  createAdminBooking: (
+    prevState: AdminBookingActionState,
+    fd: FormData
+  ) => Promise<AdminBookingActionState>;
   cancelBookingAction: (fd: FormData) => Promise<void>;
   refundBookingAction: (fd: FormData) => Promise<void>;
 }) {
   const t = useT();
+
+  const [bookingState, bookingFormAction] = useActionState(
+    createAdminBooking,
+    initialAdminBookingState
+  );
+
+  const [timezoneOffsetMinutes, setTimezoneOffsetMinutes] = useState(0);
+
+  useEffect(() => {
+    setTimezoneOffsetMinutes(new Date().getTimezoneOffset());
+  }, []);
 
   if (!slot) {
     return (
@@ -220,9 +241,14 @@ export default function SlotAdminClient({
           )}
         </div>
 
-        <form action={createAdminBooking} className="space-y-4">
+        <form action={bookingFormAction} className="space-y-4">
           <fieldset disabled={isClosed} className="space-y-4 disabled:opacity-60">
             <input type="hidden" name="slotId" value={slot.id} />
+            <input
+              type="hidden"
+              name="timezoneOffsetMinutes"
+              value={String(timezoneOffsetMinutes)}
+            />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -295,6 +321,8 @@ export default function SlotAdminClient({
                     name="startTime"
                     type="datetime-local"
                     defaultValue={toLocalDateTimeInputValue(start)}
+                    min={toLocalDateTimeInputValue(start)}
+                    max={toLocalDateTimeInputValue(end)}
                     className="w-full h-10 rounded-lg border border-white/10 bg-white/[0.05] px-3 focus:outline-none focus:ring-1 focus:ring-pink-400/50 disabled:cursor-not-allowed"
                   />
                 </div>
@@ -376,6 +404,18 @@ export default function SlotAdminClient({
                     </div>
                   </>
                 )}
+              </div>
+            )}
+
+            {(bookingState.error || bookingState.success) && (
+              <div
+                className={`rounded-xl px-4 py-3 text-sm ${
+                  bookingState.error
+                    ? "border border-red-400/20 bg-red-500/10 text-red-200"
+                    : "border border-emerald-400/20 bg-emerald-500/10 text-emerald-200"
+                }`}
+              >
+                {bookingState.error || bookingState.success}
               </div>
             )}
 

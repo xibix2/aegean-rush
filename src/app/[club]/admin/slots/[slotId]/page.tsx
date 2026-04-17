@@ -1,4 +1,3 @@
-//src/app/[club]/admin/slots/[slotId]/page.tsx
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import Stripe from "stripe";
@@ -22,6 +21,21 @@ const DB = {
   CANCELLED: "cancelled",
   REFUNDED: "refunded",
 } as const;
+
+/* =========================
+   Action State
+   ========================= */
+export type AdminBookingActionState = {
+  ok: boolean;
+  error: string | null;
+  success: string | null;
+};
+
+const initialAdminBookingState: AdminBookingActionState = {
+  ok: false,
+  error: null,
+  success: null,
+};
 
 /* =========================
    Stripe Helper
@@ -52,187 +66,270 @@ function parseOptionalString(value: FormDataEntryValue | null) {
   return s || undefined;
 }
 
+function parseDateTimeLocalWithOffset(
+  value: string | undefined,
+  timezoneOffsetMinutes: number
+) {
+  if (!value) return null;
+
+  const m = value.match(
+    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/
+  );
+  if (!m) return null;
+
+  const [, y, mo, d, h, mi] = m.map(Number);
+  const utcMs =
+    Date.UTC(y, mo - 1, d, h, mi) + timezoneOffsetMinutes * 60 * 1000;
+
+  const dt = new Date(utcMs);
+  return Number.isNaN(dt.getTime()) ? null : dt;
+}
+
 /* =========================
    Server Actions
    ========================= */
 
-export async function createAdminBooking(formData: FormData) {
+export async function createAdminBooking(
+  _prevState: AdminBookingActionState,
+  formData: FormData
+): Promise<AdminBookingActionState> {
   "use server";
 
-  const tenant = await requireTenant();
-  await requireClubAdmin(tenant.id);
-  const base = `/${tenant.slug}`;
+  try {
+    const tenant = await requireTenant();
+    await requireClubAdmin(tenant.id);
+    const base = `/${tenant.slug}`;
 
-  const slotId = String(formData.get("slotId") || "");
-  if (!slotId) throw new Error("Missing slotId");
+    const slotId = String(formData.get("slotId") || "");
+    if (!slotId) {
+      return { ok: false, error: "Missing slot ID.", success: null };
+    }
 
-  const email = String(formData.get("email") || "").trim();
-  const name = String(formData.get("name") || "Guest").trim() || "Guest";
-  const phone = String(formData.get("phone") || "").trim();
-  const markPaid = String(formData.get("markPaid") || "no") === "yes";
+    const email = String(formData.get("email") || "").trim();
+    const name = String(formData.get("name") || "Guest").trim() || "Guest";
+    const phone = String(formData.get("phone") || "").trim();
+    const markPaid = String(formData.get("markPaid") || "no") === "yes";
 
-  const partySize = parseOptionalInt(formData.get("partySize"));
-  const startTime = parseOptionalString(formData.get("startTime"));
-  const durationOptionId = parseOptionalString(formData.get("durationOptionId"));
-  const units = parseOptionalInt(formData.get("units"));
-  const guests = parseOptionalInt(formData.get("guests"));
+    const partySize = parseOptionalInt(formData.get("partySize"));
+    const startTimeRaw = parseOptionalString(formData.get("startTime"));
+    const durationOptionId = parseOptionalString(formData.get("durationOptionId"));
+    const units = parseOptionalInt(formData.get("units"));
+    const guests = parseOptionalInt(formData.get("guests"));
+    const timezoneOffsetMinutes =
+      parseOptionalInt(formData.get("timezoneOffsetMinutes")) ?? 0;
 
-  const slot = await prisma.timeSlot.findFirst({
-    where: { id: slotId, activity: { clubId: tenant.id } },
-    include: {
-      activity: {
-        include: {
-          durationOptions: {
-            where: { isActive: true },
-            orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+    const slot = await prisma.timeSlot.findFirst({
+      where: { id: slotId, activity: { clubId: tenant.id } },
+      include: {
+        activity: {
+          include: {
+            durationOptions: {
+              where: { isActive: true },
+              orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+            },
+          },
+        },
+        bookings: {
+          select: {
+            id: true,
+            status: true,
+            partySize: true,
+            reservedUnits: true,
+            bookingStartAt: true,
+            bookingEndAt: true,
+            createdAt: true,
           },
         },
       },
-      bookings: {
-        select: {
-          id: true,
-          status: true,
-          partySize: true,
-          reservedUnits: true,
-          bookingStartAt: true,
-          bookingEndAt: true,
-          createdAt: true,
-        },
+    });
+
+    if (!slot) {
+      return { ok: false, error: "Time slot not found.", success: null };
+    }
+
+    if (slot.status !== "open") {
+      return {
+        ok: false,
+        error: "This slot is closed and cannot accept bookings.",
+        success: null,
+      };
+    }
+
+    let parsedStartTime: Date | undefined = undefined;
+
+    if (slot.activity.mode !== "FIXED_SEAT_EVENT") {
+      if (!startTimeRaw) {
+        return {
+          ok: false,
+          error: "Please choose a valid start time.",
+          success: null,
+        };
+      }
+
+      parsedStartTime = parseDateTimeLocalWithOffset(
+        startTimeRaw,
+        timezoneOffsetMinutes
+      ) ?? undefined;
+
+      if (!parsedStartTime) {
+        return {
+          ok: false,
+          error: "Invalid start time format.",
+          success: null,
+        };
+      }
+    }
+
+    const quote = getBookingQuoteAndAvailability({
+      activity: {
+        id: slot.activity.id,
+        name: slot.activity.name,
+        mode: slot.activity.mode,
+        minParty: slot.activity.minParty,
+        maxParty: slot.activity.maxParty,
+        basePrice: slot.activity.basePrice,
+        guestsPerUnit: slot.activity.guestsPerUnit,
+        maxUnitsPerBooking: slot.activity.maxUnitsPerBooking,
+        slotIntervalMin: slot.activity.slotIntervalMin,
+        durationOptions: slot.activity.durationOptions.map((d) => ({
+          id: d.id,
+          label: d.label,
+          durationMin: d.durationMin,
+          priceCents: d.priceCents,
+          isActive: d.isActive,
+          sortOrder: d.sortOrder,
+        })),
       },
-    },
-  });
+      slot: {
+        id: slot.id,
+        activityId: slot.activityId,
+        startAt: slot.startAt,
+        endAt: slot.endAt,
+        capacity: slot.capacity,
+        priceCents: slot.priceCents,
+      },
+      existingBookings: slot.bookings,
+      partySize,
+      startTime: parsedStartTime,
+      durationOptionId,
+      units,
+      guests,
+    });
 
-  if (!slot) throw new Error("Time slot not found");
-  if (slot.status !== "open") throw new Error("This slot is closed and cannot accept bookings.");
+    if (!quote.isValid) {
+      return {
+        ok: false,
+        error: quote.errors[0] || "Invalid booking request.",
+        success: null,
+      };
+    }
 
-  const quote = getBookingQuoteAndAvailability({
-    activity: {
-      id: slot.activity.id,
-      name: slot.activity.name,
-      mode: slot.activity.mode,
-      minParty: slot.activity.minParty,
-      maxParty: slot.activity.maxParty,
-      basePrice: slot.activity.basePrice,
-      guestsPerUnit: slot.activity.guestsPerUnit,
-      maxUnitsPerBooking: slot.activity.maxUnitsPerBooking,
-      slotIntervalMin: slot.activity.slotIntervalMin,
-      durationOptions: slot.activity.durationOptions.map((d) => ({
-        id: d.id,
-        label: d.label,
-        durationMin: d.durationMin,
-        priceCents: d.priceCents,
-        isActive: d.isActive,
-        sortOrder: d.sortOrder,
-      })),
-    },
-    slot: {
-      id: slot.id,
-      activityId: slot.activityId,
-      startAt: slot.startAt,
-      endAt: slot.endAt,
-      capacity: slot.capacity,
-      priceCents: slot.priceCents,
-    },
-    existingBookings: slot.bookings,
-    partySize,
-    startTime,
-    durationOptionId,
-    units,
-    guests,
-  });
+    const customerEmail = email || `walkin+${Date.now()}@example.com`;
 
-  if (!quote.isValid) {
-    throw new Error(quote.errors[0] || "Invalid booking request");
-  }
-
-  const customerEmail = email || `walkin+${Date.now()}@example.com`;
-
-  const customer = await prisma.customer.upsert({
-    where: { clubId_email: { clubId: tenant.id, email: customerEmail } },
-    update: {
-      name,
-      phone: phone || null,
-    },
-    create: {
-      clubId: tenant.id,
-      email: customerEmail,
-      name,
-      phone: phone || null,
-    },
-  });
-
-  const booking = await prisma.booking.create({
-    data: {
-      customerId: customer.id,
-      activityId: slot.activityId,
-      timeSlotId: slot.id,
-      partySize: quote.partySize,
-      totalPrice: quote.totalPrice,
-      status: markPaid ? DB.CONFIRMED : DB.PENDING,
-
-      contactName: name,
-      contactEmail: email || null,
-      contactPhone: phone || null,
-
-      reservedUnits: quote.reservedUnits,
-      bookingStartAt: quote.bookingStartAt,
-      bookingEndAt: quote.bookingEndAt,
-      durationMinSnapshot: quote.durationMin,
-      unitPriceSnapshot: quote.unitPrice,
-      pricingLabelSnapshot: quote.pricingLabel,
-    },
-  });
-
-  if (markPaid) {
-    await prisma.payment.create({
-      data: {
-        bookingId: booking.id,
-        provider: "stripe",
-        providerIntentId: `admin_manual_${booking.id}`,
-        amount: quote.totalPrice,
-        currency: (tenant.currency || "EUR").toUpperCase(),
-        status: "succeeded",
+    const customer = await prisma.customer.upsert({
+      where: { clubId_email: { clubId: tenant.id, email: customerEmail } },
+      update: {
+        name,
+        phone: phone || null,
+      },
+      create: {
+        clubId: tenant.id,
+        email: customerEmail,
+        name,
+        phone: phone || null,
       },
     });
-  }
 
-  if (markPaid && email) {
-    try {
-      const club = await prisma.club.findUnique({
-        where: { id: tenant.id },
-        select: { logoKey: true },
+    const booking = await prisma.booking.create({
+      data: {
+        customerId: customer.id,
+        activityId: slot.activityId,
+        timeSlotId: slot.id,
+        partySize: quote.partySize,
+        totalPrice: quote.totalPrice,
+        status: markPaid ? DB.CONFIRMED : DB.PENDING,
+
+        contactName: name,
+        contactEmail: email || null,
+        contactPhone: phone || null,
+
+        reservedUnits: quote.reservedUnits,
+        bookingStartAt: quote.bookingStartAt,
+        bookingEndAt: quote.bookingEndAt,
+        durationMinSnapshot: quote.durationMin,
+        unitPriceSnapshot: quote.unitPrice,
+        pricingLabelSnapshot: quote.pricingLabel,
+      },
+    });
+
+    if (markPaid) {
+      await prisma.payment.create({
+        data: {
+          bookingId: booking.id,
+          provider: "stripe",
+          providerIntentId: `admin_manual_${booking.id}`,
+          amount: quote.totalPrice,
+          currency: (tenant.currency || "EUR").toUpperCase(),
+          status: "succeeded",
+        },
       });
-
-      const startISO = (booking.bookingStartAt ?? slot.startAt).toISOString();
-
-      const endISO = (
-        booking.bookingEndAt ??
-        slot.endAt ??
-        new Date(slot.startAt.getTime() + slot.activity.durationMin * 60000)
-      ).toISOString();
-
-      await resend.emails.send({
-        from: FROM,
-        to: email,
-        subject: `Your booking with ${tenant.name} is confirmed`,
-        react: BookingConfirmed({
-          activity: slot.activity.name,
-          startISO,
-          endISO,
-          partySize: booking.partySize,
-          totalCents: booking.totalPrice,
-          clubName: tenant.name,
-          logoUrl: club?.logoKey ?? undefined,
-          brandPrimary: tenant.primaryHex ?? undefined,
-        }),
-      });
-    } catch (err: any) {
-      console.error("Failed to send admin-created booking email:", err?.message || err);
     }
-  }
 
-  revalidatePath(`${base}/admin/slots/${slotId}`);
-  revalidatePath(`${base}/admin/bookings`);
+    if (markPaid && email) {
+      try {
+        const club = await prisma.club.findUnique({
+          where: { id: tenant.id },
+          select: { logoKey: true },
+        });
+
+        const startISO = (booking.bookingStartAt ?? slot.startAt).toISOString();
+
+        const endISO = (
+          booking.bookingEndAt ??
+          slot.endAt ??
+          new Date(slot.startAt.getTime() + slot.activity.durationMin * 60000)
+        ).toISOString();
+
+        await resend.emails.send({
+          from: FROM,
+          to: email,
+          subject: `Your booking with ${tenant.name} is confirmed`,
+          react: BookingConfirmed({
+            activity: slot.activity.name,
+            startISO,
+            endISO,
+            partySize: booking.partySize,
+            totalCents: booking.totalPrice,
+            clubName: tenant.name,
+            logoUrl: club?.logoKey ?? undefined,
+            brandPrimary: tenant.primaryHex ?? undefined,
+          }),
+        });
+      } catch (err: any) {
+        console.error(
+          "Failed to send admin-created booking email:",
+          err?.message || err
+        );
+      }
+    }
+
+    revalidatePath(`${base}/admin/slots/${slotId}`);
+    revalidatePath(`${base}/admin/bookings`);
+
+    return {
+      ok: true,
+      error: null,
+      success: markPaid
+        ? "Booking created and marked as paid."
+        : "Booking created successfully.",
+    };
+  } catch (err: any) {
+    return {
+      ok: false,
+      error: err?.message || "Something went wrong while creating the booking.",
+      success: null,
+    };
+  }
 }
 
 export async function cancelBookingAction(input: CancelPayload) {

@@ -115,8 +115,20 @@ function getActiveBookings(
 
 function parseStartTime(input: string | Date | null | undefined): Date | null {
   if (!input) return null;
-  if (input instanceof Date) return Number.isNaN(input.getTime()) ? null : input;
-  const d = new Date(input);
+  if (input instanceof Date) {
+    return Number.isNaN(input.getTime()) ? null : input;
+  }
+
+  const s = String(input).trim();
+
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/);
+  if (m) {
+    const [, y, mo, d, h, mi] = m.map(Number);
+    const dt = new Date(y, mo - 1, d, h, mi, 0, 0);
+    return Number.isNaN(dt.getTime()) ? null : dt;
+  }
+
+  const d = new Date(s);
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
