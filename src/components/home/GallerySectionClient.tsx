@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Camera, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import { Camera, ChevronLeft, ChevronRight } from "lucide-react";
 
 type GalleryImage = {
   id: string;
@@ -27,10 +27,6 @@ export function GallerySectionClient({
   const [incomingIndex, setIncomingIndex] = useState<number | null>(null);
   const [direction, setDirection] = useState<"next" | "prev">("next");
   const [isAnimating, setIsAnimating] = useState(false);
-
-  const resolvedTitle = title || "Moments from the water";
-  const resolvedSubtitle =
-    subtitle || "Showcase your boats, jet skis, rides, and best views.";
 
   useEffect(() => {
     if (!images.length) return;
@@ -70,19 +66,6 @@ export function GallerySectionClient({
         />
 
         <div className="mx-auto max-w-4xl text-center">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-4 py-1.5 text-xs uppercase tracking-[0.18em] text-white/70 backdrop-blur-xl">
-            <Sparkles className="size-3.5 text-pink-300" />
-            Gallery
-          </div>
-
-          <h2 className="text-3xl font-semibold tracking-tight text-white md:text-5xl">
-            {resolvedTitle}
-          </h2>
-
-          <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-white/65 md:text-base">
-            {resolvedSubtitle}
-          </p>
-
           <div className="mt-10 rounded-[1.75rem] border border-dashed border-white/10 bg-black/20 px-6 py-16 text-white/45">
             No gallery images added yet.
           </div>
@@ -208,29 +191,14 @@ export function GallerySectionClient({
       />
 
       <div className="relative mx-auto max-w-6xl">
-        <div className="mx-auto max-w-3xl text-center">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-4 py-1.5 text-xs uppercase tracking-[0.18em] text-white/70 backdrop-blur-xl">
-            <Sparkles className="size-3.5 text-pink-300" />
-            Gallery
-          </div>
-
-          <h2 className="text-3xl font-semibold tracking-tight text-white md:text-5xl">
-            {resolvedTitle}
-          </h2>
-
-          <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-white/65 md:text-base">
-            {resolvedSubtitle}
-          </p>
-        </div>
-
-        <div className="relative mt-12 flex items-center justify-center">
+        <div className="relative mt-2 flex items-center justify-center">
           {images.length > 1 && (
             <>
               <div className="pointer-events-none absolute left-0 top-1/2 hidden h-[72%] w-[18%] -translate-y-1/2 overflow-hidden rounded-[1.75rem] border border-white/6 opacity-35 blur-[1px] lg:block">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={prevImage.imageUrl}
-                  alt={prevImage.altText || prevImage.caption || "Previous image"}
+                  alt=""
                   className="h-full w-full object-cover"
                 />
                 <div className="absolute inset-0 bg-black/45" />
@@ -240,7 +208,7 @@ export function GallerySectionClient({
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={nextImage.imageUrl}
-                  alt={nextImage.altText || nextImage.caption || "Next image"}
+                  alt=""
                   className="h-full w-full object-cover"
                 />
                 <div className="absolute inset-0 bg-black/45" />
@@ -253,7 +221,7 @@ export function GallerySectionClient({
               className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-black/25 shadow-[0_40px_120px_-50px_rgba(0,0,0,0.95)]"
               style={{ animation: "galleryPulseBorder 7s ease-in-out infinite" }}
             >
-              <div className="relative aspect-[16/9] overflow-hidden">
+              <div className="relative aspect-[16/9] overflow-hidden bg-black">
                 {/* current image */}
                 <div
                   className={
@@ -274,8 +242,8 @@ export function GallerySectionClient({
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={shownImage.imageUrl}
-                    alt={shownImage.altText || shownImage.caption || "Gallery image"}
-                    className="h-full w-full object-cover"
+                    alt=""
+                    className="h-full w-full object-contain"
                   />
                 </div>
 
@@ -297,18 +265,14 @@ export function GallerySectionClient({
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={incomingImage.imageUrl}
-                      alt={
-                        incomingImage.altText ||
-                        incomingImage.caption ||
-                        "Gallery image"
-                      }
-                      className="h-full w-full object-cover"
+                      alt=""
+                      className="h-full w-full object-contain"
                     />
                   </div>
                 )}
 
-                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.05),rgba(0,0,0,0.14)_35%,rgba(0,0,0,0.55)_100%)]" />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.12),transparent_34%)]" />
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.05),rgba(0,0,0,0.10)_35%,rgba(0,0,0,0.25)_100%)]" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_34%)]" />
 
                 {/* trailing color highlight */}
                 {isAnimating && (
@@ -353,12 +317,6 @@ export function GallerySectionClient({
                     </button>
                   </>
                 )}
-
-                <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6 md:p-8">
-                  <p className="max-w-2xl text-lg font-medium text-white md:text-2xl">
-                    {images[displayIndex].caption || "A premium glimpse into the experience."}
-                  </p>
-                </div>
               </div>
             </div>
           </div>
