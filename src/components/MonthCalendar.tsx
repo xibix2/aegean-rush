@@ -309,12 +309,6 @@ export default function MonthCalendar({
 
               {info ? (
                 <div className="absolute inset-x-2 bottom-2">
-                  <div className="mb-1 flex items-center justify-between text-[10px] text-white/52">
-                    <span>
-                      {info.remaining}/{info.capacity} {legendLeft}
-                    </span>
-                  </div>
-
                   <div className="h-[5px] w-full overflow-hidden rounded-full bg-white/8">
                     <div
                       className={clsx("h-full rounded-full", fillClass)}
