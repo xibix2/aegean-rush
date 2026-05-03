@@ -116,6 +116,18 @@ function calcBucket(remaining: number, capacity: number): DayBucket {
   return "low";
 }
 
+function getUnitLabel(activity: ActivityInfo | null) {
+  const name = activity?.name?.toLowerCase() ?? "";
+
+  if (name.includes("jet ski") || name.includes("jetski")) return "Jet skis";
+  if (name.includes("boat")) return "Boats";
+  if (name.includes("sup")) return "SUPs";
+  if (name.includes("kayak")) return "Kayaks";
+  if (name.includes("canoe")) return "Canoes";
+
+  return "Units";
+}
+
 function formatMoney(cents: number) {
   return (cents / 100).toFixed(2);
 }
@@ -472,8 +484,10 @@ export default function TimetableClient() {
         payload.startTime = combineDateAndTime(safeDate, selectedTime);
         payload.durationOptionId = selectedDurationId;
       } else if (activity?.mode === "HYBRID_UNIT_BOOKING") {
-        payload.partySize = guests;
-        payload.guests = guests;
+        const estimatedGuests = units * Math.max(1, activity?.guestsPerUnit ?? 1);
+
+        payload.partySize = estimatedGuests;
+        payload.guests = estimatedGuests;
         payload.units = units;
         payload.startTime = combineDateAndTime(safeDate, selectedTime);
         payload.durationOptionId = selectedDurationId;
@@ -619,10 +633,8 @@ export default function TimetableClient() {
   const mode = activity?.mode ?? "FIXED_SEAT_EVENT";
   const selectedDuration =
     activity?.durationOptions.find((d) => d.id === selectedDurationId) ?? null;
-  const hybridMinUnits =
-    mode === "HYBRID_UNIT_BOOKING"
-      ? ceilDiv(Math.max(1, guests), Math.max(1, activity?.guestsPerUnit ?? 1))
-      : 1;
+  const unitLabel = getUnitLabel(activity);
+  const hybridMinUnits = 1;
 
   const requestedUnits = getRequestedUnits(mode, units, guests, activity);
   const stepMin = getBookingStepMinutes(activity);
@@ -770,9 +782,7 @@ export default function TimetableClient() {
               <h2 className="mt-1 text-lg font-semibold text-white">
                 {mode === "FIXED_SEAT_EVENT"
                   ? "Choose your party size"
-                  : mode === "DYNAMIC_RENTAL"
-                  ? "Set your booking details"
-                  : "Set guests, units and duration"}
+                  : `Set your ${unitLabel.toLowerCase()} and duration`}
               </h2>
             </div>
 
@@ -830,7 +840,7 @@ export default function TimetableClient() {
                 </div>
 
                 <div className={fieldClass()}>
-                  <div className="mb-2 text-sm font-medium text-white/88">Units</div>
+                  <div className="mb-2 text-sm font-medium text-white/88">{unitLabel}</div>
                   <div className="flex items-center rounded-2xl border border-white/10 bg-black/20">
                     <button
                       className="px-4 py-3 text-base text-white/80 transition hover:bg-white/5"
@@ -863,38 +873,9 @@ export default function TimetableClient() {
 
             {mode === "HYBRID_UNIT_BOOKING" && (
               <div className="grid gap-3">
-                <div className={fieldClass()}>
-                  <div className="mb-2 text-sm font-medium text-white/88">Guests</div>
-                  <div className="flex items-center rounded-2xl border border-white/10 bg-black/20">
-                    <button
-                      className="px-4 py-3 text-base text-white/80 transition hover:bg-white/5"
-                      onClick={() => onGuestsChange(guests - 1)}
-                      disabled={loading}
-                      type="button"
-                    >
-                      −
-                    </button>
-                    <input
-                      type="number"
-                      min={1}
-                      max={50}
-                      value={guests}
-                      onChange={(e) => onGuestsChange(Number(e.target.value))}
-                      className="no-spin w-20 bg-transparent px-2 py-3 text-center text-white outline-none"
-                    />
-                    <button
-                      className="px-4 py-3 text-base text-white/80 transition hover:bg-white/5"
-                      onClick={() => onGuestsChange(guests + 1)}
-                      disabled={loading}
-                      type="button"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
 
                 <div className={fieldClass()}>
-                  <div className="mb-2 text-sm font-medium text-white/88">Units</div>
+                  <div className="mb-2 text-sm font-medium text-white/88">{unitLabel}</div>
                   <div className="flex items-center rounded-2xl border border-white/10 bg-black/20">
                     <button
                       className="px-4 py-3 text-base text-white/80 transition hover:bg-white/5"
@@ -921,7 +902,6 @@ export default function TimetableClient() {
                       +
                     </button>
                   </div>
-                  <p className="mt-2 text-xs text-white/48">Minimum units needed: {hybridMinUnits}</p>
                 </div>
 
                 <div className={fieldClass()}>
