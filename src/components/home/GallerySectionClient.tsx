@@ -67,15 +67,22 @@ export function GallerySectionClient({
 
         <div className="relative mx-auto max-w-4xl text-center">
           {(title || subtitle) && (
-            <div className="mx-auto mb-10 max-w-3xl text-center">
+            <div className="mx-auto mb-10 max-w-4xl text-center">
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 text-[0.68rem] font-black uppercase tracking-[0.22em] text-white/75 shadow-[0_18px_55px_-35px_rgba(236,72,153,0.75)] backdrop-blur-xl">
+                <Camera className="size-3.5 text-pink-300" />
+                Gallery
+              </div>
+
               {title && (
-                <h2 className="text-3xl font-black tracking-tight text-white sm:text-4xl md:text-5xl">
-                  {title}
+                <h2 className="text-4xl font-black tracking-tight text-white sm:text-5xl md:text-6xl">
+                  <span className="bg-gradient-to-r from-cyan-200 via-white to-pink-300 bg-clip-text text-transparent">
+                    {title}
+                  </span>
                 </h2>
               )}
 
               {subtitle && (
-                <p className="mt-4 text-base leading-7 text-white/65 sm:text-lg">
+                <p className="mx-auto mt-5 max-w-2xl text-base font-semibold leading-7 text-white/55 sm:text-lg">
                   {subtitle}
                 </p>
               )}
