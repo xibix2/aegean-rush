@@ -137,13 +137,10 @@ function addMinutes(date: Date, minutes: number) {
 }
 
 function getBookingStepMinutes(activity: ActivityInfo | null) {
-  if (!activity) return 5;
-  if (activity.mode === "FIXED_SEAT_EVENT") {
-    return Math.max(5, activity.slotIntervalMin ?? 30);
-  }
-  return 5;
-}
+  if (!activity) return 30;
 
+  return Math.max(5, activity.slotIntervalMin ?? 30);
+}
 function getRequestedUnits(
   mode: ActivityMode,
   units: number,
