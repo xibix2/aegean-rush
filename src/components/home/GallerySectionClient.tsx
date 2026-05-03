@@ -65,8 +65,24 @@ export function GallerySectionClient({
           }}
         />
 
-        <div className="mx-auto max-w-4xl text-center">
-          <div className="mt-10 rounded-[1.75rem] border border-dashed border-white/10 bg-black/20 px-6 py-16 text-white/45">
+        <div className="relative mx-auto max-w-4xl text-center">
+          {(title || subtitle) && (
+            <div className="mx-auto mb-10 max-w-3xl text-center">
+              {title && (
+                <h2 className="text-3xl font-black tracking-tight text-white sm:text-4xl md:text-5xl">
+                  {title}
+                </h2>
+              )}
+
+              {subtitle && (
+                <p className="mt-4 text-base leading-7 text-white/65 sm:text-lg">
+                  {subtitle}
+                </p>
+              )}
+            </div>
+          )}
+
+          <div className="rounded-[1.75rem] border border-dashed border-white/10 bg-black/20 px-6 py-16 text-white/45">
             No gallery images added yet.
           </div>
         </div>
@@ -81,21 +97,25 @@ export function GallerySectionClient({
 
   const goTo = (index: number) => {
     if (index === activeIndex || isAnimating) return;
+
     const current = displayIndex;
     const isPrev =
       index === (current === 0 ? images.length - 1 : current - 1);
+
     setDirection(isPrev ? "prev" : "next");
     setActiveIndex(index);
   };
 
   const goPrev = () => {
     if (isAnimating) return;
+
     setDirection("prev");
     setActiveIndex(displayIndex === 0 ? images.length - 1 : displayIndex - 1);
   };
 
   const goNext = () => {
     if (isAnimating) return;
+
     setDirection("next");
     setActiveIndex(displayIndex === images.length - 1 ? 0 : displayIndex + 1);
   };
@@ -191,6 +211,22 @@ export function GallerySectionClient({
       />
 
       <div className="relative mx-auto max-w-6xl">
+        {(title || subtitle) && (
+          <div className="mx-auto mb-10 max-w-3xl text-center">
+            {title && (
+              <h2 className="text-3xl font-black tracking-tight text-white sm:text-4xl md:text-5xl">
+                {title}
+              </h2>
+            )}
+
+            {subtitle && (
+              <p className="mt-4 text-base leading-7 text-white/65 sm:text-lg">
+                {subtitle}
+              </p>
+            )}
+          </div>
+        )}
+
         <div className="relative mt-2 flex items-center justify-center">
           {images.length > 1 && (
             <>
@@ -222,7 +258,6 @@ export function GallerySectionClient({
               style={{ animation: "galleryPulseBorder 7s ease-in-out infinite" }}
             >
               <div className="relative aspect-[16/9] overflow-hidden bg-black">
-                {/* current image */}
                 <div
                   className={
                     isAnimating
@@ -242,12 +277,11 @@ export function GallerySectionClient({
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={shownImage.imageUrl}
-                    alt=""
+                    alt={shownImage.altText ?? ""}
                     className="h-full w-full object-contain"
                   />
                 </div>
 
-                {/* incoming image */}
                 {incomingImage && (
                   <div
                     className={
@@ -265,7 +299,7 @@ export function GallerySectionClient({
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={incomingImage.imageUrl}
-                      alt=""
+                      alt={incomingImage.altText ?? ""}
                       className="h-full w-full object-contain"
                     />
                   </div>
@@ -274,7 +308,6 @@ export function GallerySectionClient({
                 <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.05),rgba(0,0,0,0.10)_35%,rgba(0,0,0,0.25)_100%)]" />
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_34%)]" />
 
-                {/* trailing color highlight */}
                 {isAnimating && (
                   <div
                     className="gallery-anim pointer-events-none absolute inset-y-0 w-1/3 blur-2xl"
@@ -282,7 +315,8 @@ export function GallerySectionClient({
                       left: direction === "next" ? "18%" : "48%",
                       background:
                         "linear-gradient(90deg, rgba(236,72,153,0), rgba(236,72,153,0.28), rgba(56,189,248,0.22), rgba(56,189,248,0))",
-                      animation: "galleryBeam 650ms cubic-bezier(0.22,1,0.36,1) forwards",
+                      animation:
+                        "galleryBeam 650ms cubic-bezier(0.22,1,0.36,1) forwards",
                     }}
                   />
                 )}

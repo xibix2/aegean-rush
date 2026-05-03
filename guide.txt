@@ -12,3 +12,8 @@ git commit -m "Describe what you changed"
 
 git push origin main
 
+Paradise watersports:
+cYy1vVoRd81jVp0cp8VR
+
+Rent a boat Poseidon:
+k4p3Y9bWc5XG4g0q9wYA
