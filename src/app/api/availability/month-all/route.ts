@@ -56,9 +56,9 @@ function finalizeDay(d: DayAgg) {
       ? "none"
       : d.remaining === 0
       ? "full"
-      : availabilityRatio <= 0.2
+      : availabilityRatio <= 0.35
       ? "low"
-      : availabilityRatio <= 0.6
+      : availabilityRatio <= 0.8
       ? "medium"
       : "high";
 

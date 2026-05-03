@@ -309,6 +309,20 @@ export default function MonthCalendar({
 
               {info ? (
                 <div className="absolute inset-x-2 bottom-2">
+                  <div className="mb-1 flex items-center justify-between text-[10px] text-white/52">
+                    <span>
+                      {bucket === "full"
+                        ? "Fully booked"
+                        : bucket === "low"
+                        ? "Almost full"
+                        : bucket === "medium"
+                        ? "Limited availability"
+                        : bucket === "high"
+                        ? "Available"
+                        : "No schedule"}
+                    </span>
+                  </div>
+
                   <div className="h-[5px] w-full overflow-hidden rounded-full bg-white/8">
                     <div
                       className={clsx("h-full rounded-full", fillClass)}
@@ -316,7 +330,7 @@ export default function MonthCalendar({
                         width: `${
                           info.capacity > 0
                             ? Math.max(
-                                6,
+                                8,
                                 Math.min(
                                   100,
                                   Math.round((info.remaining / info.capacity) * 100)
