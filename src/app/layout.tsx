@@ -379,16 +379,13 @@ export default async function RootLayout({
                       className="h-10 w-10 shrink-0 rounded-2xl border border-white/10 bg-black/20 object-contain shadow-[0_10px_30px_rgba(0,0,0,0.35)]"
                     />
                   ) : (
-                    <span
-                      className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.35)]"
-                      aria-hidden="true"
-                    >
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5">
                       <img
                         src="/icon.png"
                         alt="Aegean Rush"
-                        className="w-7 h-7 object-contain brightness-110"
+                        className="w-9 h-9 object-contain"
                       />
-                    </span>
+                    </div>
                   )}
 
                   <div className="min-w-0">
