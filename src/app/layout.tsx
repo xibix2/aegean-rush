@@ -379,22 +379,13 @@ export default async function RootLayout({
                       className="h-10 w-10 shrink-0 rounded-2xl border border-white/10 bg-black/20 object-contain shadow-[0_10px_30px_rgba(0,0,0,0.35)]"
                     />
                   ) : (
-                    <span
-                      className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.35)]"
-                      aria-hidden="true"
-                      style={{
-                        background: `
-                          radial-gradient(circle at 30% 25%, rgba(255,255,255,0.15), transparent 45%),
-                          linear-gradient(135deg, rgba(56,189,248,0.70), rgba(99,102,241,0.60), rgba(244,114,182,0.62))
-                        `,
-                      }}
-                    >
+                    <div className="flex h-10 w-10 items-center justify-center">
                       <img
                         src="/icon.png"
                         alt="Aegean Rush"
-                        className="w-7 h-7 object-contain brightness-110"
+                        className="w-9 h-9 object-contain"
                       />
-                    </span>
+                    </div>
                   )}
 
                   <div className="min-w-0">
