@@ -390,8 +390,8 @@ export default async function RootLayout({
                       }}
                     >
                       <img
-                        src="/app/favicon.ico"
-                        alt="Aegean Rush Logo"
+                        src="/app/icon.png"
+                        alt="Aegean Rush"
                         className="w-7 h-7 object-contain brightness-110"
                       />
                     </span>
