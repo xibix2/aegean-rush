@@ -389,7 +389,11 @@ export default async function RootLayout({
                         `,
                       }}
                     >
-                      <span className="text-base leading-none">🌊</span>
+                      <img
+                        src="/app/favicon.ico"
+                        alt="Aegean Rush Logo"
+                        className="w-7 h-7 object-contain brightness-110"
+                      />
                     </span>
                   )}
 
