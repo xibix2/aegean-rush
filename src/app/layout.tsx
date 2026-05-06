@@ -390,7 +390,7 @@ export default async function RootLayout({
                       }}
                     >
                       <img
-                        src="/app/icon.png"
+                        src="/icon.png"
                         alt="Aegean Rush"
                         className="w-7 h-7 object-contain brightness-110"
                       />
