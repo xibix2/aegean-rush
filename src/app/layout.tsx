@@ -2,6 +2,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
+import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
 import { readUiPrefsFromCookies } from "@/lib/ui-prefs-server";
@@ -418,6 +419,8 @@ export default async function RootLayout({
             </main>
           </div>
         </I18nProvider>
+
+        <Analytics />
       </body>
     </html>
   );
