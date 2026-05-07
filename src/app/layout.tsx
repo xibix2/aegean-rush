@@ -8,6 +8,7 @@ import { readUiPrefsFromCookies } from "@/lib/ui-prefs-server";
 import { I18nProvider } from "@/components/I18nProvider";
 import { getTenantSoft } from "@/lib/tenant";
 import type React from "react";
+import { Analytics } from "@vercel/analytics/next";
 
 export const dynamic = "force-dynamic";
 
@@ -418,6 +419,7 @@ export default async function RootLayout({
             </main>
           </div>
         </I18nProvider>
+        <Analytics />
       </body>
     </html>
   );
