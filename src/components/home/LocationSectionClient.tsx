@@ -325,11 +325,8 @@ export function LocationSectionClient({
                 backgroundImage:
                   "linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)",
                 backgroundSize: "30px 30px",
-                maskImage:
-                  "radial-gradient(circle at center, black 36%, transparent 92%)",
-                WebkitMaskImage:
-                  "radial-gradient(circle at center, black 36%, transparent 92%)",
-                animation: undefined,
+                maskImage: "radial-gradient(circle at center, black 36%, transparent 92%)",
+                WebkitMaskImage: "radial-gradient(circle at center, black 36%, transparent 92%)",
               }}
             />
 
@@ -343,22 +340,13 @@ export function LocationSectionClient({
 
             <div className="absolute left-4 top-4 sm:left-6 sm:top-6">
               <div className="relative h-12 w-12 sm:h-16 sm:w-16">
-                <div
-                  className="absolute inset-0 rounded-full border border-white/10"
-                  style={{ animation: "locCompassSpin 18s linear infinite" }}
-                />
-                <div
-                  className="absolute inset-2 rounded-full border border-sky-300/20"
-                  style={{
-                    animation: "locCompassSpin 10s linear infinite reverse",
-                  }}
-                />
+                <div className="absolute inset-0 rounded-full border border-white/10" />
+                <div className="absolute inset-2 rounded-full border border-sky-300/20" />
                 <div
                   className="absolute inset-0 rounded-full blur-xl"
                   style={{
                     background:
                       "radial-gradient(circle, rgba(56,189,248,0.18) 0%, transparent 72%)",
-                    animation: "locCompassPulse 4.8s ease-in-out infinite",
                   }}
                 />
                 <div className="absolute inset-0 flex items-center justify-center text-[9px] uppercase tracking-[0.16em] text-white/60 sm:text-[10px] sm:tracking-[0.2em]">
@@ -386,7 +374,6 @@ export function LocationSectionClient({
                 strokeWidth="2.4"
                 strokeLinecap="round"
                 strokeDasharray="10 10"
-                style={{ animation: "locRoutePulse 6s linear infinite" }}
               />
             </svg>
 
@@ -396,7 +383,6 @@ export function LocationSectionClient({
                 background:
                   "radial-gradient(circle, rgba(236,72,153,0.95) 0%, rgba(236,72,153,0.45) 45%, transparent 78%)",
                 boxShadow: "0 0 18px rgba(236,72,153,0.4)",
-                animation: "locGlowFloat 4.2s ease-in-out infinite",
               }}
             />
 
@@ -406,7 +392,6 @@ export function LocationSectionClient({
                 background:
                   "radial-gradient(circle, rgba(56,189,248,0.95) 0%, rgba(56,189,248,0.42) 45%, transparent 78%)",
                 boxShadow: "0 0 16px rgba(56,189,248,0.35)",
-                animation: "locGlowFloat 5.3s ease-in-out infinite",
               }}
             />
 
@@ -416,11 +401,10 @@ export function LocationSectionClient({
                 background:
                   "radial-gradient(circle, rgba(168,85,247,0.95) 0%, rgba(168,85,247,0.42) 45%, transparent 78%)",
                 boxShadow: "0 0 18px rgba(168,85,247,0.35)",
-                animation: "locGlowFloat 4.9s ease-in-out infinite",
               }}
             />
 
-            <div className="absolute left-[34px] top-[92px] z-10">
+            <div className="absolute left-[96px] top-[70px] z-10 sm:left-[120px] sm:top-[82px]">
               <div className="relative">
                 <div
                   className="absolute -inset-2 rounded-full blur-xl"
@@ -448,21 +432,18 @@ export function LocationSectionClient({
               className="absolute left-[42%] top-[34%] h-1.5 w-1.5 rounded-full bg-white"
               style={{
                 boxShadow: "0 0 14px rgba(255,255,255,0.5)",
-                animation: "locStarPulse 3.4s ease-in-out infinite",
               }}
             />
             <div
               className="absolute left-[62%] top-[64%] h-1.5 w-1.5 rounded-full bg-white"
               style={{
                 boxShadow: "0 0 14px rgba(255,255,255,0.45)",
-                animation: "locStarPulse 4.1s ease-in-out infinite",
               }}
             />
             <div
               className="absolute left-[74%] top-[30%] h-1 w-1 rounded-full bg-white"
               style={{
                 boxShadow: "0 0 12px rgba(255,255,255,0.4)",
-                animation: "locStarPulse 3.8s ease-in-out infinite",
               }}
             />
           </div>
