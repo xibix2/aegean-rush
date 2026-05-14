@@ -22,10 +22,10 @@ export type DayInfo = {
 
 type Props = {
   year: number;
-  month: number; // 1-12
+  month: number;
   data: Record<string, DayInfo>;
-  minDate?: string; // YYYY-MM-DD
-  selectedDate?: string; // YYYY-MM-DD
+  minDate?: string;
+  selectedDate?: string;
   onPick?: (iso: string) => void;
   onPrevMonth?: () => void;
   onNextMonth?: () => void;
@@ -130,13 +130,12 @@ export default function MonthCalendar({
   const legendSome = t("calendar.legend.some") || "some left";
   const legendLow = t("calendar.legend.low") || "low";
   const legendFull = t("calendar.legend.full") || "full";
-  const legendLeft = t("calendar.legend.left") || "left";
   const ariaPrev = t("calendar.prevMonth") || "Previous month";
   const ariaNext = t("calendar.nextMonth") || "Next month";
 
   return (
     <div
-      className="relative mx-auto w-full overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#0a1020]"
+      className="relative mx-auto w-full overflow-hidden rounded-2xl border border-white/10 bg-[#0a1020] sm:rounded-[1.5rem]"
       role="region"
       aria-label={format(base, "MMMM yyyy")}
     >
@@ -151,7 +150,7 @@ export default function MonthCalendar({
   0%,100% { opacity: .04; }
   50% { opacity: .1; }
 }
-@media (prefers-reduced-motion: reduce) {
+@media (prefers-reduced-motion: reduce), (max-width: 768px) {
   .mc-anim { animation: none !important; }
 }
           `.trim(),
@@ -175,7 +174,7 @@ export default function MonthCalendar({
           }}
         />
         <div
-          className="mc-anim absolute left-1/2 top-8 h-28 w-[420px] -translate-x-1/2 rounded-full blur-3xl"
+          className="mc-anim absolute left-1/2 top-8 h-24 w-[280px] -translate-x-1/2 rounded-full blur-2xl sm:h-28 sm:w-[420px] sm:blur-3xl"
           style={{
             animation: "mcGlow 8s ease-in-out infinite",
             background:
@@ -184,23 +183,23 @@ export default function MonthCalendar({
         />
       </div>
 
-      <div className="relative z-10 flex items-center justify-between px-4 pb-2 pt-4 sm:px-5">
+      <div className="relative z-10 flex items-center justify-between gap-2 px-2.5 pb-1.5 pt-3 sm:px-5 sm:pb-2 sm:pt-4">
         <button
           type="button"
           onClick={onPrevMonth}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/12 bg-white/[0.05] text-sm text-white/90 transition hover:bg-white/[0.09]"
+          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/12 bg-white/[0.05] text-sm text-white/90 transition hover:bg-white/[0.09]"
           aria-label={ariaPrev}
           title={ariaPrev}
         >
           ‹
         </button>
 
-        <div className="flex items-center gap-2">
-          <div className="rounded-full border border-white/12 bg-white/[0.06] px-4 py-1.5 text-sm font-medium text-white/90">
+        <div className="flex min-w-0 items-center justify-center gap-1.5 sm:gap-2">
+          <div className="truncate rounded-full border border-white/12 bg-white/[0.06] px-3 py-1.5 text-xs font-medium text-white/90 sm:px-4 sm:text-sm">
             {format(base, "MMMM yyyy")}
           </div>
           {isSameMonth(today, base) ? (
-            <span className="rounded-full border border-fuchsia-300/18 bg-fuchsia-400/10 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.14em] text-fuchsia-100/80">
+            <span className="hidden rounded-full border border-fuchsia-300/18 bg-fuchsia-400/10 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.14em] text-fuchsia-100/80 sm:inline-flex">
               {txtToday}
             </span>
           ) : null}
@@ -209,7 +208,7 @@ export default function MonthCalendar({
         <button
           type="button"
           onClick={onNextMonth}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/12 bg-white/[0.05] text-sm text-white/90 transition hover:bg-white/[0.09]"
+          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/12 bg-white/[0.05] text-sm text-white/90 transition hover:bg-white/[0.09]"
           aria-label={ariaNext}
           title={ariaNext}
         >
@@ -217,19 +216,19 @@ export default function MonthCalendar({
         </button>
       </div>
 
-      <div className="relative z-10 grid grid-cols-7 gap-2 px-4 pb-2 pt-1 sm:px-5">
+      <div className="relative z-10 grid grid-cols-7 gap-1 px-2.5 pb-1 pt-1 sm:gap-2 sm:px-5 sm:pb-2">
         {weekLabels.map((w) => (
           <div
             key={w}
-            className="py-1 text-center text-[10px] font-medium uppercase tracking-[0.16em] text-white/42 sm:text-[11px]"
+            className="py-1 text-center text-[9px] font-medium uppercase tracking-[0.08em] text-white/42 sm:text-[11px] sm:tracking-[0.16em]"
           >
-            {w}
+            {w.slice(0, 3)}
           </div>
         ))}
       </div>
 
       <div
-        className="relative z-10 grid grid-cols-7 gap-2 px-4 pb-4 sm:px-5"
+        className="relative z-10 grid grid-cols-7 gap-1 px-2.5 pb-3 sm:gap-2 sm:px-5 sm:pb-4"
         role="grid"
         aria-readonly="false"
         tabIndex={0}
@@ -270,7 +269,7 @@ export default function MonthCalendar({
               role="gridcell"
               aria-selected={isSelected || undefined}
               className={clsx(
-                "relative h-[4.9rem] rounded-[1rem] border px-2 py-2 text-left transition-all duration-200 focus:outline-none sm:h-[5.5rem]",
+                "relative h-[3.35rem] rounded-xl border px-1.5 py-1.5 text-left transition-all duration-200 focus:outline-none sm:h-[5.5rem] sm:rounded-[1rem] sm:px-2 sm:py-2",
                 inThisMonth
                   ? "border-white/10 bg-white/[0.03]"
                   : "border-white/6 bg-white/[0.015]",
@@ -292,7 +291,7 @@ export default function MonthCalendar({
               <div className="flex items-start justify-between gap-1">
                 <span
                   className={clsx(
-                    "text-sm text-white/88",
+                    "text-xs text-white/88 sm:text-sm",
                     disabled && "opacity-60",
                     isSelected && "font-semibold text-white"
                   )}
@@ -301,15 +300,15 @@ export default function MonthCalendar({
                 </span>
 
                 {isTodayFlag && (
-                  <span className="rounded-full border border-sky-300/16 bg-sky-400/10 px-1.5 py-0.5 text-[9px] font-medium text-sky-100/70">
+                  <span className="hidden rounded-full border border-sky-300/16 bg-sky-400/10 px-1.5 py-0.5 text-[9px] font-medium text-sky-100/70 sm:inline-flex">
                     {txtToday}
                   </span>
                 )}
               </div>
 
               {info ? (
-                <div className="absolute inset-x-2 bottom-2">
-                  <div className="mb-1 flex items-center justify-between text-[10px] text-white/52">
+                <div className="absolute inset-x-1.5 bottom-1.5 sm:inset-x-2 sm:bottom-2">
+                  <div className="mb-1 hidden items-center justify-between text-[10px] text-white/52 sm:flex">
                     <span>
                       {bucket === "full"
                         ? "Fully booked"
@@ -323,7 +322,7 @@ export default function MonthCalendar({
                     </span>
                   </div>
 
-                  <div className="h-[5px] w-full overflow-hidden rounded-full bg-white/8">
+                  <div className="h-[4px] w-full overflow-hidden rounded-full bg-white/8 sm:h-[5px]">
                     <div
                       className={clsx("h-full rounded-full", fillClass)}
                       style={{
@@ -347,10 +346,10 @@ export default function MonthCalendar({
               {isSelected && (
                 <span
                   aria-hidden
-                  className="pointer-events-none absolute inset-0 rounded-[1rem]"
+                  className="pointer-events-none absolute inset-0 rounded-xl sm:rounded-[1rem]"
                   style={{
                     boxShadow:
-                      "inset 0 0 0 1px rgba(232,121,249,0.2), 0 0 0 4px rgba(232,121,249,0.05)",
+                      "inset 0 0 0 1px rgba(232,121,249,0.2), 0 0 0 3px rgba(232,121,249,0.05)",
                   }}
                 />
               )}
@@ -359,7 +358,7 @@ export default function MonthCalendar({
         })}
       </div>
 
-      <div className="relative z-10 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border-t border-white/8 px-4 py-3 sm:px-5">
+      <div className="relative z-10 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 border-t border-white/8 px-3 py-2.5 sm:gap-x-4 sm:gap-y-2 sm:px-5 sm:py-3">
         {[
           { c: "#34d399", label: legendMany },
           { c: "#fbbf24", label: legendSome },
@@ -368,10 +367,10 @@ export default function MonthCalendar({
         ].map((it) => (
           <span
             key={it.label}
-            className="inline-flex items-center gap-1.5 text-[11px] text-white/58"
+            className="inline-flex items-center gap-1.5 text-[10px] text-white/58 sm:text-[11px]"
           >
             <span
-              className="inline-block h-2.5 w-2.5 rounded-full"
+              className="inline-block h-2 w-2 rounded-full sm:h-2.5 sm:w-2.5"
               style={{ backgroundColor: it.c }}
             />
             {it.label}
