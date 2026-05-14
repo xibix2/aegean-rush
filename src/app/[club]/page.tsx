@@ -89,10 +89,10 @@ export default async function ClubHome({
 
   if (!hasHomepageSections) {
     return (
-      <div className="space-y-16 md:space-y-20">
+      <div className="space-y-10 sm:space-y-14 md:space-y-20">
         <HeroSectionClient tenantSlug={slug} />
 
-        <section id="courts" className="relative space-y-8 text-center">
+        <section id="courts" className="relative scroll-mt-24 space-y-5 text-center sm:space-y-8 md:scroll-mt-36">
           <CourtsHeaderClient />
           <Suspense fallback={<CourtsSkeleton />}>
             <CourtsSection tenantSlug={slug} />
@@ -103,7 +103,7 @@ export default async function ClubHome({
   }
 
   return (
-    <div className="space-y-16 md:space-y-20">
+    <div className="space-y-10 sm:space-y-14 md:space-y-20">
       {homepageSections.map((section) => {
         switch (section.type) {
           case "HERO": {
@@ -118,9 +118,7 @@ export default async function ClubHome({
                 : null;
 
             const microText =
-              typeof heroData?.microText === "string"
-                ? heroData.microText
-                : null;
+              typeof heroData?.microText === "string" ? heroData.microText : null;
 
             return (
               <HeroSectionClient
@@ -144,7 +142,7 @@ export default async function ClubHome({
               <section
                 key={section.id}
                 id="courts"
-                className="relative space-y-8 text-center"
+                className="relative scroll-mt-24 space-y-5 text-center sm:space-y-8 md:scroll-mt-36"
               >
                 <CourtsHeaderClient
                   badgeText={section.badgeText}
@@ -159,32 +157,35 @@ export default async function ClubHome({
 
           case "GALLERY":
             return (
-              <GallerySectionClient
-                key={section.id}
-                title={section.title}
-                subtitle={section.subtitle}
-                images={section.galleryImages}
-              />
+              <section key={section.id} className="scroll-mt-24 md:scroll-mt-36">
+                <GallerySectionClient
+                  title={section.title}
+                  subtitle={section.subtitle}
+                  images={section.galleryImages}
+                />
+              </section>
             );
 
           case "HOW_IT_WORKS":
             return (
-              <HowItWorksSectionClient
-                key={section.id}
-                title={section.title}
-                subtitle={section.subtitle}
-                items={section.featureItems}
-              />
+              <section key={section.id} className="scroll-mt-24 md:scroll-mt-36">
+                <HowItWorksSectionClient
+                  title={section.title}
+                  subtitle={section.subtitle}
+                  items={section.featureItems}
+                />
+              </section>
             );
 
           case "WHY_CHOOSE_US":
             return (
-              <WhyChooseUsSectionClient
-                key={section.id}
-                title={section.title}
-                subtitle={section.subtitle}
-                items={section.featureItems}
-              />
+              <section key={section.id} className="scroll-mt-24 md:scroll-mt-36">
+                <WhyChooseUsSectionClient
+                  title={section.title}
+                  subtitle={section.subtitle}
+                  items={section.featureItems}
+                />
+              </section>
             );
 
           case "LOCATION": {
@@ -229,31 +230,36 @@ export default async function ClubHome({
                 : null;
 
             return (
-              <LocationSectionClient
-                key={section.id}
-                clubSlug={slug}
-                badgeText={section.badgeText}
-                title={section.title}
-                subtitle={section.subtitle}
-                body={section.body}
-                primaryCtaLabel={section.primaryCtaLabel}
-                primaryCtaHref={section.primaryCtaHref}
-                secondaryCtaLabel={section.secondaryCtaLabel}
-                secondaryCtaHref={section.secondaryCtaHref}
-                locationName={locationName}
-                addressLine={addressLine}
-                googleMapsUrl={googleMapsUrl}
-                embedUrl={embedUrl}
-                detailLine1={detailLine1}
-                detailLine2={detailLine2}
-                detailLine3={detailLine3}
-              />
+              <section key={section.id} className="scroll-mt-24 md:scroll-mt-36">
+                <LocationSectionClient
+                  clubSlug={slug}
+                  badgeText={section.badgeText}
+                  title={section.title}
+                  subtitle={section.subtitle}
+                  body={section.body}
+                  primaryCtaLabel={section.primaryCtaLabel}
+                  primaryCtaHref={section.primaryCtaHref}
+                  secondaryCtaLabel={section.secondaryCtaLabel}
+                  secondaryCtaHref={section.secondaryCtaHref}
+                  locationName={locationName}
+                  addressLine={addressLine}
+                  googleMapsUrl={googleMapsUrl}
+                  embedUrl={embedUrl}
+                  detailLine1={detailLine1}
+                  detailLine2={detailLine2}
+                  detailLine3={detailLine3}
+                />
+              </section>
             );
           }
 
           case "FAQ":
             return (
-              <section key={section.id} id="faq" className="scroll-mt-28 md:scroll-mt-36">
+              <section
+                key={section.id}
+                id="faq"
+                className="scroll-mt-24 md:scroll-mt-36"
+              >
                 <FaqSectionClient
                   title={section.title}
                   subtitle={section.subtitle}
@@ -264,17 +270,18 @@ export default async function ClubHome({
 
           case "FINAL_CTA":
             return (
-              <FinalCtaSectionClient
-                key={section.id}
-                clubSlug={slug}
-                title={section.title}
-                subtitle={section.subtitle}
-                body={section.body}
-                primaryCtaLabel={section.primaryCtaLabel}
-                primaryCtaHref={section.primaryCtaHref}
-                secondaryCtaLabel={section.secondaryCtaLabel}
-                secondaryCtaHref={section.secondaryCtaHref}
-              />
+              <section key={section.id} className="scroll-mt-24 md:scroll-mt-36">
+                <FinalCtaSectionClient
+                  clubSlug={slug}
+                  title={section.title}
+                  subtitle={section.subtitle}
+                  body={section.body}
+                  primaryCtaLabel={section.primaryCtaLabel}
+                  primaryCtaHref={section.primaryCtaHref}
+                  secondaryCtaLabel={section.secondaryCtaLabel}
+                  secondaryCtaHref={section.secondaryCtaHref}
+                />
+              </section>
             );
 
           default:

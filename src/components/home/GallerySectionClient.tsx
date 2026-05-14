@@ -56,9 +56,9 @@ export function GallerySectionClient({
 
   if (!images.length) {
     return (
-      <section className="relative overflow-hidden rounded-[2.1rem] border border-white/10 bg-[#0b0d14] px-6 py-14 backdrop-blur-xl">
+      <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#0b0d14] px-4 py-9 backdrop-blur-xl sm:rounded-[2.1rem] sm:px-6 sm:py-14">
         <div
-          className="pointer-events-none absolute left-1/2 top-0 h-44 w-[70%] -translate-x-1/2 blur-3xl opacity-35"
+          className="pointer-events-none absolute left-1/2 top-0 h-36 w-[90%] -translate-x-1/2 opacity-25 blur-3xl sm:h-44 sm:w-[70%] sm:opacity-35"
           style={{
             background:
               "radial-gradient(circle, rgba(236,72,153,0.16) 0%, rgba(56,189,248,0.10) 42%, transparent 72%)",
@@ -67,14 +67,14 @@ export function GallerySectionClient({
 
         <div className="relative mx-auto max-w-4xl text-center">
           {(title || subtitle) && (
-            <div className="mx-auto mb-12 max-w-3xl text-center">
-              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-4 py-1.5 text-[0.68rem] font-bold uppercase tracking-[0.22em] text-white/65 backdrop-blur-xl">
+            <div className="mx-auto mb-7 max-w-3xl text-center sm:mb-12">
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-[0.62rem] font-bold uppercase tracking-[0.16em] text-white/65 backdrop-blur-xl sm:mb-5 sm:px-4 sm:text-[0.68rem] sm:tracking-[0.22em]">
                 <Camera className="size-3.5 text-pink-300" />
                 Gallery
               </div>
 
               {title && (
-                <h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl md:text-5xl">
+                <h2 className="text-2xl font-semibold tracking-tight text-white sm:text-4xl md:text-5xl">
                   {title.includes(" ") ? (
                     <>
                       {title.split(" ").slice(0, -1).join(" ")}{" "}
@@ -91,20 +91,20 @@ export function GallerySectionClient({
               )}
 
               {subtitle && (
-                <p className="mt-4 text-base font-medium text-white/60 sm:text-lg">
+                <p className="mt-3 text-sm font-medium leading-relaxed text-white/60 sm:mt-4 sm:text-lg">
                   {subtitle}
                 </p>
               )}
 
-              <div className="mt-8 flex items-center justify-center gap-3">
-                <span className="h-px w-9 bg-gradient-to-r from-transparent to-pink-400/70" />
+              <div className="mt-5 flex items-center justify-center gap-3 sm:mt-8">
+                <span className="h-px w-8 bg-gradient-to-r from-transparent to-pink-400/70 sm:w-9" />
                 <span className="text-cyan-300">≋</span>
-                <span className="h-px w-9 bg-gradient-to-r from-cyan-400/70 to-transparent" />
+                <span className="h-px w-8 bg-gradient-to-r from-cyan-400/70 to-transparent sm:w-9" />
               </div>
             </div>
           )}
 
-          <div className="rounded-[1.75rem] border border-dashed border-white/10 bg-black/20 px-6 py-16 text-white/45">
+          <div className="rounded-3xl border border-dashed border-white/10 bg-black/20 px-4 py-12 text-sm text-white/45 sm:rounded-[1.75rem] sm:px-6 sm:py-16">
             No gallery images added yet.
           </div>
         </div>
@@ -121,8 +121,7 @@ export function GallerySectionClient({
     if (index === activeIndex || isAnimating) return;
 
     const current = displayIndex;
-    const isPrev =
-      index === (current === 0 ? images.length - 1 : current - 1);
+    const isPrev = index === (current === 0 ? images.length - 1 : current - 1);
 
     setDirection(isPrev ? "prev" : "next");
     setActiveIndex(index);
@@ -143,7 +142,7 @@ export function GallerySectionClient({
   };
 
   return (
-    <section className="relative overflow-hidden rounded-[2.1rem] border border-white/10 bg-[#0b0d14] px-5 py-12 backdrop-blur-xl sm:px-6 md:px-8 md:py-14">
+    <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#0b0d14] px-4 py-9 backdrop-blur-xl sm:rounded-[2.1rem] sm:px-6 sm:py-12 md:px-8 md:py-14">
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -200,31 +199,34 @@ export function GallerySectionClient({
       />
 
       <div
-        className="gallery-anim pointer-events-none absolute left-1/2 top-0 h-44 w-[70%] -translate-x-1/2 blur-3xl"
+        className="gallery-anim pointer-events-none absolute left-1/2 top-0 h-36 w-[90%] -translate-x-1/2 blur-3xl sm:h-44 sm:w-[70%]"
         style={{
           background:
             "radial-gradient(circle, rgba(236,72,153,0.18) 0%, rgba(56,189,248,0.12) 42%, transparent 72%)",
           animation: "galleryGlowA 8s ease-in-out infinite",
         }}
       />
+
       <div
-        className="gallery-anim pointer-events-none absolute -left-8 top-1/3 h-48 w-48 rounded-full blur-3xl"
+        className="gallery-anim pointer-events-none absolute -left-12 top-1/3 h-36 w-36 rounded-full blur-3xl sm:-left-8 sm:h-48 sm:w-48"
         style={{
           background:
             "radial-gradient(circle, rgba(236,72,153,0.16) 0%, transparent 70%)",
           animation: "galleryGlowB 9s ease-in-out infinite",
         }}
       />
+
       <div
-        className="gallery-anim pointer-events-none absolute -right-8 top-1/4 h-52 w-52 rounded-full blur-3xl"
+        className="gallery-anim pointer-events-none absolute -right-12 top-1/4 h-40 w-40 rounded-full blur-3xl sm:-right-8 sm:h-52 sm:w-52"
         style={{
           background:
             "radial-gradient(circle, rgba(56,189,248,0.16) 0%, transparent 70%)",
           animation: "galleryGlowC 11s ease-in-out infinite",
         }}
       />
+
       <div
-        className="gallery-anim pointer-events-none absolute bottom-[-3rem] left-1/3 h-44 w-44 rounded-full blur-3xl"
+        className="gallery-anim pointer-events-none absolute bottom-[-3rem] left-1/3 h-36 w-36 rounded-full blur-3xl sm:h-44 sm:w-44"
         style={{
           background:
             "radial-gradient(circle, rgba(168,85,247,0.14) 0%, transparent 70%)",
@@ -234,14 +236,14 @@ export function GallerySectionClient({
 
       <div className="relative mx-auto max-w-6xl">
         {(title || subtitle) && (
-          <div className="mx-auto mb-12 max-w-3xl text-center">
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-4 py-1.5 text-[0.68rem] font-bold uppercase tracking-[0.22em] text-white/65 backdrop-blur-xl">
+          <div className="mx-auto mb-7 max-w-3xl text-center sm:mb-12">
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-[0.62rem] font-bold uppercase tracking-[0.16em] text-white/65 backdrop-blur-xl sm:mb-5 sm:px-4 sm:text-[0.68rem] sm:tracking-[0.22em]">
               <Camera className="size-3.5 text-pink-300" />
               Gallery
             </div>
 
             {title && (
-              <h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl md:text-5xl">
+              <h2 className="text-2xl font-semibold tracking-tight text-white sm:text-4xl md:text-5xl">
                 {title.includes(" ") ? (
                   <>
                     {title.split(" ").slice(0, -1).join(" ")}{" "}
@@ -258,39 +260,31 @@ export function GallerySectionClient({
             )}
 
             {subtitle && (
-              <p className="mt-4 text-base font-medium text-white/60 sm:text-lg">
+              <p className="mt-3 text-sm font-medium leading-relaxed text-white/60 sm:mt-4 sm:text-lg">
                 {subtitle}
               </p>
             )}
 
-            <div className="mt-8 flex items-center justify-center gap-3">
-              <span className="h-px w-9 bg-gradient-to-r from-transparent to-pink-400/70" />
+            <div className="mt-5 flex items-center justify-center gap-3 sm:mt-8">
+              <span className="h-px w-8 bg-gradient-to-r from-transparent to-pink-400/70 sm:w-9" />
               <span className="text-cyan-300">≋</span>
-              <span className="h-px w-9 bg-gradient-to-r from-cyan-400/70 to-transparent" />
+              <span className="h-px w-8 bg-gradient-to-r from-cyan-400/70 to-transparent sm:w-9" />
             </div>
           </div>
         )}
 
-        <div className="relative mt-2 flex items-center justify-center">
+        <div className="relative mt-1 flex items-center justify-center sm:mt-2">
           {images.length > 1 && (
             <>
               <div className="pointer-events-none absolute left-0 top-1/2 hidden h-[72%] w-[18%] -translate-y-1/2 overflow-hidden rounded-[1.75rem] border border-white/6 opacity-35 blur-[1px] lg:block">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={prevImage.imageUrl}
-                  alt=""
-                  className="h-full w-full object-cover"
-                />
+                <img src={prevImage.imageUrl} alt="" className="h-full w-full object-cover" />
                 <div className="absolute inset-0 bg-black/45" />
               </div>
 
               <div className="pointer-events-none absolute right-0 top-1/2 hidden h-[72%] w-[18%] -translate-y-1/2 overflow-hidden rounded-[1.75rem] border border-white/6 opacity-35 blur-[1px] lg:block">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={nextImage.imageUrl}
-                  alt=""
-                  className="h-full w-full object-cover"
-                />
+                <img src={nextImage.imageUrl} alt="" className="h-full w-full object-cover" />
                 <div className="absolute inset-0 bg-black/45" />
               </div>
             </>
@@ -298,10 +292,10 @@ export function GallerySectionClient({
 
           <div className="relative z-10 w-full max-w-4xl">
             <div
-              className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-black/25 shadow-[0_40px_120px_-50px_rgba(0,0,0,0.95)]"
+              className="relative overflow-hidden rounded-3xl border border-white/10 bg-black/25 shadow-[0_40px_120px_-50px_rgba(0,0,0,0.95)] sm:rounded-[2rem]"
               style={{ animation: "galleryPulseBorder 7s ease-in-out infinite" }}
             >
-              <div className="relative aspect-[16/9] overflow-hidden bg-black">
+              <div className="relative aspect-[4/3] overflow-hidden bg-black sm:aspect-[16/9]">
                 <div
                   className={
                     isAnimating
@@ -322,7 +316,7 @@ export function GallerySectionClient({
                   <img
                     src={shownImage.imageUrl}
                     alt={shownImage.altText ?? ""}
-                    className="h-full w-full object-contain"
+                    className="h-full w-full object-cover sm:object-contain"
                   />
                 </div>
 
@@ -344,7 +338,7 @@ export function GallerySectionClient({
                     <img
                       src={incomingImage.imageUrl}
                       alt={incomingImage.altText ?? ""}
-                      className="h-full w-full object-contain"
+                      className="h-full w-full object-cover sm:object-contain"
                     />
                   </div>
                 )}
@@ -379,7 +373,7 @@ export function GallerySectionClient({
                     <button
                       type="button"
                       onClick={goPrev}
-                      className="absolute left-4 top-1/2 inline-flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-black/35 text-white backdrop-blur-xl transition hover:scale-105 hover:bg-black/55"
+                      className="absolute left-2 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-black/45 text-white backdrop-blur-xl transition hover:scale-105 hover:bg-black/60 sm:left-4 sm:h-12 sm:w-12 sm:bg-black/35"
                       aria-label="Previous image"
                     >
                       <ChevronLeft className="size-5" />
@@ -388,7 +382,7 @@ export function GallerySectionClient({
                     <button
                       type="button"
                       onClick={goNext}
-                      className="absolute right-4 top-1/2 inline-flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-black/35 text-white backdrop-blur-xl transition hover:scale-105 hover:bg-black/55"
+                      className="absolute right-2 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-black/45 text-white backdrop-blur-xl transition hover:scale-105 hover:bg-black/60 sm:right-4 sm:h-12 sm:w-12 sm:bg-black/35"
                       aria-label="Next image"
                     >
                       <ChevronRight className="size-5" />
@@ -401,7 +395,7 @@ export function GallerySectionClient({
         </div>
 
         {images.length > 1 && (
-          <div className="mt-7 flex items-center justify-center gap-2">
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-2 sm:mt-7">
             {images.map((image, index) => (
               <button
                 key={image.id}
@@ -409,7 +403,7 @@ export function GallerySectionClient({
                 onClick={() => goTo(index)}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   index === activeIndex
-                    ? "w-10 bg-gradient-to-r from-pink-400 via-fuchsia-300 to-cyan-300 shadow-[0_0_18px_rgba(236,72,153,0.35)]"
+                    ? "w-9 bg-gradient-to-r from-pink-400 via-fuchsia-300 to-cyan-300 shadow-[0_0_18px_rgba(236,72,153,0.35)] sm:w-10"
                     : "w-2 bg-white/20 hover:bg-white/45"
                 }`}
                 aria-label={`Go to image ${index + 1}`}
@@ -418,7 +412,7 @@ export function GallerySectionClient({
           </div>
         )}
 
-        <div className="mt-6 flex items-center justify-center gap-2 text-sm text-white/45">
+        <div className="mt-5 flex items-center justify-center gap-2 text-xs text-white/45 sm:mt-6 sm:text-sm">
           <Camera className="size-4" />
           {images.length} {images.length === 1 ? "photo" : "photos"}
         </div>

@@ -68,7 +68,7 @@ export function HowItWorksSectionClient({
         ];
 
   return (
-    <section className="relative overflow-hidden rounded-[2.1rem] border border-white/10 bg-[#0b0d14] px-5 py-12 backdrop-blur-xl sm:px-6 md:px-8 md:py-14">
+    <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#0b0d14] px-4 py-9 backdrop-blur-xl sm:rounded-[2.1rem] sm:px-6 sm:py-12 md:px-8 md:py-14">
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -88,23 +88,25 @@ export function HowItWorksSectionClient({
       />
 
       <div
-        className="hiw-anim pointer-events-none absolute left-1/2 top-0 h-44 w-[68%] -translate-x-1/2 blur-3xl"
+        className="hiw-anim pointer-events-none absolute left-1/2 top-0 h-36 w-[90%] -translate-x-1/2 blur-3xl sm:h-44 sm:w-[68%]"
         style={{
           background:
             "radial-gradient(circle, rgba(236,72,153,0.14) 0%, rgba(56,189,248,0.10) 42%, transparent 72%)",
           animation: "hiwGlowA 8s ease-in-out infinite",
         }}
       />
+
       <div
-        className="hiw-anim pointer-events-none absolute left-[10%] top-[20%] h-36 w-36 rounded-full blur-3xl"
+        className="hiw-anim pointer-events-none absolute left-[4%] top-[20%] h-28 w-28 rounded-full blur-3xl sm:left-[10%] sm:h-36 sm:w-36"
         style={{
           background:
             "radial-gradient(circle, rgba(236,72,153,0.12) 0%, transparent 72%)",
           animation: "hiwGlowB 10s ease-in-out infinite",
         }}
       />
+
       <div
-        className="hiw-anim pointer-events-none absolute right-[8%] bottom-[12%] h-40 w-40 rounded-full blur-3xl"
+        className="hiw-anim pointer-events-none absolute right-[2%] bottom-[12%] h-32 w-32 rounded-full blur-3xl sm:right-[8%] sm:h-40 sm:w-40"
         style={{
           background:
             "radial-gradient(circle, rgba(56,189,248,0.12) 0%, transparent 72%)",
@@ -114,32 +116,32 @@ export function HowItWorksSectionClient({
 
       <div className="relative mx-auto max-w-6xl">
         <div className="mx-auto max-w-3xl text-center">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-4 py-1.5 text-xs uppercase tracking-[0.18em] text-white/70 backdrop-blur-xl">
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-[10px] uppercase tracking-[0.14em] text-white/70 backdrop-blur-xl sm:mb-4 sm:px-4 sm:text-xs sm:tracking-[0.18em]">
             <Sparkles className="size-3.5 text-pink-300" />
             How it works
           </div>
 
-          <h2 className="text-3xl font-semibold tracking-tight text-white md:text-5xl">
+          <h2 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl md:text-5xl">
             {title || "Book in three simple steps"}
           </h2>
 
-          <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-white/65 md:text-base">
+          <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-white/65 sm:mt-4 md:text-base">
             {subtitle ||
               "Pick activity, pick date and time, then pay and you're done."}
           </p>
         </div>
 
-        <div className="mt-10 grid gap-4 md:grid-cols-3">
+        <div className="mt-7 grid gap-3 sm:mt-10 sm:gap-4 md:grid-cols-3">
           {resolvedItems.slice(0, 3).map((item, index) => {
             const Icon = getIcon(item.icon, index);
 
             return (
               <div
                 key={item.id}
-                className="group relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-6 shadow-[0_24px_80px_-50px_rgba(0,0,0,0.95)] transition duration-300 hover:-translate-y-1 hover:border-white/20"
+                className="group relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] p-4 shadow-[0_24px_80px_-50px_rgba(0,0,0,0.95)] transition duration-300 hover:-translate-y-1 hover:border-white/20 sm:rounded-[1.75rem] sm:p-6"
               >
                 <div
-                  className="pointer-events-none absolute inset-x-0 top-0 h-24 opacity-60 blur-2xl"
+                  className="pointer-events-none absolute inset-x-0 top-0 h-20 opacity-50 blur-2xl sm:h-24 sm:opacity-60"
                   style={{
                     background:
                       index === 0
@@ -151,20 +153,20 @@ export function HowItWorksSectionClient({
                 />
 
                 <div className="relative flex items-center justify-between">
-                  <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-black/20 text-white backdrop-blur-xl">
-                    <Icon className="size-6 text-white" />
+                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-black/20 text-white backdrop-blur-xl sm:h-14 sm:w-14">
+                    <Icon className="size-5 text-white sm:size-6" />
                   </div>
 
-                  <div className="text-4xl font-semibold text-white/12">
+                  <div className="text-3xl font-semibold text-white/12 sm:text-4xl">
                     0{index + 1}
                   </div>
                 </div>
 
-                <h3 className="relative mt-6 text-xl font-semibold text-white">
+                <h3 className="relative mt-4 text-lg font-semibold text-white sm:mt-6 sm:text-xl">
                   {item.title}
                 </h3>
 
-                <p className="relative mt-3 text-sm leading-relaxed text-white/62 md:text-base">
+                <p className="relative mt-2 text-sm leading-relaxed text-white/62 sm:mt-3 md:text-base">
                   {item.description ||
                     (index === 0
                       ? "Choose the experience that fits your mood."

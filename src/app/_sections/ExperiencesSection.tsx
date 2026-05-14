@@ -68,11 +68,11 @@ export default async function ExperiencesSection(props?: { tenantSlug?: string }
   return (
     <section className="relative">
       {!experiences.length ? (
-        <div className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-8 backdrop-blur-xl">
+        <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5 backdrop-blur-xl sm:rounded-[2rem] sm:p-8">
           <EmptyState />
         </div>
       ) : (
-        <div className="rounded-[2rem] border border-white/10 bg-white/[0.03] p-3 sm:p-4 md:p-5 backdrop-blur-xl shadow-[0_20px_80px_-40px_rgba(0,0,0,0.65)]">
+        <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-2 backdrop-blur-xl shadow-[0_20px_80px_-40px_rgba(0,0,0,0.65)] sm:rounded-[2rem] sm:p-4 md:p-5">
           <ExperiencesCarousel
             courts={experiences}
             tomorrow={tomorrowYMD()}

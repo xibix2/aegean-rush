@@ -77,7 +77,7 @@ export default function CourtsCarousel({
   const [cardW, setCardW] = useState(300);
   const [viewportW, setViewportW] = useState(0);
   const [index, setIndex] = useState(Math.floor(courts.length / 2));
-  const [anim, setAnim] = useState(true);
+  const [anim] = useState(true);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   useEffect(() => {
@@ -86,10 +86,13 @@ export default function CourtsCarousel({
       const anyCard = cardRefs.current.find(Boolean);
       if (anyCard) setCardW(anyCard.clientWidth);
     };
+
     measure();
+
     const ro = new ResizeObserver(measure);
     if (viewportRef.current) ro.observe(viewportRef.current);
     cardRefs.current.forEach((el) => el && ro.observe(el));
+
     return () => ro.disconnect();
   }, [courts.length]);
 
@@ -104,6 +107,7 @@ export default function CourtsCarousel({
   useEffect(() => {
     const node = trackRef.current;
     if (!node) return;
+
     node.style.transition = anim ? `transform 650ms ${EASE}` : "none";
     node.style.transform = `translate3d(${translateX}px,0,0)`;
   }, [translateX, anim]);
@@ -125,8 +129,10 @@ export default function CourtsCarousel({
 
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (touchStartX == null) return;
+
     const delta = e.changedTouches[0].clientX - touchStartX;
     if (Math.abs(delta) > 40) delta > 0 ? goPrev() : goNext();
+
     setTouchStartX(null);
   };
 
@@ -134,6 +140,7 @@ export default function CourtsCarousel({
     (i: number) => (e: React.MouseEvent<HTMLDivElement>) => {
       const img = imgRefs.current[i];
       if (!img) return;
+
       const rect = e.currentTarget.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
@@ -159,19 +166,22 @@ export default function CourtsCarousel({
       onKeyDown={onKeyDown}
     >
       {!atStart && (
-        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-[#060a14] via-[#060a14]/80 to-transparent" />
+        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 hidden w-16 bg-gradient-to-r from-[#060a14] via-[#060a14]/80 to-transparent sm:block" />
       )}
+
       {!atEnd && (
-        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-[#060a14] via-[#060a14]/80 to-transparent" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 hidden w-16 bg-gradient-to-l from-[#060a14] via-[#060a14]/80 to-transparent sm:block" />
       )}
 
       <div
         ref={viewportRef}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
-        className="overflow-hidden px-2 py-4 sm:px-4 md:px-6 md:py-6"
+        className="overflow-hidden px-1 py-3 sm:px-4 sm:py-4 md:px-6 md:py-6"
         style={
-          { ["--card-w" as any]: "clamp(240px, 26vw, 310px)" } as React.CSSProperties
+          {
+            ["--card-w" as any]: "clamp(270px, 84vw, 310px)",
+          } as React.CSSProperties
         }
       >
         <div
@@ -197,10 +207,10 @@ export default function CourtsCarousel({
                 onMouseMove={onCardMouseMove(i)}
                 onMouseLeave={onCardMouseLeave(i)}
                 className={[
-                  "group relative w-[var(--card-w)] flex-shrink-0 overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.04] backdrop-blur-xl transition-all duration-500 transform-gpu",
+                  "group relative w-[var(--card-w)] flex-shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl transition-all duration-500 transform-gpu sm:rounded-[1.5rem]",
                   active
-                    ? "scale-[1.02] -translate-y-1 shadow-[0_24px_70px_-30px_rgba(0,0,0,0.8)]"
-                    : "scale-[0.95] opacity-75",
+                    ? "scale-[1.01] shadow-[0_24px_70px_-30px_rgba(0,0,0,0.8)] sm:-translate-y-1 sm:scale-[1.02]"
+                    : "scale-[0.96] opacity-75 sm:scale-[0.95]",
                 ].join(" ")}
               >
                 <div className="relative aspect-[16/10] w-full overflow-hidden bg-white/5">
@@ -223,42 +233,44 @@ export default function CourtsCarousel({
                     </div>
                   )}
 
-                  <div className="absolute left-3 top-3 flex items-center gap-2">
-                    <span className="inline-flex items-center gap-1 rounded-full border border-white/12 bg-black/30 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.18em] text-white/85 backdrop-blur-md">
-                      <Waves className="size-3 text-cyan-300" />
-                      {getBadgeLabel(c.mode)}
+                  <div className="absolute left-2.5 top-2.5 flex max-w-[56%] items-center gap-2 sm:left-3 sm:top-3">
+                    <span className="inline-flex max-w-full items-center gap-1 rounded-full border border-white/12 bg-black/30 px-2 py-1 text-[9px] font-medium uppercase tracking-[0.14em] text-white/85 backdrop-blur-md sm:px-2.5 sm:text-[10px] sm:tracking-[0.18em]">
+                      <Waves className="size-3 shrink-0 text-cyan-300" />
+                      <span className="truncate">{getBadgeLabel(c.mode)}</span>
                     </span>
                   </div>
 
                   {priceLabel && (
-                    <div className="absolute right-3 top-3">
-                      <div className="rounded-full border border-pink-300/20 bg-black/35 px-2.5 py-1.5 text-xs font-medium text-white shadow-lg backdrop-blur-md">
+                    <div className="absolute right-2.5 top-2.5 max-w-[42%] sm:right-3 sm:top-3">
+                      <div className="truncate rounded-full border border-pink-300/20 bg-black/35 px-2 py-1.5 text-[11px] font-medium text-white shadow-lg backdrop-blur-md sm:px-2.5 sm:text-xs">
                         {priceLabel}
                       </div>
                     </div>
                   )}
                 </div>
 
-                <div className="relative p-4">
-                  <h3 className="text-lg font-semibold leading-tight text-white">
+                <div className="relative p-3.5 sm:p-4">
+                  <h3 className="line-clamp-2 text-base font-semibold leading-tight text-white sm:text-lg">
                     {c.name}
                   </h3>
 
-                  <p className="mt-2 min-h-[40px] text-sm leading-5 text-white/68 line-clamp-2">
+                  <p className="mt-1.5 min-h-[38px] text-sm leading-5 text-white/68 line-clamp-2 sm:mt-2 sm:min-h-[40px]">
                     {c.description || "Premium Aegean sea experience."}
                   </p>
 
-                  <div className="mt-3 inline-flex items-center gap-2 text-sm text-white/70">
-                    <MapPin className="size-4 text-pink-300" />
-                    <span>{c.locationId || t("courts.defaultLocation")}</span>
+                  <div className="mt-3 inline-flex max-w-full items-center gap-2 text-xs text-white/70 sm:text-sm">
+                    <MapPin className="size-4 shrink-0 text-pink-300" />
+                    <span className="truncate">
+                      {c.locationId || t("courts.defaultLocation")}
+                    </span>
                   </div>
 
-                  <div className="mt-5 flex items-center gap-2">
+                  <div className="mt-4 grid grid-cols-1 gap-2 sm:mt-5 sm:flex sm:items-center">
                     <Link
                       href={`${tenantBase}/timetable?activityId=${encodeURIComponent(
                         c.id
                       )}&date=${encodeURIComponent(tomorrow)}&partySize=1`}
-                      className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-pink-500 to-fuchsia-500 px-4 text-sm font-medium text-white shadow-[0_14px_40px_-16px_rgba(236,72,153,0.8)] transition duration-300 hover:scale-[1.03]"
+                      className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-pink-500 to-fuchsia-500 px-4 text-sm font-medium text-white shadow-[0_14px_40px_-16px_rgba(236,72,153,0.8)] transition duration-300 hover:scale-[1.03] sm:h-10 sm:w-auto"
                     >
                       <CircleDot className="size-4" />
                       <span>{t("courts.selectBtn")}</span>
@@ -266,7 +278,7 @@ export default function CourtsCarousel({
 
                     <Link
                       href={`${tenantBase}/activities`}
-                      className="inline-flex h-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] px-3 text-sm font-medium text-white/82 backdrop-blur-md transition hover:bg-white/[0.08]"
+                      className="inline-flex h-11 w-full items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] px-3 text-sm font-medium text-white/82 backdrop-blur-md transition hover:bg-white/[0.08] sm:h-10 sm:w-auto"
                     >
                       Explore
                     </Link>
@@ -278,7 +290,7 @@ export default function CourtsCarousel({
         </div>
       </div>
 
-      <div className="mt-2 flex justify-center gap-2">
+      <div className="mt-1 flex justify-center gap-2 sm:mt-2">
         {courts.map((_, i) => (
           <button
             key={i}
@@ -299,10 +311,10 @@ export default function CourtsCarousel({
             type="button"
             onClick={goPrev}
             disabled={atStart}
-            className={`absolute left-2 top-[42%] z-20 -translate-y-1/2 rounded-full border border-white/10 p-2.5 backdrop-blur-xl transition md:left-3 ${
+            className={`absolute left-1 top-[42%] z-20 -translate-y-1/2 rounded-full border border-white/10 p-2 backdrop-blur-xl transition sm:left-2 sm:p-2.5 md:left-3 ${
               atStart
                 ? "cursor-not-allowed bg-white/5 text-white/30"
-                : "bg-black/35 text-white hover:scale-105 hover:bg-black/55"
+                : "bg-black/45 text-white hover:scale-105 hover:bg-black/60"
             }`}
             aria-label={t("courts.prev")}
           >
@@ -313,10 +325,10 @@ export default function CourtsCarousel({
             type="button"
             onClick={goNext}
             disabled={atEnd}
-            className={`absolute right-2 top-[42%] z-20 -translate-y-1/2 rounded-full border border-white/10 p-2.5 backdrop-blur-xl transition md:right-3 ${
+            className={`absolute right-1 top-[42%] z-20 -translate-y-1/2 rounded-full border border-white/10 p-2 backdrop-blur-xl transition sm:right-2 sm:p-2.5 md:right-3 ${
               atEnd
                 ? "cursor-not-allowed bg-white/5 text-white/30"
-                : "bg-black/35 text-white hover:scale-105 hover:bg-black/55"
+                : "bg-black/45 text-white hover:scale-105 hover:bg-black/60"
             }`}
             aria-label={t("courts.next")}
           >

@@ -1,4 +1,4 @@
-//FinalCtaSectionClient.tsx
+// src/components/home/FinalCtaSectionClient.tsx
 "use client";
 
 import type { ComponentType } from "react";
@@ -111,11 +111,17 @@ export function FinalCtaSectionClient({
 
   const handleInternalJump = (href: string) => {
     const id = href.replace(/^#/, "");
-    smoothScrollToId(id, 120, 1100);
+    smoothScrollToId(id, 96, 900);
   };
 
+  const primaryButtonClass =
+    "cta-anim group relative inline-flex h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-r from-pink-500 via-fuchsia-500 to-violet-500 px-6 text-sm font-medium text-white shadow-[0_22px_65px_-22px_rgba(236,72,153,0.85)] transition hover:scale-[1.03] hover:shadow-[0_28px_80px_-22px_rgba(236,72,153,0.95)] sm:w-auto md:h-14 md:px-8 md:text-base";
+
+  const secondaryButtonClass =
+    "inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-white/12 bg-white/[0.05] px-6 text-sm font-medium text-white/88 shadow-[0_16px_40px_-30px_rgba(56,189,248,0.55)] transition hover:-translate-y-0.5 hover:bg-white/[0.08] sm:w-auto md:h-14 md:px-8 md:text-base";
+
   return (
-    <section className="relative overflow-hidden rounded-[2.35rem] border border-white/10 bg-[#070b16] px-5 py-14 backdrop-blur-xl sm:px-6 md:px-8 md:py-20">
+    <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#070b16] px-4 py-10 backdrop-blur-xl sm:rounded-[2.35rem] sm:px-6 sm:py-14 md:px-8 md:py-20">
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -165,31 +171,34 @@ export function FinalCtaSectionClient({
       />
 
       <div
-        className="cta-anim pointer-events-none absolute left-1/2 top-0 h-64 w-[78%] -translate-x-1/2 blur-3xl"
+        className="cta-anim pointer-events-none absolute left-1/2 top-0 h-44 w-[92%] -translate-x-1/2 blur-3xl sm:h-64 sm:w-[78%]"
         style={{
           background:
             "radial-gradient(circle, rgba(236,72,153,0.24) 0%, rgba(168,85,247,0.18) 32%, rgba(56,189,248,0.16) 56%, transparent 76%)",
           animation: "ctaGlowMain 9s ease-in-out infinite",
         }}
       />
+
       <div
-        className="cta-anim pointer-events-none absolute left-[4%] top-[18%] h-44 w-44 rounded-full blur-3xl"
+        className="cta-anim pointer-events-none absolute left-[2%] top-[18%] h-32 w-32 rounded-full blur-3xl sm:left-[4%] sm:h-44 sm:w-44"
         style={{
           background:
             "radial-gradient(circle, rgba(236,72,153,0.16) 0%, transparent 72%)",
           animation: "ctaGlowFloat 12s ease-in-out infinite",
         }}
       />
+
       <div
-        className="cta-anim pointer-events-none absolute right-[4%] bottom-[12%] h-48 w-48 rounded-full blur-3xl"
+        className="cta-anim pointer-events-none absolute right-[2%] bottom-[12%] h-36 w-36 rounded-full blur-3xl sm:right-[4%] sm:h-48 sm:w-48"
         style={{
           background:
             "radial-gradient(circle, rgba(56,189,248,0.16) 0%, transparent 72%)",
           animation: "ctaGlowFloat 14s ease-in-out infinite",
         }}
       />
+
       <div
-        className="cta-anim pointer-events-none absolute left-[22%] bottom-[8%] h-36 w-36 rounded-full blur-3xl"
+        className="cta-anim pointer-events-none absolute left-[22%] bottom-[8%] h-28 w-28 rounded-full blur-3xl sm:h-36 sm:w-36"
         style={{
           background:
             "radial-gradient(circle, rgba(168,85,247,0.14) 0%, transparent 72%)",
@@ -198,7 +207,7 @@ export function FinalCtaSectionClient({
       />
 
       <div
-        className="cta-anim pointer-events-none absolute inset-0 opacity-[0.12]"
+        className="cta-anim pointer-events-none absolute inset-0 opacity-[0.08] sm:opacity-[0.12]"
         style={{
           background:
             "repeating-linear-gradient(115deg, transparent 0px, transparent 26px, rgba(255,255,255,0.05) 27px, transparent 28px)",
@@ -209,12 +218,12 @@ export function FinalCtaSectionClient({
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.05),transparent_46%),linear-gradient(135deg,rgba(255,255,255,0.03),transparent_40%,rgba(255,255,255,0.02))]" />
 
       <div className="relative mx-auto max-w-5xl text-center">
-        <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-4 py-1.5 text-xs uppercase tracking-[0.18em] text-white/72 shadow-[0_12px_34px_-18px_rgba(236,72,153,0.45)] backdrop-blur-xl">
-          <Sparkles className="size-3.5 text-pink-300" />
-          Ready when you are
+        <div className="mb-4 inline-flex max-w-full items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-[10px] uppercase tracking-[0.14em] text-white/72 shadow-[0_12px_34px_-18px_rgba(236,72,153,0.45)] backdrop-blur-xl sm:mb-5 sm:px-4 sm:text-xs sm:tracking-[0.18em]">
+          <Sparkles className="size-3.5 shrink-0 text-pink-300" />
+          <span className="truncate">Ready when you are</span>
         </div>
 
-        <div className="mx-auto mb-6 flex max-w-sm items-center justify-center gap-4 text-white/45">
+        <div className="mx-auto mb-5 flex max-w-xs items-center justify-center gap-3 text-white/45 sm:mb-6 sm:max-w-sm sm:gap-4">
           <div className="h-px flex-1 bg-gradient-to-r from-transparent via-pink-400/35 to-transparent" />
           <div
             className="cta-anim inline-flex items-center gap-2"
@@ -226,25 +235,25 @@ export function FinalCtaSectionClient({
           <div className="h-px flex-1 bg-gradient-to-r from-transparent via-sky-400/35 to-transparent" />
         </div>
 
-        <h2 className="mx-auto max-w-4xl text-3xl font-semibold tracking-tight text-white md:text-6xl">
+        <h2 className="mx-auto max-w-4xl text-2xl font-semibold tracking-tight text-white sm:text-3xl md:text-6xl">
           {title || "Ready to book your experience?"}
         </h2>
 
-        <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-white/70 md:text-lg">
+        <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-white/70 sm:mt-5 md:text-lg">
           {subtitle || "Choose your activity and secure your spot in seconds."}
         </p>
 
-        <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-white/56 md:text-base">
+        <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-white/56 sm:mt-4 md:text-base">
           {body ||
             "Pick your activity, choose your preferred time, and secure your place in just a few steps."}
         </p>
 
-        <div className="mt-9 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+        <div className="mt-7 grid gap-2.5 sm:mt-9 sm:flex sm:flex-wrap sm:items-center sm:justify-center sm:gap-3">
           {isHashHref(resolvedPrimaryHref) ? (
             <button
               type="button"
               onClick={() => handleInternalJump(resolvedPrimaryHref)}
-              className="cta-anim group relative inline-flex h-13 items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-r from-pink-500 via-fuchsia-500 to-violet-500 px-7 text-sm font-medium text-white shadow-[0_22px_65px_-22px_rgba(236,72,153,0.85)] transition hover:scale-[1.03] hover:shadow-[0_28px_80px_-22px_rgba(236,72,153,0.95)] md:h-14 md:px-8 md:text-base"
+              className={primaryButtonClass}
               style={{ animation: "ctaButtonFloat 4.8s ease-in-out infinite" }}
             >
               <span
@@ -261,7 +270,7 @@ export function FinalCtaSectionClient({
           ) : (
             <a
               href={resolvedPrimaryHref}
-              className="cta-anim group relative inline-flex h-13 items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-r from-pink-500 via-fuchsia-500 to-violet-500 px-7 text-sm font-medium text-white shadow-[0_22px_65px_-22px_rgba(236,72,153,0.85)] transition hover:scale-[1.03] hover:shadow-[0_28px_80px_-22px_rgba(236,72,153,0.95)] md:h-14 md:px-8 md:text-base"
+              className={primaryButtonClass}
               style={{ animation: "ctaButtonFloat 4.8s ease-in-out infinite" }}
             >
               <span
@@ -282,16 +291,13 @@ export function FinalCtaSectionClient({
               <button
                 type="button"
                 onClick={() => handleInternalJump(resolvedSecondaryHref)}
-                className="inline-flex h-13 items-center justify-center gap-2 rounded-2xl border border-white/12 bg-white/[0.05] px-7 text-sm font-medium text-white/88 shadow-[0_16px_40px_-30px_rgba(56,189,248,0.55)] transition hover:-translate-y-0.5 hover:bg-white/[0.08] md:h-14 md:px-8 md:text-base"
+                className={secondaryButtonClass}
               >
                 <MapPin className="size-4 text-sky-300" />
                 {resolvedSecondaryLabel}
               </button>
             ) : (
-              <a
-                href={resolvedSecondaryHref}
-                className="inline-flex h-13 items-center justify-center gap-2 rounded-2xl border border-white/12 bg-white/[0.05] px-7 text-sm font-medium text-white/88 shadow-[0_16px_40px_-30px_rgba(56,189,248,0.55)] transition hover:-translate-y-0.5 hover:bg-white/[0.08] md:h-14 md:px-8 md:text-base"
-              >
+              <a href={resolvedSecondaryHref} className={secondaryButtonClass}>
                 <MapPin className="size-4 text-sky-300" />
                 {resolvedSecondaryLabel}
               </a>
@@ -300,20 +306,20 @@ export function FinalCtaSectionClient({
 
           <a
             href={derivedContactHref}
-            className="inline-flex h-13 items-center justify-center gap-2 rounded-2xl border border-white/12 bg-white/[0.05] px-7 text-sm font-medium text-white/88 shadow-[0_16px_40px_-30px_rgba(236,72,153,0.45)] transition hover:-translate-y-0.5 hover:bg-white/[0.08] md:h-14 md:px-8 md:text-base"
+            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-white/12 bg-white/[0.05] px-6 text-sm font-medium text-white/88 shadow-[0_16px_40px_-30px_rgba(236,72,153,0.45)] transition hover:-translate-y-0.5 hover:bg-white/[0.08] sm:w-auto md:h-14 md:px-8 md:text-base"
           >
             <Phone className="size-4 text-pink-300" />
             {derivedContactLabel}
           </a>
         </div>
 
-        <div className="mt-7 flex flex-wrap items-center justify-center gap-3 md:gap-4">
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-2 sm:mt-7 md:gap-4">
           {DEFAULT_TRUST_ITEMS.map((item, index) => {
             const Icon = item.icon;
             return (
               <div
                 key={item.label}
-                className="cta-anim inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white/66 backdrop-blur-xl md:px-4"
+                className="cta-anim inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-[11px] text-white/66 backdrop-blur-xl sm:text-xs md:px-4"
                 style={{
                   animation: `ctaChipIn 650ms cubic-bezier(0.22,1,0.36,1) ${
                     index * 90
@@ -327,7 +333,7 @@ export function FinalCtaSectionClient({
           })}
         </div>
 
-        <div className="relative mx-auto mt-8 max-w-2xl overflow-hidden rounded-[1.6rem] border border-white/10 bg-white/[0.04] px-5 py-5 text-center backdrop-blur-xl md:px-6">
+        <div className="relative mx-auto mt-7 max-w-2xl overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] px-4 py-5 text-center backdrop-blur-xl sm:mt-8 sm:rounded-[1.6rem] sm:px-5 md:px-6">
           <div
             className="pointer-events-none absolute inset-x-0 top-0 h-20 blur-2xl"
             style={{
@@ -345,10 +351,10 @@ export function FinalCtaSectionClient({
             meeting point before you book.
           </p>
 
-          <div className="relative mt-4 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
+          <div className="relative mt-4 grid gap-2.5 sm:flex sm:items-center sm:justify-center sm:gap-3">
             <a
               href={derivedContactHref}
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-white/10 bg-black/20 px-5 text-sm font-medium text-white/85 transition hover:bg-white/[0.06]"
+              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-black/20 px-5 text-sm font-medium text-white/85 transition hover:bg-white/[0.06] sm:w-auto"
             >
               <MessageCircle className="size-4 text-pink-300" />
               Talk to us
@@ -356,7 +362,7 @@ export function FinalCtaSectionClient({
 
             <a
               href={`/${clubSlug}/manage-booking`}
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-white/10 bg-black/20 px-5 text-sm font-medium text-white/78 transition hover:bg-white/[0.06]"
+              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-black/20 px-5 text-sm font-medium text-white/78 transition hover:bg-white/[0.06] sm:w-auto"
             >
               <Ticket className="size-4 text-sky-300" />
               Manage booking
@@ -365,7 +371,7 @@ export function FinalCtaSectionClient({
             <button
               type="button"
               onClick={() => handleInternalJump("#faq")}
-              className="inline-flex h-11 items-center justify-center rounded-xl border border-white/10 bg-black/20 px-5 text-sm font-medium text-white/72 transition hover:bg-white/[0.06]"
+              className="inline-flex h-11 w-full items-center justify-center rounded-xl border border-white/10 bg-black/20 px-5 text-sm font-medium text-white/72 transition hover:bg-white/[0.06] sm:w-auto"
             >
               View FAQ
             </button>

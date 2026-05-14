@@ -1,3 +1,4 @@
+//src/components/home/FaqSectionClient.tsx
 "use client";
 
 import { useState } from "react";
@@ -17,23 +18,13 @@ type FaqSectionClientProps = {
 };
 
 function getFaqGlow(index: number) {
-  if (index === 0) {
-    return "radial-gradient(circle, rgba(56,189,248,0.18) 0%, transparent 72%)";
-  }
-  if (index === 1) {
-    return "radial-gradient(circle, rgba(236,72,153,0.18) 0%, transparent 72%)";
-  }
-  if (index === 2) {
-    return "radial-gradient(circle, rgba(168,85,247,0.18) 0%, transparent 72%)";
-  }
+  if (index === 0) return "radial-gradient(circle, rgba(56,189,248,0.18) 0%, transparent 72%)";
+  if (index === 1) return "radial-gradient(circle, rgba(236,72,153,0.18) 0%, transparent 72%)";
+  if (index === 2) return "radial-gradient(circle, rgba(168,85,247,0.18) 0%, transparent 72%)";
   return "radial-gradient(circle, rgba(34,197,94,0.16) 0%, transparent 72%)";
 }
 
-export function FaqSectionClient({
-  title,
-  subtitle,
-  items,
-}: FaqSectionClientProps) {
+export function FaqSectionClient({ title, subtitle, items }: FaqSectionClientProps) {
   const resolvedItems =
     items.length > 0
       ? items
@@ -71,7 +62,7 @@ export function FaqSectionClient({
   const [openId, setOpenId] = useState<string | null>(resolvedItems[0]?.id ?? null);
 
   return (
-    <section className="relative overflow-hidden rounded-[2.15rem] border border-white/10 bg-[#070b16] px-5 py-12 backdrop-blur-xl sm:px-6 md:px-8 md:py-16">
+    <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#070b16] px-4 py-9 backdrop-blur-xl sm:rounded-[2.15rem] sm:px-6 sm:py-12 md:px-8 md:py-16">
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -114,7 +105,7 @@ export function FaqSectionClient({
       />
 
       <div
-        className="faq-anim pointer-events-none absolute left-1/2 top-0 h-56 w-[74%] -translate-x-1/2 blur-3xl"
+        className="faq-anim pointer-events-none absolute left-1/2 top-0 h-40 w-[90%] -translate-x-1/2 blur-3xl sm:h-56 sm:w-[74%]"
         style={{
           background:
             "radial-gradient(circle, rgba(56,189,248,0.18) 0%, rgba(236,72,153,0.14) 38%, rgba(168,85,247,0.16) 58%, transparent 76%)",
@@ -122,75 +113,70 @@ export function FaqSectionClient({
         }}
       />
       <div
-        className="faq-anim pointer-events-none absolute left-[4%] top-[18%] h-40 w-40 rounded-full blur-3xl"
+        className="faq-anim pointer-events-none absolute left-[2%] top-[18%] h-28 w-28 rounded-full blur-3xl sm:left-[4%] sm:h-40 sm:w-40"
         style={{
-          background:
-            "radial-gradient(circle, rgba(236,72,153,0.14) 0%, transparent 72%)",
+          background: "radial-gradient(circle, rgba(236,72,153,0.14) 0%, transparent 72%)",
           animation: "faqGlowFloat 11s ease-in-out infinite",
         }}
       />
       <div
-        className="faq-anim pointer-events-none absolute right-[6%] bottom-[14%] h-44 w-44 rounded-full blur-3xl"
+        className="faq-anim pointer-events-none absolute right-[2%] bottom-[14%] h-32 w-32 rounded-full blur-3xl sm:right-[6%] sm:h-44 sm:w-44"
         style={{
-          background:
-            "radial-gradient(circle, rgba(56,189,248,0.14) 0%, transparent 72%)",
+          background: "radial-gradient(circle, rgba(56,189,248,0.14) 0%, transparent 72%)",
           animation: "faqGlowFloat 13s ease-in-out infinite",
         }}
       />
       <div
-        className="faq-anim pointer-events-none absolute left-[28%] bottom-[8%] h-32 w-32 rounded-full blur-3xl"
+        className="faq-anim pointer-events-none absolute left-[28%] bottom-[8%] h-24 w-24 rounded-full blur-3xl sm:h-32 sm:w-32"
         style={{
-          background:
-            "radial-gradient(circle, rgba(168,85,247,0.12) 0%, transparent 72%)",
+          background: "radial-gradient(circle, rgba(168,85,247,0.12) 0%, transparent 72%)",
           animation: "faqGlowFloat 12s ease-in-out infinite",
         }}
       />
 
       <div
-        className="faq-anim pointer-events-none absolute inset-0 opacity-[0.08]"
+        className="faq-anim pointer-events-none absolute inset-0 opacity-[0.06] sm:opacity-[0.08]"
         style={{
           backgroundImage:
             "linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)",
           backgroundSize: "42px 42px",
-          maskImage:
-            "radial-gradient(circle at center, black 35%, transparent 82%)",
-          WebkitMaskImage:
-            "radial-gradient(circle at center, black 35%, transparent 82%)",
+          maskImage: "radial-gradient(circle at center, black 35%, transparent 82%)",
+          WebkitMaskImage: "radial-gradient(circle at center, black 35%, transparent 82%)",
           animation: "faqGridMove 16s ease-in-out infinite",
         }}
       />
 
       <div className="relative mx-auto max-w-4xl">
         <div className="mx-auto max-w-3xl text-center">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-4 py-1.5 text-xs uppercase tracking-[0.18em] text-white/72 shadow-[0_10px_30px_-18px_rgba(56,189,248,0.5)] backdrop-blur-xl">
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-[10px] uppercase tracking-[0.14em] text-white/72 shadow-[0_10px_30px_-18px_rgba(56,189,248,0.5)] backdrop-blur-xl sm:mb-4 sm:px-4 sm:text-xs sm:tracking-[0.18em]">
             <HelpCircle className="size-3.5 text-sky-300" />
             FAQ
           </div>
 
-          <h2 className="text-3xl font-semibold tracking-tight text-white md:text-5xl">
+          <h2 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl md:text-5xl">
             {title || "Frequently asked questions"}
           </h2>
 
-          <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-white/66 md:text-base">
+          <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-white/66 sm:mt-4 md:text-base">
             {subtitle ||
               "Everything guests usually want to know before booking — answered clearly and beautifully."}
           </p>
         </div>
 
-        <div className="mt-10 space-y-4">
+        <div className="mt-7 space-y-3 sm:mt-10 sm:space-y-4">
           {resolvedItems.map((item, index) => {
             const isOpen = openId === item.id;
 
             return (
               <div
                 key={item.id}
-                className="faq-card group relative overflow-hidden rounded-[1.65rem] border border-white/10 bg-white/[0.045] shadow-[0_24px_90px_-54px_rgba(0,0,0,0.95)] transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-white/[0.06]"
+                className="faq-card group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.045] shadow-[0_24px_90px_-54px_rgba(0,0,0,0.95)] transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-white/[0.06] sm:rounded-[1.65rem]"
                 style={{
                   animation: `faqCardIn 700ms cubic-bezier(0.22,1,0.36,1) ${index * 90}ms both`,
                 }}
               >
                 <div
-                  className="pointer-events-none absolute inset-x-0 top-0 h-24 opacity-60 blur-2xl transition duration-500 group-hover:opacity-100"
+                  className="pointer-events-none absolute inset-x-0 top-0 h-20 opacity-50 blur-2xl transition duration-500 group-hover:opacity-100 sm:h-24 sm:opacity-60"
                   style={{ background: getFaqGlow(index) }}
                 />
 
@@ -206,22 +192,20 @@ export function FaqSectionClient({
                 <button
                   type="button"
                   onClick={() => setOpenId(isOpen ? null : item.id)}
-                  className="relative flex w-full items-center justify-between gap-4 px-5 py-5 text-left md:px-6"
+                  className="relative flex w-full items-center justify-between gap-3 px-4 py-4 text-left sm:gap-4 sm:px-5 sm:py-5 md:px-6"
                 >
-                  <div className="flex items-start gap-3">
-                    <div className="mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-black/20 text-white/85 backdrop-blur-xl">
+                  <div className="flex min-w-0 items-start gap-3">
+                    <div className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-black/20 text-white/85 backdrop-blur-xl sm:h-10 sm:w-10">
                       <Sparkles className="size-4 text-pink-300" />
                     </div>
 
-                    <div>
-                      <h3 className="text-base font-semibold text-white md:text-lg">
-                        {item.question}
-                      </h3>
-                    </div>
+                    <h3 className="text-sm font-semibold leading-snug text-white sm:text-base md:text-lg">
+                      {item.question}
+                    </h3>
                   </div>
 
                   <div
-                    className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-black/20 text-white/85 backdrop-blur-xl transition duration-300 ${
+                    className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-black/20 text-white/85 backdrop-blur-xl transition duration-300 sm:h-11 sm:w-11 ${
                       isOpen ? "rotate-180 scale-105" : ""
                     }`}
                     style={{
@@ -238,7 +222,7 @@ export function FaqSectionClient({
                   }`}
                 >
                   <div className="overflow-hidden">
-                    <div className="relative border-t border-white/10 px-5 py-4 text-sm leading-relaxed text-white/70 md:px-6 md:text-base">
+                    <div className="relative border-t border-white/10 px-4 py-3 text-sm leading-relaxed text-white/70 sm:px-5 sm:py-4 md:px-6 md:text-base">
                       <div className="pointer-events-none absolute left-0 top-0 h-full w-px bg-gradient-to-b from-transparent via-pink-400/40 to-transparent" />
                       {item.answer}
                     </div>
