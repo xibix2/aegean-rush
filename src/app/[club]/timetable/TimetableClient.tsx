@@ -230,7 +230,7 @@ function modeLabel(mode: ActivityMode) {
 }
 
 function cardClass() {
-  return "rounded-[1.6rem] border border-white/10 bg-[#070b16] p-4 sm:p-5 shadow-[0_24px_80px_-45px_rgba(0,0,0,0.95)]";
+  return "rounded-3xl border border-white/10 bg-[#070b16] p-4 shadow-[0_24px_80px_-45px_rgba(0,0,0,0.95)] sm:rounded-[1.6rem] sm:p-5";
 }
 
 function fieldClass() {
@@ -672,8 +672,8 @@ export default function TimetableClient() {
           `,
         }}
       />
-      <main className="mx-auto max-w-5xl px-4 pb-12 pt-6 sm:px-6">
-        <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#070b16] px-5 py-7 sm:px-7 md:px-8 md:py-8">
+      <main className="mx-auto max-w-5xl px-3 pb-10 pt-4 sm:px-6 sm:pb-12 sm:pt-6">
+        <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#070b16] px-4 py-6 sm:rounded-[2rem] sm:px-7 md:px-8 md:py-8">
           <div
             className="pointer-events-none absolute inset-0"
             aria-hidden
@@ -689,11 +689,11 @@ export default function TimetableClient() {
             </div>
             <Link
               href={`/${tenantSlug}/activities`}
-              className="absolute right-4 top-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-gradient-to-r from-indigo-500/10 to-fuchsia-500/10 px-4 py-2 text-sm text-white/90 backdrop-blur-md transition hover:from-indigo-500/20 hover:to-fuchsia-500/20"
+              className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-gradient-to-r from-indigo-500/10 to-fuchsia-500/10 px-4 py-2 text-sm text-white/90 backdrop-blur-md transition hover:from-indigo-500/20 hover:to-fuchsia-500/20 sm:absolute sm:right-4 sm:top-4 sm:mt-0"
             >
               ← Back to Experiences
             </Link>
-            <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+            <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white sm:text-4xl">
               {t("timetable.title")}
             </h1>
 
@@ -747,12 +747,12 @@ export default function TimetableClient() {
               />
             </div>
 
-            <div className="mt-4 flex w-full justify-center items-center gap-3">
+            <div className="mt-4 grid w-full gap-2 sm:flex sm:items-center sm:justify-center sm:gap-3">
               <button
                 type="button"
                 onClick={goPrevDay}
                 disabled={loading || isAtMin}
-                className="inline-flex h-10 items-center justify-center rounded-full border border-white/12 bg-white/[0.05] px-4 text-sm text-white/90 transition hover:bg-white/[0.08] disabled:opacity-40"
+                className="inline-flex h-11 w-full items-center justify-center rounded-full border border-white/12 bg-white/[0.05] px-4 text-sm text-white/90 transition hover:bg-white/[0.08] disabled:opacity-40 sm:h-10 sm:w-auto"
               >
                 ‹ Previous day
               </button>
@@ -762,14 +762,14 @@ export default function TimetableClient() {
                 value={safeDate}
                 min={minBookable}
                 onChange={(e) => onDateInputChange(e.target.value)}
-                className="inline-flex h-10 rounded-full border border-white/12 bg-white/[0.05] px-4 text-sm text-white/90 outline-none focus:ring-2 focus:ring-fuchsia-400/25"
+                className="inline-flex h-11 w-full rounded-full border border-white/12 bg-white/[0.05] px-4 text-center text-sm text-white/90 outline-none focus:ring-2 focus:ring-fuchsia-400/25 sm:h-10 sm:w-auto"
               />
 
               <button
                 type="button"
                 onClick={goNextDay}
                 disabled={loading}
-                className="inline-flex h-10 items-center justify-center rounded-full border border-white/12 bg-white/[0.05] px-4 text-sm text-white/90 transition hover:bg-white/[0.08] disabled:opacity-40"
+                className="inline-flex h-11 w-full items-center justify-center rounded-full border border-white/12 bg-white/[0.05] px-4 text-sm text-white/90 transition hover:bg-white/[0.08] disabled:opacity-40 sm:h-10 sm:w-auto"
               >
                 Next day ›
               </button>
@@ -963,7 +963,7 @@ export default function TimetableClient() {
                     const end = s.end ? new Date(s.end) : null;
 
                     return (
-                      <div key={s.id} className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5">
+                      <div key={s.id} className="rounded-3xl border border-white/10 bg-white/[0.03] p-4 sm:rounded-[1.5rem] sm:p-5">
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                           <div>
                             <div className="text-xl font-semibold text-white">
@@ -989,7 +989,7 @@ export default function TimetableClient() {
                             <button
                               disabled={disabled || loading}
                               onClick={() => handleChooseSlot(s.id)}
-                              className={`inline-flex h-11 items-center justify-center rounded-full px-5 text-sm font-medium text-white transition ${
+                              className={`inline-flex h-11 w-full items-center justify-center rounded-full px-5 text-sm font-medium text-white transition sm:w-auto ${
                                 disabled || loading
                                   ? "cursor-not-allowed border border-white/10 bg-white/10 opacity-40"
                                   : "bg-gradient-to-r from-pink-500 via-fuchsia-500 to-violet-500 shadow-[0_18px_50px_-18px_rgba(236,72,153,0.75)] hover:scale-[1.02]"
@@ -1206,7 +1206,7 @@ export default function TimetableClient() {
                           <button
                             disabled={disabled || loading}
                             onClick={() => handleChooseSlot(s.id)}
-                            className={`inline-flex h-11 min-w-[180px] items-center justify-center rounded-full px-6 text-sm font-medium text-white transition ${
+                            className={`inline-flex h-11 w-full items-center justify-center rounded-full px-6 text-sm font-medium text-white transition sm:min-w-[180px] sm:w-auto ${
                               disabled || loading
                                 ? "cursor-not-allowed border border-white/10 bg-white/10 opacity-40"
                                 : "bg-gradient-to-r from-pink-500 via-fuchsia-500 to-violet-500 shadow-[0_18px_50px_-18px_rgba(236,72,153,0.75)] hover:scale-[1.02]"
