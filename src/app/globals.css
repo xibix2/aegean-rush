@@ -360,6 +360,35 @@ html[data-theme="auto"] { color-scheme: dark; }
   html[data-theme="auto"] { color-scheme: light; }
 }
 
+@media (max-width: 640px) {
+  .hero-anim,
+  .gallery-anim,
+  .hiw-anim,
+  .wcu-anim,
+  .faq-anim,
+  .faq-card,
+  .loc-anim,
+  .loc-card,
+  .cta-anim,
+  .wcu-card {
+    animation: none !important;
+    transition-duration: 150ms !important;
+  }
+
+  [class*="blur-3xl"] {
+    filter: blur(24px) !important;
+  }
+
+  [class*="backdrop-blur-xl"] {
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+  }
+
+  [class*="shadow-["] {
+    box-shadow: none !important;
+  }
+}
+
 /* ======================================================================
    ACCENT CONTROL (Settings → data-accent on <html>)
    Exposes --accent-400/500/600 + --accent-glow used in gradients & glow
