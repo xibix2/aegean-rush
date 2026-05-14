@@ -344,7 +344,7 @@ export default async function RootLayout({
             {/* HEADER */}
             <header className="sticky top-0 z-50">
               <div className="absolute inset-x-0 top-0 h-px bg-white/10" />
-              <div className="absolute inset-x-0 top-0 h-16 bg-[rgba(5,8,22,0.55)] backdrop-blur-xl sm:h-20" />
+              <div className="absolute inset-x-0 top-0 h-16 bg-[rgba(5,8,22,0.55)] backdrop-blur-md sm:h-20" />
               <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-r from-cyan-400/[0.025] via-transparent to-pink-400/[0.025] sm:h-20" />
 
               <div className="relative mx-auto flex h-16 w-full max-w-[1280px] items-center justify-between px-3 sm:h-20 sm:px-6 lg:px-8">
