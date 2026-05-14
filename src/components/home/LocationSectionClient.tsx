@@ -329,7 +329,7 @@ export function LocationSectionClient({
                   "radial-gradient(circle at center, black 36%, transparent 92%)",
                 WebkitMaskImage:
                   "radial-gradient(circle at center, black 36%, transparent 92%)",
-                animation: "locGridDrift 14s ease-in-out infinite",
+                animation: undefined,
               }}
             />
 
@@ -420,12 +420,7 @@ export function LocationSectionClient({
               }}
             />
 
-            <div
-              className="absolute left-[34px] top-[92px] z-10"
-              style={{
-                animation: "locBoatMove 11s ease-in-out infinite alternate",
-              }}
-            >
+            <div className="absolute left-[34px] top-[92px] z-10">
               <div className="relative">
                 <div
                   className="absolute -inset-2 rounded-full blur-xl"
@@ -441,12 +436,11 @@ export function LocationSectionClient({
             </div>
 
             <div
-              className="absolute inset-y-0 left-[-30%] w-[55%]"
+              className="absolute inset-y-0 left-[20%] w-[55%]"
               style={{
                 background:
-                  "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.02) 20%, rgba(236,72,153,0.10) 50%, rgba(56,189,248,0.08) 72%, transparent 100%)",
+                  "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.02) 20%, rgba(236,72,153,0.08) 50%, rgba(56,189,248,0.06) 72%, transparent 100%)",
                 filter: "blur(10px)",
-                animation: "locScan 8s ease-in-out infinite",
               }}
             />
 
