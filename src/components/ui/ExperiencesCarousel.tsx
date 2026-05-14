@@ -29,7 +29,7 @@ type Court = {
 };
 
 const EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
-const GAP_PX = 18;
+const GAP_PX = 12;
 
 function getPriceLabel(c: Court) {
   if (typeof c.basePrice !== "number") return null;
@@ -177,10 +177,10 @@ export default function CourtsCarousel({
         ref={viewportRef}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
-        className="overflow-hidden px-1 py-3 sm:px-4 sm:py-4 md:px-6 md:py-6"
+        className="overflow-hidden px-0 py-3 sm:px-4 sm:py-4 md:px-6 md:py-6"
         style={
           {
-            ["--card-w" as any]: "clamp(270px, 84vw, 310px)",
+            ["--card-w" as any]: "clamp(230px, 72vw, 310px)",
           } as React.CSSProperties
         }
       >
