@@ -10,6 +10,7 @@ import {
   Sparkles,
   TicketPercent,
   Clock3,
+  Zap,
 } from "lucide-react";
 import { useT } from "@/components/I18nProvider";
 
@@ -28,28 +29,23 @@ type HeroSectionClientProps = {
 
 export function HeroSectionClient({
   tenantSlug,
-  badgeText,
-  title,
-  highlightTitle,
-  subtitle,
   primaryCtaLabel,
   primaryCtaHref,
   secondaryCtaLabel,
   secondaryCtaHref,
-  microText,
 }: HeroSectionClientProps) {
   const t = useT();
 
   const base = `/${tenantSlug}`;
   const defaultActivitiesHref = `${base}/activities`;
 
-  const resolvedPrimaryCtaLabel = primaryCtaLabel || "Book now";
+  const resolvedPrimaryCtaLabel = primaryCtaLabel || "View activities";
   const resolvedPrimaryCtaHref = primaryCtaHref || defaultActivitiesHref;
-  const resolvedSecondaryCtaLabel = secondaryCtaLabel || "Find us";
+  const resolvedSecondaryCtaLabel = secondaryCtaLabel || "Find our location";
   const resolvedSecondaryCtaHref = secondaryCtaHref || "#meeting-point";
 
   return (
-    <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#050816] px-4 py-7 text-white shadow-[0_30px_120px_-40px_rgba(0,0,0,0.8)] sm:rounded-[2rem] sm:px-10 sm:py-10 md:px-14 md:py-14">
+    <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#050816] px-3 py-4 text-white shadow-[0_30px_120px_-40px_rgba(0,0,0,0.8)] sm:rounded-[2rem] sm:px-8 sm:py-8 md:px-10 md:py-10">
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -74,13 +70,13 @@ export function HeroSectionClient({
       />
 
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(236,72,153,0.24),transparent_32%),radial-gradient(circle_at_82%_20%,rgba(56,189,248,0.18),transparent_28%),linear-gradient(180deg,#07111f_0%,#050816_58%,#03050d_100%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_20%,rgba(236,72,153,0.25),transparent_28%),radial-gradient(circle_at_82%_20%,rgba(56,189,248,0.22),transparent_30%),linear-gradient(180deg,#07111f_0%,#050816_58%,#03050d_100%)]" />
 
         <div
           className="hero-anim absolute -left-24 top-[-7rem] h-[18rem] w-[18rem] rounded-full blur-3xl sm:-left-20 sm:top-[-6rem] sm:h-[22rem] sm:w-[22rem]"
           style={{
             background:
-              "radial-gradient(circle, rgba(236,72,153,0.25) 0%, rgba(236,72,153,0.08) 45%, transparent 72%)",
+              "radial-gradient(circle, rgba(236,72,153,0.26) 0%, rgba(236,72,153,0.08) 45%, transparent 72%)",
             animation: "heroDrift 14s ease-in-out infinite",
           }}
         />
@@ -94,75 +90,128 @@ export function HeroSectionClient({
           }}
         />
 
-        <div className="absolute inset-x-0 bottom-0 h-[32%] bg-gradient-to-t from-black/55 via-slate-950/25 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-[45%] bg-gradient-to-t from-black/80 via-slate-950/35 to-transparent" />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-5xl text-center">
-        <div className="mx-auto max-w-4xl rounded-[2rem] border border-white/10 bg-white/[0.055] px-4 py-6 shadow-[0_24px_90px_-55px_rgba(0,0,0,0.95)] backdrop-blur-xl sm:px-8 sm:py-8 md:px-10 md:py-10">
-          <div className="mb-4 inline-flex max-w-full items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-100 backdrop-blur-xl sm:mb-5 sm:px-4 sm:text-xs">
-            <TicketPercent className="size-3.5 shrink-0 text-emerald-200" />
-            <span className="truncate">May online offer</span>
-          </div>
+      <div className="relative z-10 mx-auto max-w-6xl">
+        <div className="grid overflow-hidden rounded-[1.6rem] border border-white/10 bg-black/35 shadow-[0_28px_110px_-55px_rgba(0,0,0,0.95)] backdrop-blur-xl md:grid-cols-[1.05fr_0.95fr]">
+          <div className="relative px-5 py-7 text-center sm:px-8 md:px-10 md:py-10 md:text-left">
+            <div className="mb-3 inline-flex max-w-full items-center gap-2 rounded-full border border-pink-300/25 bg-pink-500/15 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-pink-100 sm:text-xs">
+              <TicketPercent className="size-3.5 shrink-0" />
+              <span className="truncate">Insane May Online Offer</span>
+            </div>
 
-          <h1 className="mx-auto max-w-4xl text-[2.45rem] font-black uppercase leading-[0.95] tracking-[-0.05em] text-white sm:text-6xl md:text-7xl lg:text-8xl">
-            <span className="block">10% OFF</span>
-            <span className="mt-1 block bg-gradient-to-r from-emerald-200 via-cyan-100 to-pink-200 bg-clip-text text-transparent">
-              Online Bookings
-            </span>
-          </h1>
-
-          <div className="mx-auto mt-5 flex max-w-xl flex-col items-center justify-center gap-2 sm:mt-6 sm:flex-row">
-            <div className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-white/12 bg-black/25 px-4 py-3 text-sm text-white/82 sm:w-auto">
-              <Sparkles className="size-4 text-pink-300" />
-              Use code
-              <span className="rounded-lg border border-emerald-300/25 bg-emerald-300/10 px-2 py-1 font-bold tracking-[0.12em] text-emerald-100">
-                MAY10
+            <h1 className="text-[3.05rem] font-black uppercase leading-[0.86] tracking-[-0.075em] text-white sm:text-7xl md:text-8xl">
+              10%
+              <span className="ml-2 bg-gradient-to-r from-pink-400 via-fuchsia-300 to-cyan-200 bg-clip-text text-transparent">
+                OFF
               </span>
+            </h1>
+
+            <div className="mt-3 inline-block -rotate-1 bg-cyan-300 px-4 py-1.5 text-2xl font-black uppercase tracking-tight text-[#06101c] shadow-[0_14px_45px_-22px_rgba(34,211,238,0.9)] sm:text-4xl">
+              Online Bookings
             </div>
 
-            <div className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-white/12 bg-black/25 px-4 py-3 text-sm text-white/82 sm:w-auto">
-              <Clock3 className="size-4 text-cyan-300" />
-              Skip the waiting line
+            <div className="mt-6 grid gap-2 sm:flex sm:flex-wrap md:justify-start">
+              <div className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/12 bg-white/[0.06] px-4 py-3 text-sm text-white/85">
+                <Sparkles className="size-4 text-pink-300" />
+                Use code
+                <span className="rounded-lg border border-cyan-300/25 bg-cyan-300/10 px-2 py-1 font-black tracking-[0.12em] text-cyan-100">
+                  MAY10
+                </span>
+              </div>
+
+              <div className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/12 bg-white/[0.06] px-4 py-3 text-sm text-white/85">
+                <Clock3 className="size-4 text-cyan-300" />
+                Skip the waiting line
+              </div>
+            </div>
+
+            <p className="mx-auto mt-5 max-w-xl text-sm leading-6 text-white/70 md:mx-0 md:text-base">
+              Book online, secure your spot before you arrive, and spend more
+              time enjoying the sea.
+            </p>
+
+            <div className="mt-6 grid gap-2.5 sm:flex md:justify-start">
+              <Link
+                href={resolvedPrimaryCtaHref}
+                className="group relative inline-flex h-12 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-r from-pink-500 to-fuchsia-500 px-7 text-sm font-bold text-white shadow-[0_18px_55px_-18px_rgba(236,72,153,0.9)] transition hover:scale-[1.03]"
+              >
+                <span
+                  className="hero-anim absolute inset-0 opacity-40"
+                  style={{
+                    background:
+                      "linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.45) 50%, transparent 100%)",
+                    animation: "heroShimmer 3.8s linear infinite",
+                  }}
+                />
+                <CircleDot className="relative mr-2 size-4" />
+                <span className="relative">{resolvedPrimaryCtaLabel}</span>
+              </Link>
+
+              <a
+                href={resolvedSecondaryCtaHref}
+                className="inline-flex h-12 items-center justify-center rounded-2xl border border-white/12 bg-white/[0.08] px-7 text-sm font-bold text-white/88 transition hover:bg-white/12"
+              >
+                <MapPin className="mr-2 size-4" />
+                {resolvedSecondaryCtaLabel}
+              </a>
+            </div>
+
+            <p className="mt-4 text-xs text-white/45">
+              Offer valid for online bookings during May.
+            </p>
+          </div>
+
+          <div className="relative hidden min-h-[430px] overflow-hidden md:block">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_35%,rgba(236,72,153,0.36),transparent_28%),radial-gradient(circle_at_45%_55%,rgba(34,211,238,0.28),transparent_34%),linear-gradient(135deg,#07111f,#04101d_55%,#021827)]" />
+            <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-cyan-500/25 to-transparent" />
+
+            <div className="absolute right-8 top-10 rounded-full border border-pink-300/25 bg-black/35 px-7 py-6 text-center shadow-[0_0_45px_rgba(236,72,153,0.25)]">
+              <div className="text-xs font-black uppercase tracking-[0.2em] text-pink-200">
+                Save
+              </div>
+              <div className="text-5xl font-black tracking-[-0.08em] text-white">
+                10%
+              </div>
+              <div className="text-xs font-black uppercase tracking-[0.16em] text-pink-200">
+                This May
+              </div>
+            </div>
+
+            <div className="absolute bottom-12 right-10 h-48 w-72 rotate-[-8deg] rounded-[3rem] border border-cyan-200/20 bg-gradient-to-br from-cyan-300/35 via-sky-500/20 to-black/20 shadow-[0_35px_90px_-35px_rgba(34,211,238,0.9)]" />
+            <div className="absolute bottom-20 right-24 h-20 w-28 rotate-[-8deg] rounded-full bg-black/45 blur-sm" />
+            <div className="absolute bottom-24 right-28 text-7xl drop-shadow-[0_0_25px_rgba(34,211,238,0.45)]">
+              🌊
+            </div>
+            <div className="absolute bottom-32 right-36 text-7xl drop-shadow-[0_0_25px_rgba(236,72,153,0.35)]">
+              🏄
+            </div>
+
+            <div className="absolute bottom-8 left-8 right-8 grid grid-cols-3 gap-3 rounded-3xl border border-white/10 bg-black/30 p-4 backdrop-blur-xl">
+              <div className="text-center">
+                <CalendarDays className="mx-auto size-5 text-cyan-300" />
+                <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.14em] text-white/75">
+                  Real-time
+                </p>
+              </div>
+              <div className="text-center">
+                <ShieldCheck className="mx-auto size-5 text-pink-300" />
+                <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.14em] text-white/75">
+                  Secure
+                </p>
+              </div>
+              <div className="text-center">
+                <Zap className="mx-auto size-5 text-cyan-200" />
+                <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.14em] text-white/75">
+                  Instant
+                </p>
+              </div>
             </div>
           </div>
-
-          <p className="mx-auto mt-5 max-w-2xl text-sm leading-6 text-white/72 sm:text-base md:text-lg">
-            Book online, secure your spot before you arrive, and spend more time
-            enjoying the sea instead of waiting.
-          </p>
-
-          <div className="mt-6 flex flex-col items-stretch justify-center gap-2.5 sm:flex-row sm:items-center sm:gap-3">
-            <Link
-              href={resolvedPrimaryCtaHref}
-              className="group relative inline-flex h-12 w-full items-center justify-center overflow-hidden rounded-xl border border-pink-300/20 bg-gradient-to-r from-pink-500 to-fuchsia-500 px-5 text-sm font-medium text-white shadow-[0_10px_40px_-12px_rgba(236,72,153,0.75)] transition duration-300 hover:scale-[1.03] hover:shadow-[0_18px_60px_-16px_rgba(236,72,153,0.85)] sm:h-11 sm:w-auto sm:px-6 sm:text-base"
-            >
-              <span
-                className="hero-anim absolute inset-0 opacity-40"
-                style={{
-                  background:
-                    "linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.45) 50%, transparent 100%)",
-                  animation: "heroShimmer 3.8s linear infinite",
-                }}
-              />
-              <CircleDot className="relative z-10 mr-2 size-4" />
-              <span className="relative z-10">{resolvedPrimaryCtaLabel}</span>
-            </Link>
-
-            <a
-              href={resolvedSecondaryCtaHref}
-              className="inline-flex h-12 w-full items-center justify-center rounded-xl border border-white/12 bg-white/6 px-5 text-sm font-medium text-white/88 backdrop-blur-xl transition duration-300 hover:scale-[1.02] hover:bg-white/10 sm:h-11 sm:w-auto sm:px-6 sm:text-base"
-            >
-              <MapPin className="mr-2 size-4" />
-              {resolvedSecondaryCtaLabel}
-            </a>
-          </div>
-
-          <p className="mt-3 text-xs text-white/50">
-            Offer valid for online bookings during May.
-          </p>
         </div>
 
-        <div className="mt-5 flex flex-wrap items-center justify-center gap-2 sm:mt-6 sm:gap-2.5">
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-2 sm:mt-5">
           <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-3 py-1.5 text-[11px] text-white/80 backdrop-blur-xl sm:px-3.5 sm:text-xs">
             <CalendarDays className="size-3.5 text-cyan-300" />
             {t("home.trust.realTime")}
@@ -171,6 +220,11 @@ export function HeroSectionClient({
           <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-3 py-1.5 text-[11px] text-white/80 backdrop-blur-xl sm:px-3.5 sm:text-xs">
             <ShieldCheck className="size-3.5 text-pink-300" />
             {t("home.trust.secureCheckout")}
+          </div>
+
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-3 py-1.5 text-[11px] text-white/80 backdrop-blur-xl sm:px-3.5 sm:text-xs">
+            <Zap className="size-3.5 text-cyan-200" />
+            Instant confirmation
           </div>
         </div>
       </div>
