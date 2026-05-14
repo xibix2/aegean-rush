@@ -183,7 +183,7 @@ export default function MonthCalendar({
         />
       </div>
 
-      <div className="relative z-10 flex items-center justify-between gap-2 px-2.5 pb-1.5 pt-3 sm:px-5 sm:pb-2 sm:pt-4">
+      <div className="relative z-10 flex items-center justify-between gap-2 px-2.5 pb-1 pt-2.5 sm:px-5 sm:pb-2 sm:pt-4">
         <button
           type="button"
           onClick={onPrevMonth}
@@ -220,7 +220,7 @@ export default function MonthCalendar({
         {weekLabels.map((w) => (
           <div
             key={w}
-            className="py-1 text-center text-[9px] font-medium uppercase tracking-[0.08em] text-white/42 sm:text-[11px] sm:tracking-[0.16em]"
+            className="py-0.5 text-center text-[9px] font-medium uppercase tracking-[0.08em] text-white/42 sm:text-[11px] sm:tracking-[0.16em]"
           >
             {w.slice(0, 3)}
           </div>
@@ -228,7 +228,7 @@ export default function MonthCalendar({
       </div>
 
       <div
-        className="relative z-10 grid grid-cols-7 gap-1 px-2.5 pb-3 sm:gap-2 sm:px-5 sm:pb-4"
+        className="relative z-10 grid grid-cols-7 gap-1 px-2 pb-2 sm:gap-2 sm:px-5 sm:pb-4"
         role="grid"
         aria-readonly="false"
         tabIndex={0}
@@ -269,7 +269,7 @@ export default function MonthCalendar({
               role="gridcell"
               aria-selected={isSelected || undefined}
               className={clsx(
-                "relative h-[3.35rem] rounded-xl border px-1.5 py-1.5 text-left transition-all duration-200 focus:outline-none sm:h-[5.5rem] sm:rounded-[1rem] sm:px-2 sm:py-2",
+                "relative h-[2.9rem] rounded-xl border px-1 py-1 text-left transition-all duration-200 focus:outline-none sm:h-[5.5rem] sm:rounded-[1rem] sm:px-2 sm:py-2",
                 inThisMonth
                   ? "border-white/10 bg-white/[0.03]"
                   : "border-white/6 bg-white/[0.015]",
@@ -322,7 +322,7 @@ export default function MonthCalendar({
                     </span>
                   </div>
 
-                  <div className="h-[4px] w-full overflow-hidden rounded-full bg-white/8 sm:h-[5px]">
+                  <div className="h-[3px] w-full overflow-hidden rounded-full bg-white/8 sm:h-[5px]">
                     <div
                       className={clsx("h-full rounded-full", fillClass)}
                       style={{
