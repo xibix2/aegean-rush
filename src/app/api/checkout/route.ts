@@ -340,6 +340,9 @@ async function createSessionAndMaybeRedirect(
 
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
+
+    allow_promotion_codes: true,
+
     success_url: successUrl,
     cancel_url: cancelUrl,
     customer_creation: "always",
