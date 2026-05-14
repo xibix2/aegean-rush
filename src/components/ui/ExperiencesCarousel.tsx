@@ -180,7 +180,7 @@ export default function CourtsCarousel({
         className="overflow-hidden px-0 py-3 sm:px-4 sm:py-4 md:px-6 md:py-6"
         style={
           {
-            ["--card-w" as any]: "clamp(230px, 72vw, 310px)",
+            ["--card-w" as any]: "clamp(190px, 62vw, 310px)",
           } as React.CSSProperties
         }
       >
@@ -209,8 +209,8 @@ export default function CourtsCarousel({
                 className={[
                   "group relative w-[var(--card-w)] flex-shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl transition-all duration-500 transform-gpu sm:rounded-[1.5rem]",
                   active
-                    ? "scale-[1.01] shadow-[0_24px_70px_-30px_rgba(0,0,0,0.8)] sm:-translate-y-1 sm:scale-[1.02]"
-                    : "scale-[0.96] opacity-75 sm:scale-[0.95]",
+                    ? "scale-[1.01] -translate-y-0.5 shadow-[0_24px_70px_-30px_rgba(0,0,0,0.8)]"
+                    : "scale-[0.92] opacity-70",
                 ].join(" ")}
               >
                 <div className="relative aspect-[16/10] w-full overflow-hidden bg-white/5">
