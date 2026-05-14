@@ -211,7 +211,7 @@ export function HeroSectionClient({
           </div>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center justify-center gap-2 sm:mt-5">
+        <div className="mt-4 hidden flex-wrap items-center justify-center gap-2 sm:mt-5 md:flex">
           <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-3 py-1.5 text-[11px] text-white/80 backdrop-blur-xl sm:px-3.5 sm:text-xs">
             <CalendarDays className="size-3.5 text-cyan-300" />
             {t("home.trust.realTime")}
