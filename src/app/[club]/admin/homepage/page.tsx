@@ -805,14 +805,14 @@ export default async function AdminHomepagePage({ params }: PageProps) {
   });
 
   return (
-    <div className="space-y-8">
-      <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 backdrop-blur-xl md:p-8">
+    <div className="space-y-5 sm:space-y-8">
+      <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:rounded-[2rem] sm:p-6 md:p-8">
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.22em] text-white/45">
               Homepage editor
             </p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white">
+            <h1 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
               Customize your club homepage
             </h1>
             <p className="mt-3 max-w-2xl text-sm text-white/65 md:text-base">
@@ -825,7 +825,7 @@ export default async function AdminHomepagePage({ params }: PageProps) {
             href={`/${tenant.slug}`}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex h-11 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] px-5 text-sm font-medium text-white/85 transition hover:bg-white/[0.08]"
+            className="inline-flex h-11 w-full items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] px-5 text-sm font-medium text-white/85 transition hover:bg-white/[0.08] sm:w-auto"
           >
             Open live page
           </a>
@@ -885,7 +885,7 @@ export default async function AdminHomepagePage({ params }: PageProps) {
           return (
             <div
               key={section.id}
-              className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 backdrop-blur-xl md:p-7"
+              className="rounded-3xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:rounded-[2rem] sm:p-6 md:p-7"
             >
               <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div>
@@ -902,7 +902,7 @@ export default async function AdminHomepagePage({ params }: PageProps) {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <form action={moveSection}>
                     <input type="hidden" name="clubSlug" value={tenant.slug} />
                     <input type="hidden" name="sectionId" value={section.id} />
@@ -1120,7 +1120,7 @@ export default async function AdminHomepagePage({ params }: PageProps) {
                 <div className="pt-2">
                   <button
                     type="submit"
-                    className="inline-flex h-11 items-center justify-center rounded-xl bg-gradient-to-r from-pink-500 to-fuchsia-500 px-5 text-sm font-medium text-white shadow-[0_12px_40px_-16px_rgba(236,72,153,0.75)] transition hover:scale-[1.02]"
+                    className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-gradient-to-r from-pink-500 to-fuchsia-500 px-5 text-sm font-medium text-white shadow-[0_12px_40px_-16px_rgba(236,72,153,0.75)] transition hover:scale-[1.02] sm:w-auto"
                   >
                     Save section
                   </button>
@@ -1824,7 +1824,7 @@ function Field(props: {
         name={props.name}
         defaultValue={props.defaultValue}
         placeholder={props.placeholder}
-        className="h-12 w-full rounded-xl border border-white/10 bg-black/20 px-4 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-pink-400/40"
+        className="h-11 w-full rounded-xl border border-white/10 bg-black/20 px-3 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-pink-400/40 sm:h-12 sm:px-4"
       />
     </label>
   );

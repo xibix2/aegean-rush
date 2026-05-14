@@ -1,4 +1,5 @@
 // src/app/layout.tsx
+// src/app/layout.tsx
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
@@ -152,7 +153,6 @@ export default async function RootLayout({
           <div className="relative min-h-screen overflow-x-hidden bg-[#050816] text-[--color-text]">
             {/* BACKGROUND */}
             <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-              {/* base gradient */}
               <div
                 className="absolute inset-0"
                 style={{
@@ -166,11 +166,9 @@ export default async function RootLayout({
                 }}
               />
 
-              {/* mobile-safe atmosphere */}
               <div className="absolute inset-x-0 top-0 h-[38vh] bg-gradient-to-b from-cyan-400/[0.04] via-fuchsia-400/[0.02] to-transparent sm:hidden" />
               <div className="absolute inset-x-0 bottom-0 h-[34vh] bg-gradient-to-t from-violet-500/[0.05] via-cyan-400/[0.03] to-transparent sm:hidden" />
 
-              {/* desktop aurora layers */}
               <div
                 className="animate-aurora-pan absolute -left-[12%] top-[8%] hidden h-[320px] w-[620px] rotate-[-10deg] rounded-full opacity-[0.12] blur-[90px] sm:block"
                 style={{
@@ -193,7 +191,6 @@ export default async function RootLayout({
                 }}
               />
 
-              {/* wave bands */}
               <div className="animate-wave-pan-slow absolute inset-x-[-10%] bottom-[6%] hidden h-[240px] opacity-[0.1] md:block">
                 <div
                   className="absolute inset-0"
@@ -218,7 +215,6 @@ export default async function RootLayout({
                 />
               </div>
 
-              {/* light streaks */}
               <div className="absolute inset-0 hidden sm:block">
                 <div className="animate-streak-drift absolute left-[4%] top-[16%] h-px w-[24%] rotate-[8deg] bg-gradient-to-r from-transparent via-cyan-300/45 to-transparent blur-[1px]" />
                 <div className="animate-streak-drift-delayed absolute right-[8%] top-[24%] h-px w-[20%] -rotate-[8deg] bg-gradient-to-r from-transparent via-pink-300/40 to-transparent blur-[1px]" />
@@ -230,57 +226,43 @@ export default async function RootLayout({
                 <div className="animate-streak-drift-delayed absolute left-[28%] top-[60%] h-px w-[22%] -rotate-[2deg] bg-gradient-to-r from-transparent via-cyan-100/24 to-transparent blur-[1px]" />
               </div>
 
-              {/* center-zone distributed rings - desktop */}
               <div className="hidden sm:block">
                 <div className="animate-spin-ultra-slow absolute left-[42%] top-[10%] h-[210px] w-[210px] -translate-x-1/2 rounded-full border border-cyan-300/[0.09]" />
                 <div className="animate-spin-reverse-ultra-slow absolute left-[47%] top-[14%] h-[138px] w-[138px] -translate-x-1/2 rounded-full border border-violet-300/[0.08]" />
-
                 <div className="animate-spin-ultra-slow absolute left-[58%] top-[18%] h-[280px] w-[280px] -translate-x-1/2 rounded-full border border-pink-300/[0.08]" />
                 <div className="animate-spin-reverse-ultra-slow absolute left-[54%] top-[23%] h-[188px] w-[188px] -translate-x-1/2 rounded-full border border-sky-200/[0.07]" />
-
                 <div className="animate-spin-ultra-slow absolute left-[38%] top-[28%] h-[330px] w-[330px] -translate-x-1/2 rounded-full border border-white/[0.05]" />
                 <div className="animate-spin-reverse-ultra-slow absolute left-[44%] top-[33%] h-[228px] w-[228px] -translate-x-1/2 rounded-full border border-cyan-200/[0.07]" />
-
                 <div className="animate-spin-ultra-slow absolute left-[62%] top-[40%] h-[250px] w-[250px] -translate-x-1/2 rounded-full border border-violet-300/[0.08]" />
                 <div className="animate-spin-reverse-ultra-slow absolute left-[56%] top-[45%] h-[170px] w-[170px] -translate-x-1/2 rounded-full border border-pink-200/[0.07]" />
-
                 <div className="animate-spin-ultra-slow absolute left-[36%] top-[50%] h-[300px] w-[300px] -translate-x-1/2 rounded-full border border-cyan-300/[0.07]" />
                 <div className="animate-spin-reverse-ultra-slow absolute left-[41%] top-[56%] h-[200px] w-[200px] -translate-x-1/2 rounded-full border border-sky-200/[0.08]" />
-
                 <div className="animate-spin-ultra-slow absolute left-[57%] top-[58%] h-[360px] w-[360px] -translate-x-1/2 rounded-full border border-violet-300/[0.07]" />
                 <div className="animate-spin-reverse-ultra-slow absolute left-[51%] top-[64%] h-[244px] w-[244px] -translate-x-1/2 rounded-full border border-cyan-300/[0.08]" />
-
                 <div className="animate-spin-ultra-slow absolute left-[67%] top-[70%] h-[230px] w-[230px] -translate-x-1/2 rounded-full border border-pink-300/[0.07]" />
                 <div className="animate-spin-reverse-ultra-slow absolute left-[60%] top-[74%] h-[150px] w-[150px] -translate-x-1/2 rounded-full border border-white/[0.06]" />
-
                 <div className="animate-spin-ultra-slow absolute left-[46%] top-[76%] h-[260px] w-[260px] -translate-x-1/2 rounded-full border border-cyan-200/[0.07]" />
                 <div className="animate-spin-reverse-ultra-slow absolute left-[52%] top-[81%] h-[176px] w-[176px] -translate-x-1/2 rounded-full border border-violet-200/[0.07]" />
               </div>
 
-              {/* extra side rings */}
               <div className="animate-spin-ultra-slow absolute left-[-120px] top-[18%] hidden h-[420px] w-[420px] rounded-full border border-cyan-300/[0.08] md:block" />
               <div className="animate-spin-reverse-ultra-slow absolute left-[-70px] top-[23%] hidden h-[300px] w-[300px] rounded-full border border-violet-300/[0.07] lg:block" />
               <div className="animate-spin-ultra-slow absolute bottom-[8%] right-[-140px] hidden h-[440px] w-[440px] rounded-full border border-pink-300/[0.08] md:block" />
               <div className="animate-spin-reverse-ultra-slow absolute bottom-[16%] right-[-80px] hidden h-[320px] w-[320px] rounded-full border border-sky-200/[0.07] lg:block" />
 
-              {/* mobile center-zone rings */}
               <div className="sm:hidden">
                 <div className="animate-spin-ultra-slow absolute left-[44%] top-[16%] h-[150px] w-[150px] -translate-x-1/2 rounded-full border border-cyan-300/[0.08]" />
                 <div className="animate-spin-reverse-ultra-slow absolute left-[51%] top-[20%] h-[104px] w-[104px] -translate-x-1/2 rounded-full border border-violet-300/[0.07]" />
-
                 <div className="animate-spin-ultra-slow absolute left-[58%] top-[40%] h-[190px] w-[190px] -translate-x-1/2 rounded-full border border-pink-300/[0.07]" />
                 <div className="animate-spin-reverse-ultra-slow absolute left-[48%] top-[46%] h-[126px] w-[126px] -translate-x-1/2 rounded-full border border-sky-200/[0.07]" />
-
                 <div className="animate-spin-ultra-slow absolute left-[41%] top-[66%] h-[170px] w-[170px] -translate-x-1/2 rounded-full border border-cyan-200/[0.07]" />
                 <div className="animate-spin-reverse-ultra-slow absolute left-[56%] top-[72%] h-[112px] w-[112px] -translate-x-1/2 rounded-full border border-violet-200/[0.07]" />
               </div>
 
-              {/* horizon */}
               <div className="absolute inset-x-0 bottom-[18%] h-px opacity-[0.16] bg-gradient-to-r from-transparent via-cyan-200/50 to-transparent sm:hidden" />
               <div className="absolute inset-x-0 bottom-[18%] hidden h-px opacity-[0.22] bg-gradient-to-r from-transparent via-cyan-200/70 to-transparent sm:block" />
               <div className="absolute inset-x-0 bottom-[18%] hidden h-24 opacity-[0.08] blur-2xl bg-gradient-to-r from-transparent via-cyan-300/30 to-transparent md:block" />
 
-              {/* mobile particles */}
               {mobileParticles.map((p) => (
                 <span
                   key={`mobile-particle-${p.id}`}
@@ -296,7 +278,6 @@ export default async function RootLayout({
                 />
               ))}
 
-              {/* desktop particles */}
               {desktopParticles.map((p) => (
                 <span
                   key={`desktop-particle-${p.id}`}
@@ -316,7 +297,6 @@ export default async function RootLayout({
                 />
               ))}
 
-              {/* desktop colored orbs */}
               {desktopOrbs.map((orb) => (
                 <span
                   key={`orb-${orb.id}`}
@@ -335,11 +315,9 @@ export default async function RootLayout({
                 />
               ))}
 
-              {/* lighter beams only on desktop */}
               <div className="animate-beam-shift absolute left-[-8%] top-[20%] hidden h-[120px] w-[48%] rotate-[8deg] bg-gradient-to-r from-transparent via-white/[0.04] to-transparent blur-2xl md:block" />
               <div className="animate-beam-shift-reverse absolute right-[-12%] bottom-[18%] hidden h-[140px] w-[52%] -rotate-[6deg] bg-gradient-to-r from-transparent via-cyan-200/[0.04] to-transparent blur-2xl lg:block" />
 
-              {/* grain desktop only */}
               <div className="animate-grain absolute inset-0 hidden opacity-[0.03] mix-blend-screen md:block">
                 <div
                   className="absolute inset-[-50%]"
@@ -351,7 +329,6 @@ export default async function RootLayout({
                 />
               </div>
 
-              {/* grid */}
               <div
                 className="absolute inset-0 opacity-[0.025] sm:opacity-[0.03]"
                 style={{
@@ -367,20 +344,20 @@ export default async function RootLayout({
             {/* HEADER */}
             <header className="sticky top-0 z-50">
               <div className="absolute inset-x-0 top-0 h-px bg-white/10" />
-              <div className="absolute inset-x-0 top-0 h-20 bg-[rgba(5,8,22,0.55)] backdrop-blur-xl" />
-              <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-r from-cyan-400/[0.025] via-transparent to-pink-400/[0.025]" />
+              <div className="absolute inset-x-0 top-0 h-16 bg-[rgba(5,8,22,0.55)] backdrop-blur-xl sm:h-20" />
+              <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-r from-cyan-400/[0.025] via-transparent to-pink-400/[0.025] sm:h-20" />
 
-              <div className="relative mx-auto flex h-20 w-full max-w-[1280px] items-center justify-between px-4 sm:px-6 lg:px-8">
-                <Link href={tHref("/")} className="group flex min-w-0 items-center gap-3">
+              <div className="relative mx-auto flex h-16 w-full max-w-[1280px] items-center justify-between px-3 sm:h-20 sm:px-6 lg:px-8">
+                <Link href={tHref("/")} className="group flex min-w-0 items-center gap-2 sm:gap-3">
                   {brandLogo ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={brandLogo}
                       alt={effectiveBrandName}
-                      className="h-10 w-10 shrink-0 rounded-2xl border border-white/10 bg-black/20 object-contain shadow-[0_10px_30px_rgba(0,0,0,0.35)]"
+                      className="h-9 w-9 shrink-0 rounded-2xl border border-white/10 bg-black/20 object-contain shadow-[0_10px_30px_rgba(0,0,0,0.35)] sm:h-10 sm:w-10"
                     />
                   ) : (
-                    <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-[0_0_20px_rgba(255,255,255,0.04)]">
+                    <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-[0_0_20px_rgba(255,255,255,0.04)] sm:h-10 sm:w-10">
                       <img
                         src="/icon.png"
                         alt="Aegean Rush"
@@ -390,7 +367,7 @@ export default async function RootLayout({
                   )}
 
                   <div className="min-w-0">
-                    <div className="truncate text-[15px] font-semibold tracking-tight text-white/95 transition group-hover:text-white">
+                    <div className="max-w-[170px] truncate text-sm font-semibold tracking-tight text-white/95 transition group-hover:text-white sm:max-w-none sm:text-[15px]">
                       {effectiveBrandName}
                     </div>
                   </div>
@@ -399,21 +376,21 @@ export default async function RootLayout({
                 <nav className="rounded-full border border-white/10 bg-white/6 p-1 shadow-[0_10px_30px_rgba(0,0,0,0.18)] backdrop-blur-md">
                   <Link
                     href={tHref("/contact")}
-                    className="rounded-full px-4 py-2 text-sm font-medium text-white/80 transition hover:bg-white/10 hover:text-white"
+                    className="rounded-full px-3 py-2 text-xs font-medium text-white/80 transition hover:bg-white/10 hover:text-white sm:px-4 sm:text-sm"
                   >
                     Contact
                   </Link>
                 </nav>
               </div>
 
-              <div className="relative mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
+              <div className="relative mx-auto max-w-[1280px] px-3 sm:px-6 lg:px-8">
                 <div className="h-px w-full bg-gradient-to-r from-transparent via-cyan-300/30 to-transparent" />
               </div>
             </header>
 
             {/* PAGE CONTENT */}
             <main className="relative">
-              <div className="mx-auto w-full max-w-[1280px] px-4 pb-10 pt-6 sm:px-6 sm:pb-14 sm:pt-8 lg:px-8 lg:pb-20 lg:pt-10">
+              <div className="mx-auto w-full max-w-[1280px] px-3 pb-8 pt-4 sm:px-6 sm:pb-14 sm:pt-8 lg:px-8 lg:pb-20 lg:pt-10">
                 {children}
               </div>
             </main>
