@@ -29,7 +29,7 @@ type Court = {
 };
 
 const EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
-const GAP_PX = 12;
+const GAP_PX = 10;
 
 function getPriceLabel(c: Court) {
   if (typeof c.basePrice !== "number") return null;
@@ -213,7 +213,7 @@ export default function CourtsCarousel({
                     : "scale-[0.92] opacity-70",
                 ].join(" ")}
               >
-                <div className="relative aspect-[16/10] w-full overflow-hidden bg-white/5">
+                <div className="relative aspect-[16/8.5] w-full overflow-hidden bg-white/5">
                   {img ? (
                     <>
                       <img
@@ -249,7 +249,7 @@ export default function CourtsCarousel({
                   )}
                 </div>
 
-                <div className="relative p-3.5 sm:p-4">
+                <div className="relative p-3.5 sm:p-3">
                   <h3 className="line-clamp-2 text-base font-semibold leading-tight text-white sm:text-lg">
                     {c.name}
                   </h3>
