@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { format, addDays, addMonths, subMonths, parse } from "date-fns";
-import { formatInTimeZone } from "date-fns-tz";
+import { formatInTimeZone, fromZonedTime } from "date-fns-tz";
 import { toast } from "sonner";
 import MonthCalendar from "@/components/MonthCalendar";
 import { useT } from "@/components/I18nProvider";
@@ -133,7 +133,7 @@ function formatMoney(cents: number) {
 }
 
 function combineDateAndTime(dateYmd: string, timeHm: string) {
-  return new Date(`${dateYmd}T${timeHm}:00`).toISOString();
+  return fromZonedTime(`${dateYmd}T${timeHm}:00`, TIMEZONE).toISOString();
 }
 
 function ceilDiv(a: number, b: number) {
@@ -208,7 +208,7 @@ function buildTimeOptions(args: {
     }
 
     const availableUnits = Math.max(0, slot.capacity - usedUnits);
-    const hm = format(current, "HH:mm");
+    const hm = formatInTimeZone(current, TIMEZONE, "HH:mm");
 
     options.push({
       label: hm,
@@ -627,7 +627,12 @@ export default function TimetableClient() {
     setMonth(d.getMonth() + 1);
   };
 
-  const pretty = format(parse(safeDate, "yyyy-MM-dd", new Date()), "eeee, d MMM yyyy");
+  const pretty = formatInTimeZone(
+    fromZonedTime(`${safeDate}T12:00:00`, TIMEZONE),
+    TIMEZONE,
+    "eeee, d MMM yyyy"
+  );
+  
   const isAtMin = safeDate <= minBookable;
 
   const mode = activity?.mode ?? "FIXED_SEAT_EVENT";
@@ -967,8 +972,8 @@ export default function TimetableClient() {
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                           <div>
                             <div className="text-xl font-semibold text-white">
-                              {format(start, "HH:mm")}
-                              {end ? `–${format(end, "HH:mm")}` : ""}
+                              {formatInTimeZone(start, TIMEZONE, "HH:mm")}
+                              {end ? `–${formatInTimeZone(end, TIMEZONE, "HH:mm")}` : ""}
                             </div>
                             <div className="mt-1 text-sm text-white/56">
                               {s.remaining} spot{s.remaining === 1 ? "" : "s"} left
@@ -1028,8 +1033,10 @@ export default function TimetableClient() {
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                           <div>
                             <div className="text-xl font-semibold text-white">
-                              {format(new Date(s.availableWindowStart), "HH:mm")}
-                              {s.availableWindowEnd ? `–${format(new Date(s.availableWindowEnd), "HH:mm")}` : ""}
+                              {formatInTimeZone(new Date(s.availableWindowStart), TIMEZONE, "HH:mm")}
+                              {s.availableWindowEnd
+                                ? `–${formatInTimeZone(new Date(s.availableWindowEnd), TIMEZONE, "HH:mm")}`
+                                : ""}
                             </div>
                             {!!s.errors?.length && (
                               <div className="mt-2 text-xs text-amber-300">{s.errors[0]}</div>
