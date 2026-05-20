@@ -26,7 +26,10 @@ export default function BookingConfirmed({
 
   const color = brandPrimary || "#22c55e";
 
+  const TIMEZONE = "Europe/Athens";
+
   const formatterDate = new Intl.DateTimeFormat("en-GB", {
+    timeZone: TIMEZONE,
     weekday: "short",
     day: "2-digit",
     month: "short",
@@ -34,14 +37,20 @@ export default function BookingConfirmed({
   });
 
   const formatterTime = new Intl.DateTimeFormat("en-GB", {
+    timeZone: TIMEZONE,
     hour: "2-digit",
     minute: "2-digit",
+    hour12: false,
   });
 
-  const sameDay =
-    start.getFullYear() === end.getFullYear() &&
-    start.getMonth() === end.getMonth() &&
-    start.getDate() === end.getDate();
+  const formatterDayKey = new Intl.DateTimeFormat("en-CA", {
+    timeZone: TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+
+  const sameDay = formatterDayKey.format(start) === formatterDayKey.format(end);
 
   const dateLabel = formatterDate.format(start);
   const timeLabel = sameDay
@@ -212,6 +221,7 @@ export default function BookingConfirmed({
                 {dateLabel}
                 <span style={{ opacity: 0.75 }}> · </span>
                 {timeLabel}
+                <span style={{ opacity: 0.7 }}> Greek local time</span>
               </div>
             </div>
 

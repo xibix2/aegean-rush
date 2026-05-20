@@ -235,8 +235,8 @@ async function sendConfirmationEmail(
       subject: `Your booking with ${senderDisplayName} is confirmed ✅`,
       react: BookingConfirmed({
         activity: b.timeSlot.activity.name,
-        startISO: startLocal.toISOString(),
-        endISO: endLocal.toISOString(),
+        startISO: bookingStart.toISOString(),
+        endISO: bookingEnd.toISOString(),
         partySize: b.partySize,
         totalCents: b.totalPrice!,
         clubName: senderDisplayName,
