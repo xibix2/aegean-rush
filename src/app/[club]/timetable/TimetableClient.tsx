@@ -332,7 +332,7 @@ export default function TimetableClient() {
   const base = tenantSlug ? `/${tenantSlug}` : "";
 
   const minBookable = useMemo(
-    () => formatInTimeZone(addDays(new Date(), 1), TIMEZONE, "yyyy-MM-dd"),
+    () => formatInTimeZone(new Date(), TIMEZONE, "yyyy-MM-dd"),
     [],
   );
 

@@ -89,6 +89,8 @@ export type BookingEngineResult = {
 const PENDING_HOLD_MINUTES = 30;
 const RENTAL_BOOKING_STEP_MINUTES = 5;
 
+const MIN_BOOKING_NOTICE_MINUTES = 120;
+
 function isFreshPending(createdAt: Date, now: Date) {
   return (now.getTime() - createdAt.getTime()) / 60000 < PENDING_HOLD_MINUTES;
 }
@@ -236,6 +238,22 @@ function validateInterval(
   }
 }
 
+function validateBookingNotice(
+  start: Date,
+  now: Date,
+  errors: string[]
+) {
+  const minAllowedTime = new Date(
+    now.getTime() + MIN_BOOKING_NOTICE_MINUTES * 60 * 1000
+  );
+
+  if (start < minAllowedTime) {
+    errors.push(
+      `Bookings must be made at least ${MIN_BOOKING_NOTICE_MINUTES / 60} hours before start time.`
+    );
+  }
+}
+
 function usedSeatsForFixedEvent(activeBookings: ExistingBookingLike[]) {
   return activeBookings.reduce((sum, b) => sum + (b.partySize ?? 0), 0);
 }
@@ -297,7 +315,9 @@ export function getBookingQuoteAndAvailability(
     const bookingStartAt = slot.startAt;
     const bookingEndAt =
       slot.endAt ?? new Date(slot.startAt.getTime() + 90 * 60 * 1000);
-
+    
+    validateBookingNotice(bookingStartAt, now, errors);
+    
     return {
       isValid: errors.length === 0,
       errors,
@@ -337,6 +357,7 @@ export function getBookingQuoteAndAvailability(
   if (start && bookingEndAt) {
     validateInsideWindow(start, bookingEndAt, slot, errors);
     validateInterval(activity, start, slot, errors);
+    validateBookingNotice(start, now, errors);
   }
 
   const requestedUnits = normalizePositiveInt(input.units, 1);

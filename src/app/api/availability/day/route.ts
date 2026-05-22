@@ -7,6 +7,7 @@ import { getBookingQuoteAndAvailability } from "@/lib/booking-engine";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+const MIN_BOOKING_NOTICE_MINUTES = 120;
 
 function parsePositiveInt(value: string | null, fallback: number) {
   const n = Number(value);
@@ -146,6 +147,26 @@ export async function GET(req: NextRequest) {
 
     const slotResults = slots.map((slot) => {
       if (activity.mode === ActivityMode.FIXED_SEAT_EVENT) {
+        const minAllowedTime = new Date(
+          now.getTime() + MIN_BOOKING_NOTICE_MINUTES * 60 * 1000
+        );
+
+        if (slot.startAt < minAllowedTime) {
+          return {
+            id: slot.id,
+            kind: "fixed" as const,
+            start: slot.startAt.toISOString(),
+            end: slot.endAt ? slot.endAt.toISOString() : null,
+            capacity: slot.capacity,
+            remaining: 0,
+            canFit: false,
+            unitPrice: 0,
+            totalPrice: 0,
+            requestedPartySize: partySize,
+            errors: ["Booking closed (less than 2 hours remaining)"],
+          };
+        }
+
         const quote = getBookingQuoteAndAvailability({
           activity,
           slot: {
@@ -191,6 +212,31 @@ export async function GET(req: NextRequest) {
           };
         })
         .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+      
+      const minAllowedTime = new Date(
+        now.getTime() + MIN_BOOKING_NOTICE_MINUTES * 60 * 1000
+      );
+
+      const effectiveWindowStart =
+        slot.startAt < minAllowedTime ? minAllowedTime : slot.startAt;
+
+      if (slot.endAt && effectiveWindowStart >= slot.endAt) {
+        return {
+          id: slot.id,
+          kind:
+            activity.mode === ActivityMode.DYNAMIC_RENTAL
+              ? ("rental" as const)
+              : ("hybrid" as const),
+          start: slot.startAt.toISOString(),
+          end: slot.endAt ? slot.endAt.toISOString() : null,
+          capacity: slot.capacity,
+          availableWindowStart: effectiveWindowStart.toISOString(),
+          availableWindowEnd: slot.endAt?.toISOString() ?? null,
+          bookedRanges,
+          canFit: false,
+          errors: ["Booking closed (less than 2 hours remaining)"],
+        };
+      }
 
       const selectedDuration =
         durationOptionId &&
@@ -247,7 +293,7 @@ export async function GET(req: NextRequest) {
         start: slot.startAt.toISOString(),
         end: slot.endAt ? slot.endAt.toISOString() : null,
         capacity: slot.capacity,
-        availableWindowStart: slot.startAt.toISOString(),
+        availableWindowStart: effectiveWindowStart.toISOString(),
         availableWindowEnd: slot.endAt ? slot.endAt.toISOString() : null,
         bookedRanges,
         bookingStartAt: quote.bookingStartAt.toISOString(),
