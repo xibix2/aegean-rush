@@ -211,13 +211,16 @@ function validateInsideWindow(
 }
 
 function getAllowedStartStepMinutes(activity: ActivityLike) {
+  const configured = activity.slotIntervalMin ?? null;
+
+  // Fixed events keep their configured interval
   if (activity.mode === ActivityMode.FIXED_SEAT_EVENT) {
-    const configured = activity.slotIntervalMin ?? null;
     if (!configured || configured <= 1) return null;
     return configured;
   }
 
-  return RENTAL_BOOKING_STEP_MINUTES;
+  // Rentals / hybrid bookings → always use 15-minute steps
+  return Math.max(15, configured ?? 15);
 }
 
 function validateInterval(
@@ -317,7 +320,7 @@ export function getBookingQuoteAndAvailability(
       slot.endAt ?? new Date(slot.startAt.getTime() + 90 * 60 * 1000);
     
     validateBookingNotice(bookingStartAt, now, errors);
-    
+
     return {
       isValid: errors.length === 0,
       errors,

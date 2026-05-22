@@ -9,6 +9,11 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 const MIN_BOOKING_NOTICE_MINUTES = 120;
 
+function roundUpToInterval(date: Date, intervalMin: number) {
+  const ms = intervalMin * 60 * 1000;
+  return new Date(Math.ceil(date.getTime() / ms) * ms);
+}
+
 function parsePositiveInt(value: string | null, fallback: number) {
   const n = Number(value);
   if (!Number.isFinite(n)) return fallback;
@@ -217,8 +222,12 @@ export async function GET(req: NextRequest) {
         now.getTime() + MIN_BOOKING_NOTICE_MINUTES * 60 * 1000
       );
 
+      const intervalMin = Math.max(15, activity.slotIntervalMin ?? 15);
+
       const effectiveWindowStart =
-        slot.startAt < minAllowedTime ? minAllowedTime : slot.startAt;
+        slot.startAt < minAllowedTime
+          ? roundUpToInterval(minAllowedTime, intervalMin)
+          : roundUpToInterval(slot.startAt, intervalMin);
 
       if (slot.endAt && effectiveWindowStart >= slot.endAt) {
         return {
