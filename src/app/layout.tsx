@@ -26,6 +26,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Aegean Rush — Book activities in seconds",
   description: "Real-time activity availability with fast, secure checkout.",
+
+  verification: {
+    google: "j83BsmCSLfgPKUrVjFc31WFYMifgZRzlHcT2ixnExSw", 
+  },
 };
 
 function isValidTenantSlug(slug: string | null) {
