@@ -1,4 +1,5 @@
 // src/app/[club]/page.tsx
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import prisma from "@/lib/prisma";
 import { requireTenant } from "@/lib/tenant";
@@ -15,6 +16,55 @@ import { LocationSectionClient } from "@/components/home/LocationSectionClient";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ club: string }>;
+}): Promise<Metadata> {
+  const { club } = await params;
+
+  const tenant = await prisma.club.findFirst({
+    where: {
+      slug: club,
+    },
+    select: {
+      name: true,
+      location: true,
+      logoKey: true,
+    },
+  });
+
+  if (!tenant) {
+    return {
+      title: "Aegean Rush",
+    };
+  }
+
+  const title = `${tenant.name} | Watersports & Boat Activities in ${
+    tenant.location ?? "Crete"
+  }`;
+
+  const description = `Book watersports, boat rentals and experiences with ${tenant.name}. Fast online booking through Aegean Rush.`;
+
+  return {
+    title,
+    description,
+
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      url: `https://www.aegeanrush.com/${club}`,
+    },
+
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+    },
+  };
+}
 
 export default async function ClubHome({
   params,
