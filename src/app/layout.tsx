@@ -1,5 +1,4 @@
 // src/app/layout.tsx
-// src/app/layout.tsx
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
@@ -31,6 +30,8 @@ export const metadata: Metadata = {
     google: "j83BsmCSLfgPKUrVjFc31WFYMifgZRzlHcT2ixnExSw", 
   },
 };
+
+const SITE_URL = "https://www.aegeanrush.com";
 
 function isValidTenantSlug(slug: string | null) {
   if (!slug) return false;
@@ -136,6 +137,23 @@ export default async function RootLayout({
     };
   });
 
+  const websiteJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Aegean Rush",
+    url: SITE_URL,
+    description:
+      "Book watersports, boat rentals, jet ski rides, parasailing and sea activities in Hersonissos, Crete.",
+  };
+
+  const organizationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "Aegean Rush",
+    url: SITE_URL,
+    logo: `${SITE_URL}/icon.png`,
+  };
+
   return (
     <html
       lang={prefs.lang}
@@ -153,6 +171,19 @@ export default async function RootLayout({
           } as React.CSSProperties
         }
       >
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(websiteJsonLd),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationJsonLd),
+          }}
+        />
+
         <I18nProvider lang={prefs.lang as "en" | "el"}>
           <div className="relative min-h-screen overflow-x-hidden bg-[#050816] text-[--color-text]">
             {/* BACKGROUND */}
