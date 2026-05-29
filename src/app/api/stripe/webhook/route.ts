@@ -159,6 +159,11 @@ async function sendConfirmationEmail(
 
   let to = fallbackEmail ?? b.contactEmail ?? b.customer?.email ?? null;
 
+  const internalNotificationEmails = [
+    "aegeanrush@gmail.com",
+    "watersportsofparadise@gmail.com",
+  ];
+
   if (fallbackEmail && b.customer?.email?.startsWith("guest+")) {
     try {
       await prisma.customer.update({
@@ -167,7 +172,11 @@ async function sendConfirmationEmail(
       });
     } catch {}
   }
-  if (!to) return;
+  const recipients = Array.from(
+    new Set([to, ...internalNotificationEmails].filter(Boolean))
+  ) as string[];
+
+  if (recipients.length === 0) return;
 
   const bookingStart = b.bookingStartAt ?? b.timeSlot.startAt;
   const bookingEnd =
@@ -231,7 +240,7 @@ async function sendConfirmationEmail(
   try {
     await resend.emails.send({
       from,
-      to,
+      to: recipients,
       subject: `Your booking with ${senderDisplayName} is confirmed ✅`,
       react: BookingConfirmed({
         activity: b.timeSlot.activity.name,
