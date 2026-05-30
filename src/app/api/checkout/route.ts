@@ -339,35 +339,46 @@ async function createSessionAndMaybeRedirect(
     durationMin: quote.durationMin,
   });
 
-  const session = await stripe.checkout.sessions.create({
-    mode: "payment",
+  let session: Stripe.Checkout.Session;
 
-    allow_promotion_codes: true,
+  try {
+    session = await stripe.checkout.sessions.create({
+      mode: "payment",
 
-    success_url: successUrl,
-    cancel_url: cancelUrl,
-    customer_creation: "always",
-    client_reference_id: booking.id,
-    metadata: {
-      bookingId: booking.id,
-      timeSlotId: slot.id,
-      activityId,
-      tenantSlug: tenantBase.replace("/", ""),
-      activityMode: quote.mode,
-    },
-    payment_intent_data: paymentIntentData,
-    customer_email: customer?.email,
-    line_items: [
-      {
-        ...stripeLineItem,
-        price_data: {
-          ...stripeLineItem.price_data,
-          currency,
-        },
+      allow_promotion_codes: true,
+
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+      customer_creation: "always",
+      client_reference_id: booking.id,
+      metadata: {
+        bookingId: booking.id,
+        timeSlotId: slot.id,
+        activityId,
+        tenantSlug: tenantBase.replace("/", ""),
+        activityMode: quote.mode,
       },
-    ],
-    expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
-  });
+      payment_intent_data: paymentIntentData,
+      customer_email: customer?.email,
+      line_items: [
+        {
+          ...stripeLineItem,
+          price_data: {
+            ...stripeLineItem.price_data,
+            currency,
+          },
+        },
+      ],
+      expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
+    });
+  } catch (err) {
+    await prisma.booking.update({
+      where: { id: booking.id },
+      data: { status: "cancelled" },
+    });
+
+    throw err;
+  }
 
   await prisma.payment.create({
     data: {
