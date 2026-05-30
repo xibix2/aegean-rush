@@ -125,6 +125,7 @@ export default function BookingClient({
 
   const isPaid = isDbPaid;
   const isCancelled = isDbCancelled || (isUrlCancelled && !isDbPaid);
+  const isUnpaid = !isPaid;
 
   useEffect(() => {
     if (cancelState.ok) router.refresh();
@@ -140,9 +141,7 @@ export default function BookingClient({
       attempts += 1;
       router.refresh();
 
-      if (attempts >= maxAttempts) {
-        clearInterval(timer);
-      }
+      if (attempts >= maxAttempts) clearInterval(timer);
     }, 1500);
 
     return () => clearInterval(timer);
@@ -157,9 +156,7 @@ export default function BookingClient({
           <HelpCircle className="size-14" />
         </div>
 
-        <h1 className="text-4xl font-semibold text-white">
-          Booking not found
-        </h1>
+        <h1 className="text-4xl font-semibold text-white">Booking not found</h1>
 
         <p className="mt-4 max-w-xl text-base leading-relaxed text-white/68">
           We couldn’t find this booking. If you just completed payment or think
@@ -193,17 +190,17 @@ export default function BookingClient({
 
   const statusLabel = (() => {
     if (isPaid) return t("booking.paid") ?? "Paid";
-    if (isCancelled) return t("booking.cancelled") ?? "Cancelled";
-    if (isPending && isUrlSuccess) return t("booking.processing") ?? "Processing";
-    if (isPending) return t("booking.pending") ?? "Pending";
+    if (isCancelled) return "Payment not completed";
+    if (isPending && isUrlSuccess) return "Checking payment";
+    if (isPending) return "Payment pending";
     return booking.status;
   })();
 
   const title = isPaid
     ? t("booking.thankYou")
     : isCancelled
-    ? "Booking not completed"
-    : t("booking.processing");
+    ? "Payment not completed"
+    : "Payment not confirmed yet";
 
   const descriptionLines = isPaid
     ? [
@@ -213,10 +210,15 @@ export default function BookingClient({
       ]
     : isCancelled
     ? [
-        "Your payment was cancelled or did not complete.",
-        "No confirmed booking has been created. You can try again or contact us if something went wrong.",
+        "Your booking is NOT confirmed.",
+        "No successful payment was received for this booking attempt.",
+        "Please book again or contact us if you believe money was taken.",
       ]
-    : [t("booking.pending1"), t("booking.pending2"), t("booking.pending3")];
+    : [
+        "Your booking is NOT confirmed yet.",
+        "We are still waiting for payment confirmation.",
+        "Do not come to the activity unless you receive a confirmation email.",
+      ];
 
   const bookingTypeLabel =
     mode === "FIXED_SEAT_EVENT"
@@ -254,8 +256,8 @@ export default function BookingClient({
           isPaid
             ? "bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.16),transparent_68%)]"
             : isCancelled
-            ? "bg-[radial-gradient(circle_at_top,rgba(248,113,113,0.16),transparent_68%)]"
-            : "bg-[radial-gradient(circle_at_top,rgba(251,191,36,0.14),transparent_68%)]"
+            ? "bg-[radial-gradient(circle_at_top,rgba(248,113,113,0.18),transparent_68%)]"
+            : "bg-[radial-gradient(circle_at_top,rgba(251,191,36,0.16),transparent_68%)]"
         }`}
       />
 
@@ -288,30 +290,33 @@ export default function BookingClient({
         ))}
       </div>
 
-      {isCancelled && (
-        <div className="mb-8 grid w-full max-w-2xl gap-3 rounded-[2rem] border border-red-300/15 bg-red-500/[0.07] p-4 text-left sm:p-5">
-          <div className="flex gap-3">
-            <div className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-2xl border border-red-300/20 bg-red-500/10 text-red-200">
-              <AlertTriangle className="size-5" />
-            </div>
-            <div>
-              <h2 className="text-base font-semibold text-white">
-                Need help with this booking?
-              </h2>
-              <p className="mt-1 text-sm leading-relaxed text-white/65">
-                If payment was taken, Stripe redirected you incorrectly, or you
-                are unsure what happened, contact us and we’ll check it for you.
-              </p>
-            </div>
+      {isUnpaid && (
+        <div className="mb-8 w-full max-w-2xl rounded-[2rem] border border-red-400/25 bg-red-500/[0.09] p-5 text-center shadow-[0_24px_80px_-50px_rgba(248,113,113,0.45)] sm:p-6">
+          <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl border border-red-300/20 bg-red-500/15 text-red-200">
+            <AlertTriangle className="size-7" />
           </div>
 
-          <div className="mt-2 grid gap-2 sm:grid-cols-3">
+          <h2 className="text-2xl font-bold uppercase tracking-tight text-red-200">
+            Booking NOT confirmed
+          </h2>
+
+          <p className="mt-3 text-base font-medium text-white">
+            This activity is not reserved yet.
+          </p>
+
+          <p className="mt-2 text-sm leading-relaxed text-white/70">
+            Only bookings with successful payment and a confirmation email are
+            valid. If you did not receive a confirmation email, please book
+            again or contact us.
+          </p>
+
+          <div className="mt-5 grid gap-2 sm:grid-cols-3">
             <Link
               href={`/${tenantSlug}/activities`}
               className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-pink-500 via-fuchsia-500 to-violet-500 px-4 text-sm font-medium text-white shadow-[0_18px_50px_-18px_rgba(236,72,153,0.75)] transition hover:scale-[1.02]"
             >
               <RefreshCcw className="size-4" />
-              Try again
+              Book again
             </Link>
 
             <Link
@@ -331,9 +336,9 @@ export default function BookingClient({
             </Link>
           </div>
 
-          <p className="mt-2 text-center text-xs text-white/45">
-            Booking code:{" "}
-            <span className="font-medium text-white/70">
+          <p className="mt-4 text-xs text-white/45">
+            Booking attempt code:{" "}
+            <span className="font-medium text-white/75">
               {booking.publicToken}
             </span>
           </p>
@@ -355,53 +360,75 @@ export default function BookingClient({
         </span>
       </div>
 
-      {!isCancelled && (
-        <div className="mb-10 max-w-2xl rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white/65">
-          You are viewing your booking details. Online cancellation is only
-          available at least 48 hours before the booking start time.
+      {isPaid ? (
+        <>
+          <div className="mb-10 max-w-2xl rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white/65">
+            You are viewing your confirmed booking details. Online cancellation
+            is only available at least 48 hours before the booking start time.
+          </div>
+
+          <Card className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-transparent p-6 text-left shadow-lg sm:p-8 [background:linear-gradient(var(--color-card),var(--color-card))_padding-box,linear-gradient(90deg,color-mix(in_oklab,var(--accent-300),transparent_65%),color-mix(in_oklab,var(--accent-400),transparent_70%),color-mix(in_oklab,var(--accent-300),transparent_65%))_border-box]">
+            <CardTitle className="text-2xl">{t("booking.summary")}</CardTitle>
+
+            <div className="mt-4 space-y-4">
+              <CardSubtle className="text-lg">
+                <b>{t("booking.activity")}:</b>{" "}
+                <span className="font-medium text-white">
+                  {booking.timeSlot.activity.name}
+                </span>
+              </CardSubtle>
+
+              <CardSubtle className="text-lg">
+                <b>{t("booking.date")}:</b>{" "}
+                {format(actualStart, "PPPP p")} – {format(actualEnd, "p")}
+              </CardSubtle>
+
+              {durationText && mode !== "FIXED_SEAT_EVENT" && (
+                <CardSubtle className="text-lg">
+                  <b>Duration:</b> {durationText}
+                </CardSubtle>
+              )}
+
+              <CardSubtle className="text-lg">
+                <b>{bookingTypeLabel}:</b> {bookingTypeValue}
+              </CardSubtle>
+
+              {unitPriceText && mode !== "FIXED_SEAT_EVENT" && (
+                <CardSubtle className="text-lg">
+                  <b>Unit price:</b> {unitPriceText}
+                </CardSubtle>
+              )}
+
+              <CardSubtle className="text-lg">
+                <b>{t("booking.total")}:</b>{" "}
+                <span className="font-semibold">
+                  {formatMoney(booking.totalPrice, currencyGlyph)}
+                </span>
+              </CardSubtle>
+            </div>
+          </Card>
+        </>
+      ) : (
+        <div className="w-full max-w-2xl rounded-2xl border border-white/10 bg-white/[0.035] p-5 text-left">
+          <h3 className="text-base font-semibold text-white">
+            Attempt details
+          </h3>
+
+          <div className="mt-3 space-y-2 text-sm text-white/62">
+            <p>
+              <span className="text-white/85">Activity:</span>{" "}
+              {booking.timeSlot.activity.name}
+            </p>
+            <p>
+              <span className="text-white/85">Selected time:</span>{" "}
+              {format(actualStart, "PPPP p")} – {format(actualEnd, "p")}
+            </p>
+            <p>
+              <span className="text-white/85">Status:</span> Not confirmed
+            </p>
+          </div>
         </div>
       )}
-
-      <Card className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-transparent p-6 text-left shadow-lg sm:p-8 [background:linear-gradient(var(--color-card),var(--color-card))_padding-box,linear-gradient(90deg,color-mix(in_oklab,var(--accent-300),transparent_65%),color-mix(in_oklab,var(--accent-400),transparent_70%),color-mix(in_oklab,var(--accent-300),transparent_65%))_border-box]">
-        <CardTitle className="text-2xl">{t("booking.summary")}</CardTitle>
-
-        <div className="mt-4 space-y-4">
-          <CardSubtle className="text-lg">
-            <b>{t("booking.activity")}:</b>{" "}
-            <span className="font-medium text-white">
-              {booking.timeSlot.activity.name}
-            </span>
-          </CardSubtle>
-
-          <CardSubtle className="text-lg">
-            <b>{t("booking.date")}:</b>{" "}
-            {format(actualStart, "PPPP p")} – {format(actualEnd, "p")}
-          </CardSubtle>
-
-          {durationText && mode !== "FIXED_SEAT_EVENT" && (
-            <CardSubtle className="text-lg">
-              <b>Duration:</b> {durationText}
-            </CardSubtle>
-          )}
-
-          <CardSubtle className="text-lg">
-            <b>{bookingTypeLabel}:</b> {bookingTypeValue}
-          </CardSubtle>
-
-          {unitPriceText && mode !== "FIXED_SEAT_EVENT" && (
-            <CardSubtle className="text-lg">
-              <b>Unit price:</b> {unitPriceText}
-            </CardSubtle>
-          )}
-
-          <CardSubtle className="text-lg">
-            <b>{t("booking.total")}:</b>{" "}
-            <span className="font-semibold">
-              {formatMoney(booking.totalPrice, currencyGlyph)}
-            </span>
-          </CardSubtle>
-        </div>
-      </Card>
 
       <div className="mt-8 w-full max-w-2xl">
         {cancelState.error ? (
@@ -417,20 +444,15 @@ export default function BookingClient({
         ) : null}
 
         <div className="mt-4 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          {booking.canCancel && !isCancelled ? (
+          {booking.canCancel && isPaid ? (
             <form action={cancelFormAction}>
               <input type="hidden" name="club" value={tenantSlug} />
               <input type="hidden" name="token" value={booking.publicToken} />
               <CancelSubmitButton />
             </form>
-          ) : !isCancelled ? (
-            <div className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white/60">
-              Refunds and cancellations are unavailable within 48 hours of the
-              booking.
-            </div>
           ) : null}
 
-          {!isCancelled && (
+          {isPaid && (
             <Link href={`/${tenantSlug}`}>
               <Button
                 size="lg"
