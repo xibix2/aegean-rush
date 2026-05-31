@@ -582,17 +582,18 @@ function BookingDetailsCell({ row }: { row: Row }) {
   }
 
   if (row.mode === "DYNAMIC_RENTAL") {
+    const guestCount = row.players ?? 1;
+    const unitCount = row.reservedUnits ?? 1;
+
     return (
       <div className="space-y-1">
         <div>
-          {row.players} guest{row.players === 1 ? "" : "s"}
+          {guestCount} guest{guestCount === 1 ? "" : "s"}
         </div>
 
-        {row.reservedUnits != null && (
-          <div>
-            {row.reservedUnits} unit{row.reservedUnits === 1 ? "" : "s"}
-          </div>
-        )}
+        <div>
+          {unitCount} unit{unitCount === 1 ? "" : "s"}
+        </div>
 
         {row.durationMinSnapshot != null && (
           <div className="text-[12px] opacity-70">
@@ -602,7 +603,7 @@ function BookingDetailsCell({ row }: { row: Row }) {
       </div>
     );
   }
-  
+
   return (
     <div className="space-y-1">
       <div>{row.players} guest{row.players === 1 ? "" : "s"}</div>
