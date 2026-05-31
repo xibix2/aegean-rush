@@ -150,6 +150,9 @@ async function updateActivityAction(
   const maxUnitsPerBooking = parseOptionalInt(formData.get("maxUnitsPerBooking"));
   const slotIntervalMin = parseOptionalInt(formData.get("slotIntervalMin"));
 
+  const showGuestsForRental =
+    formData.get("showGuestsForRental") === "on";
+
   const parsedDurationOptions = parseDurationOptions(formData);
 
   let coverImageUrl: string | undefined;
@@ -191,6 +194,12 @@ async function updateActivityAction(
             : guestsPerUnit,
         maxUnitsPerBooking:
           mode === "FIXED_SEAT_EVENT" ? null : maxUnitsPerBooking,
+
+        showGuestsForRental:
+          mode === "DYNAMIC_RENTAL"
+            ? showGuestsForRental
+            : false,
+
         slotIntervalMin:
           mode === "FIXED_SEAT_EVENT"
             ? slotIntervalMin
@@ -307,6 +316,7 @@ export default async function ActivityDetailPage({
 
     guestsPerUnit: a.guestsPerUnit ?? 1,
     maxUnitsPerBooking: a.maxUnitsPerBooking ?? 1,
+    showGuestsForRental: a.showGuestsForRental ?? false,
     slotIntervalMin: a.slotIntervalMin ?? 30,
 
     durationOptions: a.durationOptions.map((opt) => ({

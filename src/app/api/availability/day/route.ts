@@ -82,6 +82,7 @@ export async function GET(req: NextRequest) {
         basePrice: true,
         guestsPerUnit: true,
         maxUnitsPerBooking: true,
+        showGuestsForRental: true,
         slotIntervalMin: true,
         durationOptions: {
           where: { isActive: true },
@@ -142,6 +143,7 @@ export async function GET(req: NextRequest) {
           slotIntervalMin: activity.slotIntervalMin,
           guestsPerUnit: activity.guestsPerUnit,
           maxUnitsPerBooking: activity.maxUnitsPerBooking,
+          showGuestsForRental: activity.showGuestsForRental,
           durationOptions: activity.durationOptions,
         },
         slots: [],
@@ -349,6 +351,7 @@ export async function GET(req: NextRequest) {
         slotIntervalMin: activity.slotIntervalMin,
         guestsPerUnit: activity.guestsPerUnit,
         maxUnitsPerBooking: activity.maxUnitsPerBooking,
+        showGuestsForRental: activity.showGuestsForRental,
         durationOptions: activity.durationOptions.map((d) => ({
           id: d.id,
           label: d.label,

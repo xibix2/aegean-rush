@@ -31,6 +31,7 @@ type ActivityInfo = {
   slotIntervalMin: number | null;
   guestsPerUnit: number | null;
   maxUnitsPerBooking: number | null;
+  showGuestsForRental: boolean;
   durationOptions: DurationOption[];
 };
 
@@ -479,7 +480,9 @@ export default function TimetableClient() {
       if (activity?.mode === "FIXED_SEAT_EVENT") {
         payload.partySize = partySize;
       } else if (activity?.mode === "DYNAMIC_RENTAL") {
-        payload.partySize = 1;
+        payload.partySize = activity.showGuestsForRental ? guests : 1;
+        payload.guests = activity.showGuestsForRental ? guests : undefined;
+
         payload.units = units;
         payload.startTime = combineDateAndTime(safeDate, selectedTime);
         payload.durationOptionId = selectedDurationId;
@@ -855,6 +858,7 @@ export default function TimetableClient() {
                     >
                       −
                     </button>
+
                     <input
                       type="number"
                       min={1}
@@ -863,6 +867,7 @@ export default function TimetableClient() {
                       onChange={(e) => onUnitsChange(Number(e.target.value))}
                       className="no-spin w-20 bg-transparent px-2 py-3 text-center text-white outline-none"
                     />
+
                     <button
                       className="px-4 py-3 text-base text-white/80 transition hover:bg-white/5"
                       onClick={() => onUnitsChange(units + 1)}
@@ -873,6 +878,45 @@ export default function TimetableClient() {
                     </button>
                   </div>
                 </div>
+
+                {activity?.showGuestsForRental && (
+                  <div className={fieldClass()}>
+                    <div className="mb-2 text-sm font-medium text-white/88">Guests</div>
+
+                    <div className="flex items-center rounded-2xl border border-white/10 bg-black/20">
+                      <button
+                        className="px-4 py-3 text-base text-white/80 transition hover:bg-white/5"
+                        onClick={() => onGuestsChange(guests - 1)}
+                        disabled={loading}
+                        type="button"
+                      >
+                        −
+                      </button>
+
+                      <input
+                        type="number"
+                        min={1}
+                        max={50}
+                        value={guests}
+                        onChange={(e) => onGuestsChange(Number(e.target.value))}
+                        className="no-spin w-20 bg-transparent px-2 py-3 text-center text-white outline-none"
+                      />
+
+                      <button
+                        className="px-4 py-3 text-base text-white/80 transition hover:bg-white/5"
+                        onClick={() => onGuestsChange(guests + 1)}
+                        disabled={loading}
+                        type="button"
+                      >
+                        +
+                      </button>
+                    </div>
+
+                    <p className="mt-2 text-xs text-white/45">
+                      This helps the operator prepare the right safety equipment.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 

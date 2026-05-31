@@ -163,6 +163,7 @@ model Activity {
   bringText          String?
   cancellationText   String?
   guestsPerUnit      Int?
+  showGuestsForRental Boolean @default(false)
   includedText       String?
   maxUnitsPerBooking Int?
   meetingPoint       String?

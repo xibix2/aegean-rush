@@ -45,6 +45,7 @@ type ActivityShape = {
 
   guestsPerUnit?: number;
   maxUnitsPerBooking?: number;
+  showGuestsForRental?: boolean;
   slotIntervalMin?: number;
 
   durationOptions?: DurationOptionShape[];
@@ -351,6 +352,26 @@ export function ActivityFormClient({
                   className="h-10 rounded-lg u-border u-surface px-3 focus:outline-none focus:ring-1 focus:ring-[var(--accent-400)]"
                 />
               </div>
+              
+              {isRental && (
+                <label className="flex items-start gap-3 rounded-lg border border-white/10 bg-white/[0.03] p-3 text-sm sm:col-span-2">
+                  <input
+                    type="checkbox"
+                    name="showGuestsForRental"
+                    defaultChecked={activity.showGuestsForRental ?? false}
+                    className="mt-0.5 size-4"
+                  />
+
+                  <span>
+                    <span className="block font-medium text-white/90">
+                      Show guest selector for rentals
+                    </span>
+                    <span className="mt-1 block text-xs text-white/55">
+                      Customers will choose how many guests are coming, even if pricing is based on units.
+                    </span>
+                  </span>
+                </label>
+              )}
 
               {isHybrid && (
                 <div className="flex flex-col gap-1.5 sm:col-span-2">
