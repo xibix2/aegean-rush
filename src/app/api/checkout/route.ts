@@ -197,7 +197,6 @@ async function createSessionAndMaybeRedirect(
           basePrice: true,
           guestsPerUnit: true,
           maxUnitsPerBooking: true,
-          showGuestsForRental: true,
           slotIntervalMin: true,
           durationOptions: {
             where: { isActive: true },

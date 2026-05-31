@@ -35,7 +35,6 @@ export default async function ActivitiesPage() {
       mode: true,
       guestsPerUnit: true,
       maxUnitsPerBooking: true,
-      showGuestsForRental: true,
       durationOptions: {
         where: { isActive: true },
         orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
