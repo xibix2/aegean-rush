@@ -584,16 +584,25 @@ function BookingDetailsCell({ row }: { row: Row }) {
   if (row.mode === "DYNAMIC_RENTAL") {
     return (
       <div className="space-y-1">
+        <div>
+          {row.players} guest{row.players === 1 ? "" : "s"}
+        </div>
+
         {row.reservedUnits != null && (
-          <div>{row.reservedUnits} unit{row.reservedUnits === 1 ? "" : "s"}</div>
+          <div>
+            {row.reservedUnits} unit{row.reservedUnits === 1 ? "" : "s"}
+          </div>
         )}
+
         {row.durationMinSnapshot != null && (
-          <div className="text-[12px] opacity-70">{row.durationMinSnapshot} min</div>
+          <div className="text-[12px] opacity-70">
+            {row.durationMinSnapshot} min
+          </div>
         )}
       </div>
     );
   }
-
+  
   return (
     <div className="space-y-1">
       <div>{row.players} guest{row.players === 1 ? "" : "s"}</div>
