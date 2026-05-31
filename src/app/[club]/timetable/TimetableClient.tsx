@@ -31,7 +31,7 @@ type ActivityInfo = {
   slotIntervalMin: number | null;
   guestsPerUnit: number | null;
   maxUnitsPerBooking: number | null;
-  showGuestsForRental?: boolean;
+  showGuestsForRental: boolean;
   durationOptions: DurationOption[];
 };
 
