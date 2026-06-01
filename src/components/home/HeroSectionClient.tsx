@@ -8,9 +8,9 @@ import {
   CircleDot,
   MapPin,
   Sparkles,
-  TicketPercent,
   Clock3,
   Zap,
+  TimerReset,
 } from "lucide-react";
 import { useT } from "@/components/I18nProvider";
 
@@ -97,39 +97,39 @@ export function HeroSectionClient({
         <div className="grid overflow-hidden rounded-[1.6rem] border border-white/10 bg-black/35 shadow-[0_28px_110px_-55px_rgba(0,0,0,0.95)] backdrop-blur-xl md:grid-cols-[1.05fr_0.95fr]">
           <div className="relative px-5 py-7 text-center sm:px-8 md:px-10 md:py-10 md:text-left">
             <div className="mb-3 inline-flex max-w-full items-center gap-2 rounded-full border border-pink-300/25 bg-pink-500/15 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-pink-100 sm:text-xs">
-              <TicketPercent className="size-3.5 shrink-0" />
-              <span className="truncate">Insane May Online Offer</span>
+              <TimerReset className="size-3.5 shrink-0" />
+              <span className="truncate">Skip the queue — book online</span>
             </div>
 
             <h1 className="text-[3.05rem] font-black uppercase leading-[0.86] tracking-[-0.075em] text-white sm:text-7xl md:text-8xl">
-              10%
+              Save
               <span className="ml-2 bg-gradient-to-r from-pink-400 via-fuchsia-300 to-cyan-200 bg-clip-text text-transparent">
-                OFF
+                Time
               </span>
             </h1>
 
             <div className="mt-3 inline-block -rotate-1 bg-cyan-300 px-4 py-1.5 text-2xl font-black uppercase tracking-tight text-[#06101c] shadow-[0_14px_45px_-22px_rgba(34,211,238,0.9)] sm:text-4xl">
-              Online Bookings
+              Book Before You Arrive
             </div>
 
             <div className="mt-6 grid gap-2 sm:flex sm:flex-wrap md:justify-start">
               <div className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/12 bg-white/[0.06] px-4 py-3 text-sm text-white/85">
                 <Sparkles className="size-4 text-pink-300" />
-                Use code
+                Secure your spot
                 <span className="rounded-lg border border-cyan-300/25 bg-cyan-300/10 px-2 py-1 font-black tracking-[0.12em] text-cyan-100">
-                  MAY10
+                  ONLINE
                 </span>
               </div>
 
               <div className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/12 bg-white/[0.06] px-4 py-3 text-sm text-white/85">
                 <Clock3 className="size-4 text-cyan-300" />
-                Skip the waiting line
+                Avoid waiting in line
               </div>
             </div>
 
             <p className="mx-auto mt-5 max-w-xl text-sm leading-6 text-white/70 md:mx-0 md:text-base">
-              Book online, secure your spot before you arrive, and spend more
-              time enjoying the sea.
+              Book online, secure your spot before you arrive, and avoid waiting
+              around all day just to reserve your activity.
             </p>
 
             <div className="mt-6 grid gap-2.5 sm:flex md:justify-start">
@@ -159,7 +159,8 @@ export function HeroSectionClient({
             </div>
 
             <p className="mt-4 text-xs text-white/45">
-              Offer valid for online bookings during May.
+              Online booking gives you real-time availability, secure checkout,
+              and instant confirmation.
             </p>
           </div>
 
@@ -169,13 +170,13 @@ export function HeroSectionClient({
 
             <div className="absolute right-8 top-10 rounded-full border border-pink-300/25 bg-black/35 px-7 py-6 text-center shadow-[0_0_45px_rgba(236,72,153,0.25)]">
               <div className="text-xs font-black uppercase tracking-[0.2em] text-pink-200">
-                Save
+                Skip
               </div>
               <div className="text-5xl font-black tracking-[-0.08em] text-white">
-                10%
+                The
               </div>
               <div className="text-xs font-black uppercase tracking-[0.16em] text-pink-200">
-                This May
+                Queue
               </div>
             </div>
 
