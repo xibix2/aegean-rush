@@ -101,9 +101,9 @@ export function HeroSectionClient({
               <span className="truncate">Skip the queue — book online</span>
             </div>
 
-            <h1 className="text-[3.05rem] font-black uppercase leading-[0.86] tracking-[-0.075em] text-white sm:text-7xl md:text-8xl">
-              Save
-              <span className="ml-2 bg-gradient-to-r from-pink-400 via-fuchsia-300 to-cyan-200 bg-clip-text text-transparent">
+            <h1 className="text-[3.05rem] font-black uppercase leading-[0.82] tracking-[-0.075em] text-white sm:text-7xl md:text-8xl">
+              <span className="block">Save</span>
+              <span className="block bg-gradient-to-r from-pink-400 via-fuchsia-300 to-cyan-200 bg-clip-text text-transparent">
                 Time
               </span>
             </h1>
@@ -123,13 +123,13 @@ export function HeroSectionClient({
 
               <div className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/12 bg-white/[0.06] px-4 py-3 text-sm text-white/85">
                 <Clock3 className="size-4 text-cyan-300" />
-                Avoid waiting in line
+                Skip the line
               </div>
             </div>
 
             <p className="mx-auto mt-5 max-w-xl text-sm leading-6 text-white/70 md:mx-0 md:text-base">
-              Book online, secure your spot before you arrive, and avoid waiting
-              around all day just to reserve your activity.
+              Reserve your activity online before you arrive. Skip the queue,
+              secure your spot, and spend more time on the water.
             </p>
 
             <div className="mt-6 grid gap-2.5 sm:flex md:justify-start">
