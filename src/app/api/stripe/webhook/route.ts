@@ -78,6 +78,7 @@ async function attachRealCustomerToBooking(
   bookingId: string,
   email: string | null | undefined,
   name: string | null | undefined,
+  phone?: string | null,
 ) {
   if (!email) return;
 
@@ -89,21 +90,35 @@ async function attachRealCustomerToBooking(
 
   const real = await prisma.customer.upsert({
     where: { clubId_email: { clubId, email } },
-    create: { clubId, email, name: name || "Customer" },
-    update: { name: name || undefined },
+    create: {
+      clubId,
+      email,
+      name: name || "Customer",
+      phone: phone ?? null,
+    },
+    update: {
+      name: name || undefined,
+      phone: phone ?? undefined,
+    },
   });
 
   if (booking.customerId === real.id) {
     const bookingUpdate: {
       contactEmail?: string;
       contactName?: string;
+      contactPhone?: string;
     } = {};
 
     if (email && booking.contactEmail !== email) {
       bookingUpdate.contactEmail = email;
     }
+
     if (name && booking.contactName !== name) {
       bookingUpdate.contactName = name;
+    }
+
+    if (phone && booking.contactPhone !== phone) {
+      bookingUpdate.contactPhone = phone;
     }
 
     if (Object.keys(bookingUpdate).length > 0) {
@@ -113,12 +128,6 @@ async function attachRealCustomerToBooking(
       });
     }
 
-    if (name) {
-      await prisma.customer.update({
-        where: { id: real.id },
-        data: { name },
-      });
-    }
     return;
   }
 
@@ -128,6 +137,7 @@ async function attachRealCustomerToBooking(
       customerId: real.id,
       contactEmail: email ?? undefined,
       contactName: name ?? undefined,
+      contactPhone: phone ?? undefined,
     },
   });
 }
@@ -331,6 +341,8 @@ async function getPayerDetails(
   const payerEmail =
     session.customer_details?.email ?? session.customer_email ?? null;
 
+  const payerPhone = session.customer_details?.phone ?? null;
+
   let payerName: string | null = null;
 
   if (paymentIntentId) {
@@ -345,7 +357,7 @@ async function getPayerDetails(
     }
   }
 
-  return { payerEmail, payerName };
+  return { payerEmail, payerName, payerPhone };
 }
 
 async function handleSuccessfulCheckoutSession(
@@ -357,7 +369,7 @@ async function handleSuccessfulCheckoutSession(
 
   const paymentIntentId = extractPaymentIntentIdFromSession(session);
   const amount = session.amount_total ?? null;
-  const { payerEmail, payerName } = await getPayerDetails(
+  const { payerEmail, payerName, payerPhone } = await getPayerDetails(
     session,
     paymentIntentId,
   );
@@ -370,14 +382,20 @@ async function handleSuccessfulCheckoutSession(
   });
 
   const result = await markBookingPaid(bookingId, paymentIntentId, amount);
-  await attachRealCustomerToBooking(bookingId, payerEmail, payerName);
+  await attachRealCustomerToBooking(
+    bookingId,
+    payerEmail,
+    payerName,
+    payerPhone,
+  );
 
-  if (payerEmail || payerName) {
+  if (payerEmail || payerName || payerPhone) {
     await prisma.booking.update({
       where: { id: bookingId },
       data: {
         contactEmail: payerEmail ?? undefined,
         contactName: payerName ?? undefined,
+        contactPhone: payerPhone ?? undefined,
       },
     });
   }
@@ -392,6 +410,25 @@ async function handleFailedOrExpiredCheckoutSession(
 ) {
   const bookingId = extractBookingIdFromSession(session);
   if (!bookingId) return;
+
+  const payerEmail =
+    session.customer_details?.email ?? session.customer_email ?? null;
+
+  const payerPhone = session.customer_details?.phone ?? null;
+
+  const payerName = session.customer_details?.name ?? null;
+
+  if (payerEmail || payerPhone || payerName) {
+    await prisma.booking.update({
+      where: { id: bookingId },
+      data: {
+        contactEmail: payerEmail ?? undefined,
+        contactPhone: payerPhone ?? undefined,
+        contactName: payerName ?? undefined,
+      },
+    });
+  }
+
   await markBookingCancelledIfPending(bookingId);
 }
 

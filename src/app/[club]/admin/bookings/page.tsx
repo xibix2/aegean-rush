@@ -27,6 +27,7 @@ type APIRow = {
 
   customerName: string;
   customerEmail: string;
+  customerPhone?: string | null;
 
   activityId?: string;
   activityName: string;
@@ -59,6 +60,7 @@ type Row = {
 
   customerName: string;
   customerEmail: string;
+  customerPhone: string;
   activityName: string;
   slotId: string | null;
 
@@ -169,6 +171,7 @@ export default function AdminBookingsPage() {
 
         customerName: b.customerName ?? "",
         customerEmail: b.customerEmail ?? "",
+        customerPhone: b.customerPhone ?? "",
         activityName: b.activityName ?? "",
         slotId: b.slotId ?? null,
 
@@ -484,9 +487,16 @@ export default function AdminBookingsPage() {
                       <div className="font-medium break-words">
                         {r.customerName || "—"}
                       </div>
+
                       <div className="mt-1 text-[12px] opacity-65 break-all">
                         {r.customerEmail || "—"}
                       </div>
+
+                      {r.customerPhone && (
+                        <div className="mt-1 text-[12px] text-emerald-200/85 break-all">
+                          {r.customerPhone}
+                        </div>
+                      )}
                     </Td>
 
                     <Td>

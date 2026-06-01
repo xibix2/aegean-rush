@@ -348,6 +348,10 @@ async function createSessionAndMaybeRedirect(
 
       allow_promotion_codes: true,
 
+      phone_number_collection: {
+        enabled: true,
+      },
+
       success_url: successUrl,
       cancel_url: cancelUrl,
       customer_creation: "always",
@@ -371,6 +375,12 @@ async function createSessionAndMaybeRedirect(
         },
       ],
       expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
+
+      after_expiration: {
+        recovery: {
+          enabled: true,
+        },
+      },
     });
   } catch (err) {
     await prisma.booking.update({

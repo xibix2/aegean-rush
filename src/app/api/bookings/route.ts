@@ -115,7 +115,7 @@ export async function GET(req: Request) {
     const customers = customerIds.length
       ? await prisma.customer.findMany({
           where: { id: { in: customerIds }, clubId: tenant.id },
-          select: { id: true, name: true, email: true },
+          select: { id: true, name: true, email: true, phone: true },
         })
       : [];
 
@@ -139,7 +139,7 @@ export async function GET(req: Request) {
 
           customerName: b.contactName ?? c?.name ?? "",
           customerEmail: b.contactEmail ?? c?.email ?? "",
-          customerPhone: b.contactPhone ?? "",
+          customerPhone: b.contactPhone ?? c?.phone ?? "",
 
           activityId: s.activity?.id ?? "",
           activityName: s.activity?.name ?? "",
