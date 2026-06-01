@@ -101,10 +101,10 @@ export function HeroSectionClient({
               <span className="truncate">Skip the queue — book online</span>
             </div>
 
-            <h1 className="text-[3.05rem] font-black uppercase leading-[0.82] tracking-[-0.075em] text-white sm:text-7xl md:text-8xl">
-              <span className="block">Save</span>
+            <h1 className="text-[3.05rem] font-black uppercase leading-[0.86] tracking-[-0.075em] text-white sm:text-7xl md:text-8xl">
+              DON'T WAIT
               <span className="block bg-gradient-to-r from-pink-400 via-fuchsia-300 to-cyan-200 bg-clip-text text-transparent">
-                Time
+                IN LINE
               </span>
             </h1>
 
@@ -115,7 +115,7 @@ export function HeroSectionClient({
             <div className="mt-6 grid gap-2 sm:flex sm:flex-wrap md:justify-start">
               <div className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/12 bg-white/[0.06] px-4 py-3 text-sm text-white/85">
                 <Sparkles className="size-4 text-pink-300" />
-                Secure your spot
+                Guaranteed spot
                 <span className="rounded-lg border border-cyan-300/25 bg-cyan-300/10 px-2 py-1 font-black tracking-[0.12em] text-cyan-100">
                   ONLINE
                 </span>
@@ -123,13 +123,14 @@ export function HeroSectionClient({
 
               <div className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/12 bg-white/[0.06] px-4 py-3 text-sm text-white/85">
                 <Clock3 className="size-4 text-cyan-300" />
-                Skip the line
+                Fast check-in
               </div>
             </div>
 
             <p className="mx-auto mt-5 max-w-xl text-sm leading-6 text-white/70 md:mx-0 md:text-base">
-              Reserve your activity online before you arrive. Skip the queue,
-              secure your spot, and spend more time on the water.
+                Reserve your activity online before you arrive.
+                No waiting in line. No uncertainty.
+                Just arrive and enjoy the water.
             </p>
 
             <div className="mt-6 grid gap-2.5 sm:flex md:justify-start">
@@ -170,13 +171,13 @@ export function HeroSectionClient({
 
             <div className="absolute right-8 top-10 rounded-full border border-pink-300/25 bg-black/35 px-7 py-6 text-center shadow-[0_0_45px_rgba(236,72,153,0.25)]">
               <div className="text-xs font-black uppercase tracking-[0.2em] text-pink-200">
-                Skip
+                Fast
               </div>
               <div className="text-5xl font-black tracking-[-0.08em] text-white">
-                The
+                Check
               </div>
               <div className="text-xs font-black uppercase tracking-[0.16em] text-pink-200">
-                Queue
+                In
               </div>
             </div>
 
