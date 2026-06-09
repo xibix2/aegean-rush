@@ -437,7 +437,12 @@ export async function refundBookingAction(input: RefundPayload) {
   }
 
   const stripe = getStripe();
-  await stripe.refunds.create({ payment_intent: rawPI });
+  await stripe.refunds.create({
+    payment_intent: rawPI,
+    reverse_transfer: true,
+    refund_application_fee: true,
+    reason: "requested_by_customer",
+  });
 
   if (payment?.id) {
     await prisma.payment.update({

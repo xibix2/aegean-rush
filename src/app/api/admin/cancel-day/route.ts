@@ -152,7 +152,12 @@ export async function POST(req: Request) {
       const hasStripePI = !!rawPI && rawPI.startsWith("pi_");
 
       if (hasStripePI) {
-        await stripe.refunds.create({ payment_intent: rawPI });
+        await stripe.refunds.create({
+          payment_intent: rawPI,
+          reverse_transfer: true,
+          refund_application_fee: true,
+          reason: "requested_by_customer",
+        });
 
         if (b.payment?.id) {
           await prisma.payment.update({

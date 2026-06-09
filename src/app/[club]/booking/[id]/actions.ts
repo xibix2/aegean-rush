@@ -65,8 +65,21 @@ export async function cancelBookingAction(
         : null;
 
     if (paymentIntentId) {
+      const refundAmount = Math.round((booking.totalPrice ?? 0) * 0.8);
+
       await stripe.refunds.create({
         payment_intent: paymentIntentId,
+        amount: refundAmount,
+        reverse_transfer: true,
+        refund_application_fee: false,
+        reason: "requested_by_customer",
+        metadata: {
+          bookingId: booking.id,
+          refundPolicy: "80_percent_customer_refund",
+          originalAmount: String(booking.totalPrice ?? 0),
+          refundedAmount: String(refundAmount),
+          source: "customer_cancel_booking_action",
+        },
       });
     }
 
