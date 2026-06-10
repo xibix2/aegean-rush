@@ -42,9 +42,9 @@ export default async function Home() {
   const liveSlugs = new Set(clubs.map((club) => club.slug));
 
   return (
-    <main className="mx-auto w-full max-w-6xl space-y-7 px-3 pb-14 pt-3 sm:px-5 md:space-y-12 md:px-6">
+    <main className="mx-auto w-full max-w-6xl space-y-5 px-1 pb-10 pt-1 sm:px-5 md:space-y-10 md:px-6">
       {/* HERO */}
-      <section className="relative min-h-[430px] overflow-hidden rounded-[2rem] border border-white/10 bg-black/40 px-5 py-8 shadow-[0_24px_80px_rgba(0,0,0,0.55)] sm:px-8 md:min-h-[500px] md:px-12 md:py-14">
+      <section className="relative min-h-[315px] overflow-hidden rounded-[1.75rem] border border-white/10 bg-black/40 px-4 py-6 shadow-[0_24px_80px_rgba(0,0,0,0.55)] sm:px-8 md:min-h-[500px] md:px-12 md:py-14">
         <div
           aria-hidden
           className="absolute inset-0"
@@ -54,12 +54,12 @@ export default async function Home() {
           }}
         />
 
-        <div className="relative z-10 flex min-h-[360px] flex-col items-center justify-center text-center md:min-h-[420px]">
+        <div className="relative z-10 flex min-h-[255px] flex-col items-center justify-center text-center md:min-h-[420px]">
           <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.2em] text-white/80 backdrop-blur-md">
             Hersonissos sea adventures
           </div>
 
-          <h1 className="max-w-3xl text-5xl font-black leading-[0.92] tracking-tight text-white sm:text-6xl md:text-7xl">
+          <h1 className="max-w-3xl text-4xl font-black leading-[0.95] tracking-tight text-white sm:text-6xl md:text-7xl">
             Book your sea adventure in Crete
           </h1>
 
@@ -70,7 +70,7 @@ export default async function Home() {
 
           <a
             href="#choose"
-            className="mt-7 inline-flex h-14 items-center justify-center rounded-full bg-gradient-to-r from-pink-500 to-cyan-400 px-8 text-base font-black text-white shadow-[0_18px_55px_rgba(56,189,248,0.28)]"
+            className="mt-5 inline-flex h-12 items-center justify-center rounded-full bg-gradient-to-r from-pink-500 to-cyan-400 px-6 text-sm font-black text-white shadow-[0_18px_55px_rgba(56,189,248,0.28)] sm:mt-7 sm:h-14 sm:px-8 sm:text-base"
           >
             Choose your adventure →
           </a>
@@ -83,7 +83,7 @@ export default async function Home() {
           <p className="text-xs font-bold uppercase tracking-[0.26em] text-white/65">
             Choose what you want
           </p>
-          <h2 className="mt-2 text-4xl font-black tracking-tight text-white sm:text-5xl">
+          <h2 className="mt-1 text-3xl font-black tracking-tight text-white sm:text-5xl">
             Watersports or boats?
           </h2>
         </div>
@@ -97,7 +97,7 @@ export default async function Home() {
               <Link
                 key={club.slug}
                 href={href}
-                className="group relative min-h-[620px] overflow-hidden rounded-[2.25rem] border border-white/10 bg-black shadow-[0_26px_80px_rgba(0,0,0,0.7)] transition duration-300 hover:-translate-y-1 hover:border-white/25 md:min-h-[560px]"
+                className="group relative min-h-[430px] overflow-hidden rounded-[2rem] border border-white/10 bg-black shadow-[0_26px_80px_rgba(0,0,0,0.7)] transition duration-300 hover:-translate-y-1 hover:border-white/25 md:min-h-[560px]"
               >
                 {/* Image: much stronger, less faded */}
                 <div
@@ -112,8 +112,8 @@ export default async function Home() {
                   className="absolute inset-0 bg-gradient-to-t from-black via-black/45 to-black/5"
                 />
 
-                <div className="relative z-10 flex min-h-[620px] flex-col justify-end p-5 sm:p-7 md:min-h-[560px]">
-                  <div className="absolute left-5 right-5 top-5 flex items-center gap-3 sm:left-7 sm:right-7 sm:top-7">
+                <div className="relative z-10 flex min-h-[430px] flex-col justify-end p-4 sm:p-7 md:min-h-[560px]">
+                  <div className="absolute left-4 right-4 top-4 flex items-center gap-2 sm:left-7 sm:right-7 sm:top-7 sm:gap-3">
                     <div className="flex-1 rounded-full border border-white/15 bg-black/55 px-4 py-3 text-[11px] font-black uppercase tracking-[0.2em] text-white/85 backdrop-blur-md">
                       {club.label}
                     </div>
@@ -124,16 +124,16 @@ export default async function Home() {
                   </div>
 
                   <div className="space-y-4">
-                    <h3 className="text-5xl font-black leading-[0.95] tracking-tight text-white drop-shadow-[0_5px_22px_rgba(0,0,0,0.8)] sm:text-6xl md:text-5xl">
+                    <h3 className="text-4xl font-black leading-[0.95] tracking-tight text-white drop-shadow-[0_5px_22px_rgba(0,0,0,0.8)] sm:text-6xl md:text-5xl">
                       {club.title}
                     </h3>
 
-                    <p className="max-w-lg text-lg leading-relaxed text-white/90 drop-shadow-[0_3px_14px_rgba(0,0,0,0.85)]">
+                    <p className="max-w-lg text-base leading-relaxed text-white/90 drop-shadow-[0_3px_14px_rgba(0,0,0,0.85)] sm:text-lg">
                       {club.description}
                     </p>
 
                     <div className="pt-3">
-                      <span className="inline-flex h-14 items-center justify-center rounded-full bg-gradient-to-r from-pink-500 to-cyan-400 px-8 text-base font-black text-white shadow-[0_18px_50px_rgba(236,72,153,0.35)]">
+                      <span className="inline-flex h-12 items-center justify-center rounded-full bg-gradient-to-r from-pink-500 to-cyan-400 px-6 text-sm font-black text-white shadow-[0_18px_50px_rgba(236,72,153,0.35)] sm:h-14 sm:px-8 sm:text-base">
                         {club.cta} →
                       </span>
                     </div>

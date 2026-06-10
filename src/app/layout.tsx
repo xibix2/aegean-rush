@@ -425,7 +425,7 @@ export default async function RootLayout({
 
             {/* PAGE CONTENT */}
             <main className="relative">
-              <div className="mx-auto w-full max-w-[1280px] px-3 pb-8 pt-4 sm:px-6 sm:pb-14 sm:pt-8 lg:px-8 lg:pb-20 lg:pt-10">
+              <div className="mx-auto w-full max-w-[1280px] px-1 pb-6 pt-2 sm:px-6 sm:pb-14 sm:pt-8 lg:px-8 lg:pb-20 lg:pt-10">
                 {children}
               </div>
             </main>
