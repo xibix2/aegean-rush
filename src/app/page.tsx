@@ -1,18 +1,44 @@
 // src/app/page.tsx
 import Link from "next/link";
 import prisma from "@/lib/prisma";
-import { HeroSectionClient } from "@/components/home/HeroSectionClient2";
-import { CourtsHeaderClient } from "@/components/home/CourtsHeaderClient";
-import { ClubsGrid } from "@/components/home/ClubsGrid";
+import { CalendarDays, ShieldCheck, Zap, Waves, Anchor, Star } from "lucide-react";
 
 export const revalidate = 0;
 export const dynamic = "force-dynamic";
 
+const CLUBS = [
+  {
+    slug: "paradise-watersports",
+    eyebrow: "Watersports & beach activities",
+    title: "Paradise Watersports",
+    description:
+      "Jet ski, parasailing, crazy sofa, flyfish, wakeboard and more high-energy sea activities.",
+    cta: "View watersports",
+    icon: Waves,
+    gradient:
+      "from-cyan-400/25 via-blue-500/10 to-pink-500/25",
+    image:
+      "/images/paradise-watersports-cover.jpg",
+    tags: ["Jet Ski", "Parasailing", "Crazy Sofa"],
+  },
+  {
+    slug: "poseidon-rent-a-boat",
+    eyebrow: "Boat rentals & jet boat rides",
+    title: "Poseidon Rent A Boat",
+    description:
+      "Rent a boat, explore the coast, or book fast jet boat experiences with instant confirmation.",
+    cta: "View boats & jet boat",
+    icon: Anchor,
+    gradient:
+      "from-blue-500/25 via-cyan-500/10 to-purple-500/25",
+    image:
+      "/images/poseidon-rent-a-boat-cover.jpg",
+    tags: ["Boat Rental", "Jet Boat", "Private Trips"],
+  },
+];
+
 export default async function Home() {
   const clubs = await prisma.club.findMany({
-    where: {
-      // e.g. active: true,
-    },
     orderBy: { name: "asc" },
     select: {
       id: true,
@@ -21,217 +47,164 @@ export default async function Home() {
     },
   });
 
-  return (
-    <div className="space-y-16 md:space-y-20">
-      {/* 1. Hero / main header */}
-      <HeroSectionClient />
+  const liveSlugs = new Set(clubs.map((club) => club.slug));
 
-      {/* 2. Segment section: guests vs business operators */}
-      <section className="relative mx-auto max-w-6xl py-4">
-        {/* Big ambient glow behind both cards */}
+  return (
+    <main className="mx-auto w-full max-w-6xl space-y-10 px-4 pb-16 pt-4 sm:px-6 md:space-y-16 md:pt-8">
+      {/* HERO */}
+      <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-black/40 px-5 py-8 shadow-[0_24px_80px_rgba(0,0,0,0.55)] sm:px-8 md:px-12 md:py-14">
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-4 h-40 rounded-[3rem]"
+          className="absolute inset-0"
           style={{
             background:
-              "radial-gradient(90% 190% at 50% 0%, color-mix(in oklab, var(--accent-500) 26%, transparent), transparent 70%)",
-            filter: "blur(52px)",
-            opacity: 0.9,
+              "radial-gradient(circle at 20% 10%, rgba(236,72,153,0.25), transparent 35%), radial-gradient(circle at 85% 20%, rgba(56,189,248,0.22), transparent 38%), radial-gradient(circle at 50% 100%, rgba(14,165,233,0.18), transparent 45%)",
           }}
         />
 
-        <div className="relative space-y-7">
-          {/* Section heading */}
-          <div className="text-center space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[--color-accent]">
-              Who is Aegean Rush for?
-            </p>
-            <h2 className="text-lg sm:text-xl font-semibold tracking-tight">
-              One platform for guests and activity operators
-            </h2>
-            <p className="mx-auto max-w-3xl text-sm text-white/75">
-              Guests can discover experiences and book activities in seconds.
-              Business operators get a complete booking and payment system
-              without technical headaches.
-            </p>
+        <div className="relative z-10 mx-auto max-w-3xl text-center">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/75">
+            <Star className="size-3.5 text-pink-300" />
+            Hersonissos sea adventures
           </div>
 
-          {/* Two-column cards */}
-          <div className="grid gap-6 md:grid-cols-2 items-stretch">
-            {/* Guests card */}
-            <div className="relative overflow-hidden rounded-[26px] border border-white/10 bg-[--color-card]/85 shadow-[0_22px_65px_rgba(0,0,0,0.65)] backdrop-blur-sm transition-transform hover:-translate-y-1">
-              {/* top accent strip */}
-              <div
-                aria-hidden
-                className="pointer-events-none absolute -top-1 left-0 right-0 h-[3px]"
-                style={{
-                  background:
-                    "linear-gradient(90deg, transparent, var(--accent-500), transparent)",
-                }}
-              />
+          <h1 className="text-4xl font-black leading-[0.95] tracking-tight text-white sm:text-5xl md:text-7xl">
+            Book your sea adventure in Crete
+          </h1>
 
-              <div className="relative flex h-full flex-col justify-between p-6 sm:p-7 space-y-4">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between gap-3">
-                    {/* label chip with glowing dot */}
-                    <div className="inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-black/30 px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-white/75">
-                      <span
-                        className="h-1.5 w-1.5 rounded-full"
-                        style={{
-                          background: "var(--color-accent)",
-                          boxShadow:
-                            "0 0 0 3px color-mix(in oklab, var(--color-accent) 16%, transparent)",
-                        }}
-                      />
-                      <span className="leading-none text-center">Guests</span>
-                    </div>
+          <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-white/75 sm:text-base md:text-lg">
+            Choose watersports, boat rentals, or jet boat experiences. Book online
+            before you arrive and skip the stress.
+          </p>
 
-                    {/* icon badge */}
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-lg">
-                      🌊
-                    </div>
-                  </div>
-
-                  <h3 className="text-base font-semibold">
-                    For guests & groups
-                  </h3>
-                  <p className="text-sm text-white/78">
-                    Browse activity providers, see live availability, and book
-                    your next experience in seconds. No phone calls, no manual
-                    back-and-forth.
-                  </p>
-                </div>
-
-                <div className="pt-2 mt-10">
-                  <Link
-                    href="/clubs"
-                    className="relative inline-flex h-11 items-center gap-2 px-6 rounded-xl font-semibold text-black btn-accent overflow-hidden"
-                  >
-                    {/* Glow Behind */}
-                    <span
-                      aria-hidden="true"
-                      className="absolute inset-0 rounded-xl pointer-events-none"
-                      style={{
-                        background:
-                          "radial-gradient(circle at 50% 50%, rgba(255,215,130,0.45), rgba(255,180,80,0.18), transparent 70%)",
-                        filter: "blur(14px)",
-                        opacity: 0.85,
-                        animation: "goldenPulse 6s ease-in-out infinite",
-                      }}
-                    />
-                    <span className="relative z-10">View businesses</span>
-                  </Link>
-                </div>
-              </div>
+          <div className="mt-6 grid grid-cols-1 gap-2 text-xs text-white/75 sm:mx-auto sm:max-w-2xl sm:grid-cols-3">
+            <div className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-2">
+              Real-time availability
             </div>
-
-            {/* Business operators card */}
-            <div className="relative overflow-hidden rounded-[26px] border border-white/10 bg-[--color-card]/85 shadow-[0_22px_65px_rgba(0,0,0,0.65)] backdrop-blur-sm transition-transform hover:-translate-y-1">
-              {/* top accent strip */}
-              <div
-                aria-hidden
-                className="pointer-events-none absolute -top-1 left-0 right-0 h-[3px]"
-                style={{
-                  background:
-                    "linear-gradient(90deg, transparent, var(--accent-500), transparent)",
-                }}
-              />
-
-              <div className="relative flex h-full flex-col justify-between p-6 sm:p-7 space-y-4">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between gap-3">
-                    {/* label chip with glowing dot */}
-                    <div className="inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-black/30 px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-white/75">
-                      <span
-                        className="h-1.5 w-1.5 rounded-full"
-                        style={{
-                          background: "var(--color-accent)",
-                          boxShadow:
-                            "0 0 0 3px color-mix(in oklab, var(--color-accent) 16%, transparent)",
-                        }}
-                      />
-                      <span className="leading-none text-center">
-                        Business owners
-                      </span>
-                    </div>
-
-                    {/* icon badge */}
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-lg">
-                      📊
-                    </div>
-                  </div>
-
-                  <h3 className="text-base font-semibold">
-                    For business owners & operators
-                  </h3>
-                  <p className="text-sm text-white/78">
-                    Accept online bookings, manage schedules, and get paid
-                    automatically. Branded pages for your business with full
-                    control over pricing and capacity.
-                  </p>
-                </div>
-
-                {/* CTA BUTTONS */}
-                <div className="mt-16 flex flex-wrap gap-4">
-                  {/* BUSINESS SIGN UP — glowing */}
-                  <Link
-                    href="/signup"
-                    className="relative inline-flex h-11 items-center gap-2 px-6 rounded-xl font-semibold text-black btn-accent overflow-hidden"
-                  >
-                    {/* Glow behind */}
-                    <span
-                      aria-hidden="true"
-                      className="absolute inset-0 rounded-xl pointer-events-none"
-                      style={{
-                        background:
-                          "radial-gradient(circle at 50% 50%, rgba(255,215,130,0.45), rgba(255,180,80,0.18), transparent 70%)",
-                        filter: "blur(14px)",
-                        opacity: 0.85,
-                        animation: "goldenPulse 6s ease-in-out infinite",
-                      }}
-                    />
-                    <span className="relative z-10">Business sign up</span>
-                  </Link>
-
-                  {/* BUSINESS LOGIN — outlined but elegant */}
-                  <a
-                    href="/login"
-                    className="relative inline-flex h-11 items-center px-6 rounded-xl border border-[--color-border] bg-black/20 text-white/90 font-medium hover:border-[--color-accent] hover:text-white transition"
-                  >
-                    Business login
-                  </a>
-                </div>
-              </div>
+            <div className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-2">
+              Secure checkout
+            </div>
+            <div className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-2">
+              Instant confirmation
             </div>
           </div>
         </div>
       </section>
 
-      {/* 3. Businesses list */}
-      <section id="clubs" className="relative space-y-8">
-        <div className="text-center space-y-3">
-          <CourtsHeaderClient />
-          <p className="mx-auto max-w-3xl text-sm text-white/75">
-            These are the businesses currently live on Aegean Rush. Pick one to view
-            activities, pricing and availability.
+      {/* TWO MAIN CHOICES */}
+      <section className="space-y-4">
+        <div className="text-center">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[--color-accent]">
+            Choose what you want
+          </p>
+          <h2 className="mt-2 text-2xl font-bold tracking-tight text-white sm:text-3xl">
+            Watersports or boats?
+          </h2>
+        </div>
+
+        <div className="grid gap-5 md:grid-cols-2">
+          {CLUBS.map((club) => {
+            const Icon = club.icon;
+            const href = liveSlugs.has(club.slug) ? `/${club.slug}` : "/clubs";
+
+            return (
+              <Link
+                key={club.slug}
+                href={href}
+                className="group relative min-h-[430px] overflow-hidden rounded-[2rem] border border-white/10 bg-black/50 shadow-[0_24px_70px_rgba(0,0,0,0.55)] transition hover:-translate-y-1 hover:border-white/25"
+              >
+                <div
+                  aria-hidden
+                  className={`absolute inset-0 bg-gradient-to-br ${club.gradient}`}
+                />
+
+                <div
+                  aria-hidden
+                  className="absolute inset-0 bg-cover bg-center opacity-35 transition duration-500 group-hover:scale-105 group-hover:opacity-45"
+                  style={{ backgroundImage: `url(${club.image})` }}
+                />
+
+                <div
+                  aria-hidden
+                  className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-black/20"
+                />
+
+                <div className="relative z-10 flex min-h-[430px] flex-col justify-end p-6 sm:p-7">
+                  <div className="mb-auto flex items-center justify-between">
+                    <div className="rounded-full border border-white/10 bg-black/40 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-white/75 backdrop-blur">
+                      {club.eyebrow}
+                    </div>
+
+                    <div className="flex size-11 items-center justify-center rounded-full border border-white/10 bg-white/10 backdrop-blur">
+                      <Icon className="size-5 text-cyan-200" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-3xl font-black tracking-tight text-white sm:text-4xl">
+                      {club.title}
+                    </h3>
+
+                    <p className="mt-3 max-w-md text-sm leading-relaxed text-white/75">
+                      {club.description}
+                    </p>
+
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {club.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs text-white/80"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div className="mt-6 inline-flex h-12 items-center justify-center rounded-2xl bg-gradient-to-r from-pink-500 to-cyan-400 px-6 text-sm font-bold text-white shadow-[0_12px_40px_rgba(236,72,153,0.35)]">
+                      {club.cta} →
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* TRUST */}
+      <section className="grid gap-3 rounded-[2rem] border border-white/10 bg-white/[0.035] p-4 sm:grid-cols-3 sm:p-5">
+        <div className="rounded-2xl bg-black/25 p-4">
+          <CalendarDays className="mb-3 size-5 text-cyan-300" />
+          <h3 className="text-sm font-bold text-white">Book before you arrive</h3>
+          <p className="mt-1 text-xs leading-relaxed text-white/65">
+            No waiting around. Reserve your activity online.
           </p>
         </div>
 
-        {clubs.length === 0 ? (
-          <div className="mx-auto max-w-5xl rounded-2xl border border-[--color-border] bg-[--color-card]/60 p-6 text-sm text-center opacity-85">
-            No businesses are live yet. Check back soon, or{" "}
-            <Link
-              href="/signup"
-              className="text-[--color-accent] underline-offset-2 hover:underline"
-            >
-              add your business to Aegean Rush
-            </Link>
-            .
-          </div>
-        ) : (
-          <ClubsGrid clubs={clubs} />
-        )}
+        <div className="rounded-2xl bg-black/25 p-4">
+          <ShieldCheck className="mb-3 size-5 text-pink-300" />
+          <h3 className="text-sm font-bold text-white">Secure payment</h3>
+          <p className="mt-1 text-xs leading-relaxed text-white/65">
+            Safe online checkout with instant confirmation.
+          </p>
+        </div>
+
+        <div className="rounded-2xl bg-black/25 p-4">
+          <Zap className="mb-3 size-5 text-yellow-300" />
+          <h3 className="text-sm font-bold text-white">Fast check-in</h3>
+          <p className="mt-1 text-xs leading-relaxed text-white/65">
+            Show your booking and get straight to the water.
+          </p>
+        </div>
       </section>
-    </div>
+
+      {/* SMALL FOOTER BUSINESS LINK */}
+      <section className="text-center text-xs text-white/45">
+        Own an activity business?{" "}
+        <Link href="/signup" className="text-[--color-accent] hover:underline">
+          Partner with Aegean Rush
+        </Link>
+      </section>
+    </main>
   );
 }
