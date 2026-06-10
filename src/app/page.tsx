@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 const CLUBS = [
   {
-    slug: "paradise-watersports",
+    slug: "paradisewatersports",
     label: "Watersports & beach activities",
     title: "Paradise Watersports",
     description:
