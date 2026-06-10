@@ -1,14 +1,21 @@
 // src/app/page.tsx
 import Link from "next/link";
 import prisma from "@/lib/prisma";
-import { Anchor, Waves } from "lucide-react";
+import {
+  Anchor,
+  Waves,
+  CalendarDays,
+  ShieldCheck,
+  Zap,
+  Sparkles,
+} from "lucide-react";
 
 export const revalidate = 0;
 export const dynamic = "force-dynamic";
 
 const CLUBS = [
   {
-    slug: "paradisewatersports",
+    slug: "paradise-watersports",
     label: "Watersports & beach activities",
     title: "Paradise Watersports",
     description:
@@ -29,6 +36,21 @@ const CLUBS = [
   },
 ];
 
+const TRUST_ITEMS = [
+  {
+    label: "Live availability",
+    icon: CalendarDays,
+  },
+  {
+    label: "Secure checkout",
+    icon: ShieldCheck,
+  },
+  {
+    label: "Instant confirmation",
+    icon: Zap,
+  },
+];
+
 export default async function Home() {
   const clubs = await prisma.club.findMany({
     orderBy: { name: "asc" },
@@ -44,18 +66,19 @@ export default async function Home() {
   return (
     <main className="mx-auto w-full max-w-6xl space-y-5 px-1 pb-10 pt-1 sm:px-5 md:space-y-10 md:px-6">
       {/* HERO */}
-      <section className="relative min-h-[315px] overflow-hidden rounded-[1.75rem] border border-white/10 bg-black/40 px-4 py-6 shadow-[0_24px_80px_rgba(0,0,0,0.55)] sm:px-8 md:min-h-[500px] md:px-12 md:py-14">
+      <section className="relative min-h-[285px] overflow-hidden rounded-[1.65rem] border border-white/10 bg-black/40 px-4 py-5 shadow-[0_24px_80px_rgba(0,0,0,0.55)] sm:px-8 md:min-h-[430px] md:px-12 md:py-12">
         <div
           aria-hidden
           className="absolute inset-0"
           style={{
             backgroundImage:
-              "linear-gradient(180deg, rgba(3,7,18,0.1), rgba(3,7,18,0.9)), radial-gradient(circle at 20% 10%, rgba(236,72,153,0.32), transparent 35%), radial-gradient(circle at 85% 20%, rgba(56,189,248,0.34), transparent 42%)",
+              "linear-gradient(180deg, rgba(3,7,18,0.04), rgba(3,7,18,0.9)), radial-gradient(circle at 20% 10%, rgba(236,72,153,0.32), transparent 35%), radial-gradient(circle at 85% 20%, rgba(56,189,248,0.34), transparent 42%)",
           }}
         />
 
-        <div className="relative z-10 flex min-h-[255px] flex-col items-center justify-center text-center md:min-h-[420px]">
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.2em] text-white/80 backdrop-blur-md">
+        <div className="relative z-10 flex min-h-[245px] flex-col items-center justify-center text-center md:min-h-[355px]">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-white/80 backdrop-blur-md sm:text-[11px]">
+            <Sparkles className="size-3.5 text-pink-300" />
             Hersonissos sea adventures
           </div>
 
@@ -63,17 +86,26 @@ export default async function Home() {
             Book your sea adventure in Crete
           </h1>
 
-          <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-white/80 sm:text-lg">
+          <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-white/80 sm:text-base md:text-lg">
             Choose watersports, boat rentals, or jet boat experiences. Book
             online before you arrive and skip the stress.
           </p>
 
-          <a
-            href="#choose"
-            className="mt-5 inline-flex h-12 items-center justify-center rounded-full bg-gradient-to-r from-pink-500 to-cyan-400 px-6 text-sm font-black text-white shadow-[0_18px_55px_rgba(56,189,248,0.28)] sm:mt-7 sm:h-14 sm:px-8 sm:text-base"
-          >
-            Choose your adventure →
-          </a>
+          <div className="mt-5 grid w-full max-w-[720px] grid-cols-1 gap-2 sm:grid-cols-3">
+            {TRUST_ITEMS.map((item) => {
+              const Icon = item.icon;
+
+              return (
+                <div
+                  key={item.label}
+                  className="group flex items-center justify-center gap-2 rounded-full border border-white/12 bg-white/[0.07] px-4 py-2.5 text-xs font-semibold text-white/82 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md transition hover:border-white/20 hover:bg-white/[0.1] sm:text-sm"
+                >
+                  <Icon className="size-4 text-cyan-200 drop-shadow-[0_0_10px_rgba(103,232,249,0.35)]" />
+                  <span>{item.label}</span>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </section>
 
@@ -99,14 +131,12 @@ export default async function Home() {
                 href={href}
                 className="group relative min-h-[430px] overflow-hidden rounded-[2rem] border border-white/10 bg-black shadow-[0_26px_80px_rgba(0,0,0,0.7)] transition duration-300 hover:-translate-y-1 hover:border-white/25 md:min-h-[560px]"
               >
-                {/* Image: much stronger, less faded */}
                 <div
                   aria-hidden
                   className="absolute inset-0 bg-cover bg-center opacity-95 transition duration-700 group-hover:scale-105"
                   style={{ backgroundImage: `url(${club.image})` }}
                 />
 
-                {/* Dark overlay only where text is */}
                 <div
                   aria-hidden
                   className="absolute inset-0 bg-gradient-to-t from-black via-black/45 to-black/5"
@@ -143,13 +173,6 @@ export default async function Home() {
             );
           })}
         </div>
-      </section>
-
-      {/* TRUST - SHORT AND CLEAN */}
-      <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] px-5 py-5 text-center">
-        <p className="text-sm font-semibold text-white/85">
-          Real-time availability · Secure checkout · Instant confirmation
-        </p>
       </section>
 
       <section className="text-center text-xs text-white/45">
