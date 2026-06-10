@@ -178,7 +178,7 @@ export default async function Home() {
       <section className="text-center text-xs text-white/45">
         Login for businesses{" "}
         <Link href="/login" className="text-[--color-accent] hover:underline">
-          Partner with Aegean Rush
+          Partner of Aegean Rush
         </Link>
       </section>
     </main>
