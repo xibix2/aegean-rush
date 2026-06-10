@@ -18,7 +18,7 @@ const CLUBS = [
     gradient:
       "from-cyan-400/25 via-blue-500/10 to-pink-500/25",
     image:
-      "/images/paradise-watersports-cover.jpg",
+      "/images/paradise-watersports-cover.png",
     tags: ["Jet Ski", "Parasailing", "Crazy Sofa"],
   },
   {
@@ -32,7 +32,7 @@ const CLUBS = [
     gradient:
       "from-blue-500/25 via-cyan-500/10 to-purple-500/25",
     image:
-      "/images/poseidon-rent-a-boat-cover.jpg",
+      "/images/poseidon-rent-a-boat-cover.png",
     tags: ["Boat Rental", "Jet Boat", "Private Trips"],
   },
 ];
