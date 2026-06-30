@@ -512,6 +512,7 @@ export async function refundBooking80Action(input: RefundPayload) {
   await stripe.refunds.create({
     payment_intent: rawPI,
     amount: refundAmount,
+    reverse_transfer: true,
   });
 
   if (payment?.id) {
