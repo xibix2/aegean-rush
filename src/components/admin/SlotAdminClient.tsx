@@ -78,6 +78,7 @@ export default function SlotAdminClient({
   createAdminBooking,
   cancelBookingAction,
   refundBookingAction,
+  refundBooking80Action,
 }: {
   currency: string;
   slot: SlotPayload;
@@ -87,6 +88,7 @@ export default function SlotAdminClient({
   ) => Promise<AdminBookingActionState>;
   cancelBookingAction: (fd: FormData) => Promise<void>;
   refundBookingAction: (fd: FormData) => Promise<void>;
+  refundBooking80Action: (fd: FormData) => Promise<void>;
 }) {
   const t = useT();
 
@@ -592,30 +594,49 @@ export default function SlotAdminClient({
                     </form>
 
                     {!isRefunded ? (
-                      <form action={refundBookingAction} className="col-span-2">
-                        <input type="hidden" name="bookingId" value={b.id} />
-                        <input type="hidden" name="slotId" value={slot.id} />
-                        <button
-                          aria-label={
-                            canStripeRefund
-                              ? t("admin.slot.aria.refund")
-                              : t("admin.slot.aria.markRefunded")
-                          }
-                          disabled={!canRefund}
-                          className={`h-9 w-full rounded-lg border border-rose-400/30 bg-rose-400/10 text-rose-200
-                            text-xs font-medium px-3 flex items-center justify-center transition
-                            focus:outline-none focus:ring-1 focus:ring-rose-300/40
-                            ${
-                              !canRefund
-                                ? "opacity-50 cursor-not-allowed"
-                                : "hover:bg-rose-400/15"
-                            }`}
-                        >
-                          {canStripeRefund
-                            ? t("admin.slot.refundStripe")
-                            : t("admin.slot.markRefunded")}
-                        </button>
-                      </form>
+                      <>
+                        <form action={refundBookingAction} className="col-span-1">
+                          <input type="hidden" name="bookingId" value={b.id} />
+                          <input type="hidden" name="slotId" value={slot.id} />
+                          <button
+                            aria-label={
+                              canStripeRefund
+                                ? t("admin.slot.aria.refund")
+                                : t("admin.slot.aria.markRefunded")
+                            }
+                            disabled={!canRefund}
+                            className={`h-9 w-full rounded-lg border border-rose-400/30 bg-rose-400/10 text-rose-200
+                              text-xs font-medium px-3 flex items-center justify-center transition
+                              focus:outline-none focus:ring-1 focus:ring-rose-300/40
+                              ${
+                                !canRefund
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : "hover:bg-rose-400/15"
+                              }`}
+                          >
+                            Full refund
+                          </button>
+                        </form>
+
+                        <form action={refundBooking80Action} className="col-span-1">
+                          <input type="hidden" name="bookingId" value={b.id} />
+                          <input type="hidden" name="slotId" value={slot.id} />
+                          <button
+                            aria-label="Refund 80 percent"
+                            disabled={!canRefund || !canStripeRefund}
+                            className={`h-9 w-full rounded-lg border border-amber-400/30 bg-amber-400/10 text-amber-200
+                              text-xs font-medium px-3 flex items-center justify-center transition
+                              focus:outline-none focus:ring-1 focus:ring-amber-300/40
+                              ${
+                                !canRefund || !canStripeRefund
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : "hover:bg-amber-400/15"
+                              }`}
+                          >
+                            Refund 80%
+                          </button>
+                        </form>
+                      </>
                     ) : (
                       <button
                         disabled

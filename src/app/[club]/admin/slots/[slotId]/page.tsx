@@ -460,6 +460,75 @@ export async function refundBookingAction(input: RefundPayload) {
   revalidatePath(`${base}/admin/bookings`);
 }
 
+export async function refundBooking80Action(input: RefundPayload) {
+  "use server";
+
+  const tenant = await requireTenant();
+  await requireClubAdmin(tenant.id);
+  const base = `/${tenant.slug}`;
+
+  let bookingId = "";
+  let slotId = "";
+
+  if (input instanceof FormData) {
+    bookingId = String(input.get("bookingId") || "");
+    slotId = String(input.get("slotId") || "");
+  } else {
+    bookingId = String(input.bookingId || "");
+    slotId = String(input.slotId || "");
+  }
+
+  if (!bookingId) throw new Error("Missing bookingId");
+
+  const booking = await prisma.booking.findFirst({
+    where: { id: bookingId, timeSlot: { activity: { clubId: tenant.id } } },
+    include: { payment: true },
+  });
+
+  if (!booking) throw new Error("Booking not found");
+
+  if (booking.status !== DB.CONFIRMED) {
+    throw new Error("Only confirmed paid bookings can be refunded.");
+  }
+
+  const payment =
+    booking.payment ||
+    (await prisma.payment.findFirst({
+      where: { bookingId },
+      orderBy: { createdAt: "desc" },
+    }));
+
+  const rawPI = payment?.providerIntentId ?? null;
+  const hasStripePI = !!rawPI && rawPI.startsWith("pi_");
+
+  if (!hasStripePI) {
+    throw new Error("This booking has no real Stripe payment intent.");
+  }
+
+  const refundAmount = Math.floor(booking.totalPrice * 0.8);
+
+  const stripe = getStripe();
+
+  await stripe.refunds.create({
+    payment_intent: rawPI,
+    amount: refundAmount,
+  });
+
+  if (payment?.id) {
+    await prisma.payment.update({
+      where: { id: payment.id },
+      data: { status: "refunded" },
+    });
+  }
+
+  await prisma.booking.update({
+    where: { id: bookingId },
+    data: { status: DB.CANCELLED },
+  });
+
+  if (slotId) revalidatePath(`${base}/admin/slots/${slotId}`);
+  revalidatePath(`${base}/admin/bookings`);
+}
 /* =========================
    Page (Server Component)
    ========================= */
@@ -514,6 +583,7 @@ export default async function SlotAdminPage({
         createAdminBooking={createAdminBooking}
         cancelBookingAction={cancelBookingAction}
         refundBookingAction={refundBookingAction}
+        refundBooking80Action={refundBooking80Action}
       />
     );
   }
@@ -574,6 +644,7 @@ export default async function SlotAdminPage({
       createAdminBooking={createAdminBooking}
       cancelBookingAction={cancelBookingAction}
       refundBookingAction={refundBookingAction}
+      refundBooking80Action={refundBooking80Action}
     />
   );
 }
