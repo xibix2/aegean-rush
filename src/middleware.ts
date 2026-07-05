@@ -134,8 +134,11 @@ export async function middleware(req: NextRequest) {
   const cookies = req.cookies;
 
   const session = await verifyAdminSessionToken(cookies.get("admin_session")?.value);
-  const isAuthed = !!session;
-  const isSuperAdmin = session?.role === "SUPERADMIN";
+  const legacyIsAuthed = cookies.get("admin_auth")?.value === "yes";
+  const legacyRole = cookies.get("admin_role")?.value;
+  const isAuthed = !!session || legacyIsAuthed;
+  const isSuperAdmin =
+    session?.role === "SUPERADMIN" || legacyRole === "SUPERADMIN";
 
   // If cookie is poisoned, clear it aggressively
   const cookieTenant = cookies.get("tenant_slug")?.value;

@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies, headers } from "next/headers";
 import prisma from "@/lib/prisma";
-import { issueAdminSession, verifyAdminPassword } from "@/lib/auth";
+import { verifyAdminPassword } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 
 type Body = {
@@ -78,12 +78,10 @@ export async function POST(req: NextRequest) {
   const superUserOk = !requiredUser || email === requiredUser;
   const superPassOk = verifyAdminPassword(password);
   if (superUserOk && superPassOk) {
-    await issueAdminSession({
-      email,
-      role: "SUPERADMIN",
-      clubId: null,
-      hours: clampedHours,
-    });
+    jar.set("admin_auth", "yes", common);
+    jar.set("admin_email", email, common);
+    jar.set("admin_role", "SUPERADMIN", common);
+    jar.set("admin_clubId", "", { ...common, maxAge: 0 });
     // Don't set tenant_slug for superadmin (global mode)
     jar.set("tenant_slug", "", { ...common, maxAge: 0 });
 
@@ -211,13 +209,10 @@ export async function POST(req: NextRequest) {
   // NOTE: for now we still store "ADMIN" as role in the cookie so that the
   // existing guards keep working. We’ll tighten this later when we add
   // real per-role permissions.
-  await issueAdminSession({
-    email,
-    role: user.role as any,
-    clubId: user.clubId,
-    hours: clampedHours,
-  });
-
+  jar.set("admin_auth", "yes", common);
+  jar.set("admin_email", email, common);
+  jar.set("admin_role", user.role as any, common);
+  jar.set("admin_clubId", user.clubId, common);
   jar.set("tenant_slug", clubSlugToSet, common);
 
   const wantsHtml = (req.headers.get("accept") || "").includes("text/html");
@@ -231,7 +226,7 @@ export async function POST(req: NextRequest) {
   }
   return NextResponse.json({
     ok: true,
-    role: user.role,
+    role: "ADMIN",
     tenant: clubSlugToSet,
     redirect: redirectPath,
   });

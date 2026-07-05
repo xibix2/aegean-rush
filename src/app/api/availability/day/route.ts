@@ -215,8 +215,13 @@ export async function GET(req: NextRequest) {
           };
         }
 
+        const quoteActivity =
+          activity.ticketTypes.length > 0 && !ticketSelections?.length
+            ? { ...activity, ticketTypes: [] }
+            : activity;
+
         const quote = getBookingQuoteAndAvailability({
-          activity,
+          activity: quoteActivity,
           slot: {
             id: slot.id,
             activityId: slot.activityId,

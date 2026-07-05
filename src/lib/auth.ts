@@ -60,14 +60,15 @@ function signSession(payload: AdminSession): string {
 
 function verifyToken(token?: string | null): AdminSession | null {
   if (!token) return null;
-  const [body, sig] = token.split(".");
-  if (!body || !sig) return null;
-  const expSig = crypto
-    .createHmac("sha256", secret())
-    .update(body)
-    .digest("base64url");
-  if (sig !== expSig) return null;
   try {
+    const [body, sig] = token.split(".");
+    if (!body || !sig) return null;
+    const expSig = crypto
+      .createHmac("sha256", secret())
+      .update(body)
+      .digest("base64url");
+    if (sig !== expSig) return null;
+
     const data = JSON.parse(
       Buffer.from(body, "base64url").toString()
     ) as AdminSession;
@@ -164,6 +165,18 @@ export async function getAdminSession(): Promise<AdminSession | null> {
   const token = jar.get(SESSION_COOKIE)?.value ?? null;
   const sess = verifyToken(token);
   if (sess) return sess;
+
+  // Back-compat fallback for the existing login flow and already-issued cookies.
+  const authYes = jar.get(AUTH_FLAG_COOKIE)?.value === "yes";
+  const email = jar.get("admin_email")?.value ?? null;
+  const role =
+    (jar.get("admin_role")?.value as AdminRole | undefined) ?? null;
+  const clubId = jar.get("admin_clubId")?.value ?? null;
+
+  if (authYes && email && role) {
+    const exp = Math.floor(Date.now() / 1000) + 15 * 60;
+    return { email, role, clubId, exp };
+  }
 
   return null;
 }
