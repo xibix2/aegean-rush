@@ -405,6 +405,13 @@ export async function GET(req: NextRequest) {
           durationMin: d.durationMin,
           priceCents: d.priceCents,
         })),
+        ticketTypes: activity.ticketTypes.map((ticket) => ({
+          id: ticket.id,
+          label: ticket.label,
+          priceCents: ticket.priceCents,
+          isActive: ticket.isActive,
+          sortOrder: ticket.sortOrder,
+        })),
       },
       slots: slotResults,
     });
