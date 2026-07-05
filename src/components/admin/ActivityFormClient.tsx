@@ -19,6 +19,14 @@ type DurationOptionShape = {
   sortOrder?: number;
 };
 
+type TicketTypeRow = {
+  id?: string;
+  label: string;
+  priceEuro: number;
+  isActive?: boolean;
+  sortOrder?: number;
+};
+
 type ActivityShape = {
   id: string;
   name: string;
@@ -47,7 +55,7 @@ type ActivityShape = {
   maxUnitsPerBooking?: number;
   showGuestsForRental?: boolean;
   slotIntervalMin?: number;
-
+  ticketTypes?: TicketTypeRow[];
   durationOptions?: DurationOptionShape[];
 };
 
@@ -81,7 +89,9 @@ export function ActivityFormClient({
         ]
   );
   const [formKey, setFormKey] = React.useState(activity.id);
-
+  const [ticketTypes, setTicketTypes] = React.useState<TicketTypeRow[]>(
+    activity.ticketTypes?.length ? activity.ticketTypes : []
+  );
   React.useEffect(() => {
     setFormKey(activity.id);
     setMode(activity.mode);
@@ -142,6 +152,32 @@ export function ActivityFormClient({
     );
   };
 
+  const addTicketType = () => {
+    setTicketTypes((prev) => [
+      ...prev,
+      {
+        label: "",
+        priceEuro: 0,
+        isActive: true,
+        sortOrder: prev.length,
+      },
+    ]);
+  };
+
+  const updateTicketType = (index: number, patch: Partial<TicketTypeRow>) => {
+    setTicketTypes((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, ...patch } : item))
+    );
+  };
+
+  const removeTicketType = (index: number) => {
+    setTicketTypes((prev) =>
+      prev
+        .filter((_, i) => i !== index)
+        .map((item, i) => ({ ...item, sortOrder: i }))
+    );
+  };
+
   const durationOptionsJson = JSON.stringify(
     durationOptions.map((opt, index) => ({
       id: opt.id,
@@ -150,6 +186,16 @@ export function ActivityFormClient({
       priceEuro: Number(opt.priceEuro) || 0,
       isActive: opt.isActive ?? true,
       sortOrder: typeof opt.sortOrder === "number" ? opt.sortOrder : index,
+    }))
+  );
+
+  const ticketTypesJson = JSON.stringify(
+    ticketTypes.map((ticket, index) => ({
+      id: ticket.id,
+      label: ticket.label?.trim(),
+      priceEuro: Number(ticket.priceEuro) || 0,
+      isActive: ticket.isActive ?? true,
+      sortOrder: typeof ticket.sortOrder === "number" ? ticket.sortOrder : index,
     }))
   );
 
@@ -169,6 +215,8 @@ export function ActivityFormClient({
         name="durationOptionsJson"
         value={durationOptionsJson}
       />
+
+      <input type="hidden" name="ticketTypesJson" value={ticketTypesJson} />
 
       <div className="grid gap-6 sm:grid-cols-2">
         <div className="grid gap-4">
@@ -455,6 +503,74 @@ export function ActivityFormClient({
                     <button
                       type="button"
                       onClick={() => removeDurationOption(index)}
+                      className="rounded-lg border border-red-400/20 bg-red-500/10 px-3 py-2 text-xs text-red-200 hover:bg-red-500/15 transition"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {isFixed && (
+          <div className="rounded-xl border border-white/10 bg-black/15 p-4 space-y-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <div className="text-sm font-medium">Ticket types (optional)</div>
+                <div className="mt-1 text-xs opacity-65">
+                  Leave empty to use the normal price per guest.
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={addTicketType}
+                className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs hover:bg-white/10 transition"
+              >
+                Add ticket
+              </button>
+            </div>
+
+            {ticketTypes.length === 0 ? (
+              <div className="text-sm opacity-65">
+                No ticket types yet. Add Adult, Child, or other price tiers if this
+                activity needs mixed pricing.
+              </div>
+            ) : (
+              <div className="grid gap-3">
+                {ticketTypes.map((ticket, index) => (
+                  <div
+                    key={ticket.id ?? index}
+                    className="grid gap-3 rounded-lg border border-white/10 bg-white/5 p-3 sm:grid-cols-[1fr_150px_auto]"
+                  >
+                    <input
+                      value={ticket.label}
+                      onChange={(e) =>
+                        updateTicketType(index, { label: e.target.value })
+                      }
+                      placeholder="Adult / Child"
+                      className="h-10 rounded-lg u-border u-surface px-3 focus:outline-none focus:ring-1 focus:ring-[var(--accent-400)]"
+                    />
+
+                    <input
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      value={ticket.priceEuro}
+                      onChange={(e) =>
+                        updateTicketType(index, {
+                          priceEuro: Number(e.target.value) || 0,
+                        })
+                      }
+                      placeholder="Price EUR"
+                      className="h-10 rounded-lg u-border u-surface px-3 focus:outline-none focus:ring-1 focus:ring-[var(--accent-400)]"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() => removeTicketType(index)}
                       className="rounded-lg border border-red-400/20 bg-red-500/10 px-3 py-2 text-xs text-red-200 hover:bg-red-500/15 transition"
                     >
                       Remove

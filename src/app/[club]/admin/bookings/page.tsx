@@ -13,6 +13,12 @@ type BookingMode =
   | "DYNAMIC_RENTAL"
   | "HYBRID_UNIT_BOOKING";
 
+type BookingTicketRow = {
+  labelSnapshot: string;
+  priceCentsSnapshot: number;
+  quantity: number;
+};
+
 type APIRow = {
   id: string;
   ref: string;
@@ -42,6 +48,7 @@ type APIRow = {
   durationMinSnapshot?: number | null;
   pricingLabelSnapshot?: string | null;
   guestsPerUnit?: number | null;
+  tickets?: BookingTicketRow[];
 
   createdAt: string;
 };
@@ -72,6 +79,7 @@ type Row = {
   durationMinSnapshot: number | null;
   pricingLabelSnapshot: string | null;
   guestsPerUnit: number | null;
+  tickets: BookingTicketRow[];
 
   createdAt: string;
 };
@@ -183,6 +191,7 @@ export default function AdminBookingsPage() {
         durationMinSnapshot: b.durationMinSnapshot ?? null,
         pricingLabelSnapshot: b.pricingLabelSnapshot ?? null,
         guestsPerUnit: b.guestsPerUnit ?? null,
+        tickets: b.tickets ?? [],
 
         createdAt: b.createdAt,
       }));
@@ -586,7 +595,22 @@ function BookingDetailsCell({ row }: { row: Row }) {
   if (row.mode === "FIXED_SEAT_EVENT") {
     return (
       <div className="space-y-1">
-        <div>{row.players} guest{row.players === 1 ? "" : "s"}</div>
+        {row.tickets.length > 0 ? (
+          <>
+            {row.tickets.map((ticket, index) => (
+              <div key={index}>
+                {ticket.quantity} × {ticket.labelSnapshot}
+              </div>
+            ))}
+            <div className="text-[12px] opacity-70">
+              Total: {row.players} guest{row.players === 1 ? "" : "s"}
+            </div>
+          </>
+        ) : (
+          <div>
+            {row.players} guest{row.players === 1 ? "" : "s"}
+          </div>
+        )}
       </div>
     );
   }

@@ -103,20 +103,11 @@ export default function SlotAdminClient({
     setTimezoneOffsetMinutes(new Date().getTimezoneOffset());
   }, []);
 
-  if (!slot) {
-    return (
-      <main className="max-w-4xl mx-auto p-6">
-        <h1 className="text-2xl font-semibold">{t("admin.slot.notFound")}</h1>
-      </main>
-    );
-  }
-
-  const start = new Date(slot.startAtISO);
-  const end = new Date(slot.endAtISO);
-  const mode = slot.activityMode;
-  const isClosed = !!slot.isClosed;
-
   const paid = useMemo(() => {
+    if (!slot) return 0;
+
+    const mode = slot.activityMode;
+
     if (mode === "FIXED_SEAT_EVENT") {
       return slot.bookings
         .filter((b) => b.status === DB.CONFIRMED)
@@ -126,9 +117,13 @@ export default function SlotAdminClient({
     return slot.bookings
       .filter((b) => b.status === DB.CONFIRMED)
       .reduce((s, b) => s + (b.reservedUnits || 0), 0);
-  }, [slot.bookings, mode]);
+  }, [slot]);
 
   const freshPending = useMemo(() => {
+    if (!slot) return 0;
+
+    const mode = slot.activityMode;
+
     if (mode === "FIXED_SEAT_EVENT") {
       return slot.bookings
         .filter((b) => {
@@ -146,7 +141,20 @@ export default function SlotAdminClient({
         return mins < 30;
       })
       .reduce((s, b) => s + (b.reservedUnits || 0), 0);
-  }, [slot.bookings, mode]);
+  }, [slot]);
+
+  if (!slot) {
+    return (
+      <main className="max-w-4xl mx-auto p-6">
+        <h1 className="text-2xl font-semibold">{t("admin.slot.notFound")}</h1>
+      </main>
+    );
+  }
+
+  const start = new Date(slot.startAtISO);
+  const end = new Date(slot.endAtISO);
+  const mode = slot.activityMode;
+  const isClosed = !!slot.isClosed;
 
   const remaining = Math.max(0, slot.capacity - paid - freshPending);
 

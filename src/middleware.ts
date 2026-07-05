@@ -56,18 +56,86 @@ function redirectToLogin(
   return NextResponse.redirect(url, { status: 303 });
 }
 
-export function middleware(req: NextRequest) {
+type MiddlewareSession = {
+  email: string;
+  role: string;
+  clubId: string | null;
+  exp: number;
+};
+
+function base64UrlToBytes(value: string) {
+  const base64 = value
+    .replace(/-/g, "+")
+    .replace(/_/g, "/")
+    .padEnd(Math.ceil(value.length / 4) * 4, "=");
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
+function bytesToBase64Url(bytes: ArrayBuffer) {
+  const binary = String.fromCharCode(...new Uint8Array(bytes));
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+async function signBody(body: string, secret: string) {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const signature = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    new TextEncoder().encode(body),
+  );
+  return bytesToBase64Url(signature);
+}
+
+async function verifyAdminSessionToken(
+  token?: string | null,
+): Promise<MiddlewareSession | null> {
+  if (!token) return null;
+  const [body, sig] = token.split(".");
+  if (!body || !sig) return null;
+
+  const secret = process.env.AUTH_HMAC_SECRET;
+  if (!secret) return null;
+
+  const expectedSig = await signBody(body, secret);
+  if (sig !== expectedSig) return null;
+
+  try {
+    const payload = JSON.parse(
+      new TextDecoder().decode(base64UrlToBytes(body)),
+    ) as MiddlewareSession;
+    if (typeof payload.exp !== "number" || Date.now() / 1000 > payload.exp) {
+      return null;
+    }
+    if (typeof payload.email !== "string" || typeof payload.role !== "string") {
+      return null;
+    }
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+export async function middleware(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
   if (isStaticPath(pathname)) return NextResponse.next();
 
   const segs = pathname.split("/").filter(Boolean);
   const cookies = req.cookies;
 
-  const authYes = cookies.get("admin_auth")?.value === "yes"; // legacy flag
-  const hasSession = !!cookies.get("admin_session")?.value; // signed token (optional)
-  const adminRoleCookie = cookies.get("admin_role")?.value || "";
-  const isSuperAdmin = adminRoleCookie === "SUPERADMIN";
-  const isAuthed = authYes || hasSession || !!adminRoleCookie;
+  const session = await verifyAdminSessionToken(cookies.get("admin_session")?.value);
+  const isAuthed = !!session;
+  const isSuperAdmin = session?.role === "SUPERADMIN";
 
   // If cookie is poisoned, clear it aggressively
   const cookieTenant = cookies.get("tenant_slug")?.value;

@@ -5,6 +5,7 @@ import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import Link from "next/link";
 import { ensureHomepageDefaultsForClub } from "@/lib/homepageDefaults";
+import { issueAdminSession } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -98,10 +99,13 @@ async function createClubAndAdmin(formData: FormData) {
     maxAge,
   };
 
-  jar.set("admin_auth", "yes", common);
-  jar.set("admin_email", adminEmail, common);
-  jar.set("admin_role", "ADMIN", common);
-  jar.set("admin_clubId", club.id, common);
+  await issueAdminSession({
+    email: adminEmail,
+    role: "ADMIN",
+    clubId: club.id,
+    hours,
+  });
+
   jar.set("tenant_slug", club.slug, common);
 
   // Step 2: send them to the nice billing screen you already have
@@ -306,9 +310,9 @@ export default function SignupPage() {
                 >
                   {TXT.primaryBtn}
                 </button>
-                <a href="/" className="text-sm opacity-80 hover:opacity-100">
+                <Link href="/" className="text-sm opacity-80 hover:opacity-100">
                   {TXT.cancel}
-                </a>
+                </Link>
               </div>
 
               <div className="pt-2 flex items-center justify-between text-[11px] opacity-60">

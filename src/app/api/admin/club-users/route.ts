@@ -1,22 +1,15 @@
 // src/app/api/admin/club-users/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { requireSuperAdmin } from "@/lib/admin-guard";
 
 export const runtime = "nodejs";
 export const revalidate = 0;
 
-async function requireSuperAdminCookie() {
-  const jar = await cookies();
-  const isAuthed = jar.get("admin_auth")?.value === "yes";
-  const role = jar.get("admin_role")?.value;
-  if (!isAuthed || role !== "SUPERADMIN") throw new Error("Forbidden");
-}
-
 export async function GET() {
   try {
-    await requireSuperAdminCookie();
+    await requireSuperAdmin();
 
     const users = await prisma.user.findMany({
       where: { role: "ADMIN" },
@@ -39,7 +32,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    await requireSuperAdminCookie();
+    await requireSuperAdmin();
 
     const { email, password, clubSlug } = (await req.json().catch(() => ({}))) as {
       email?: string;

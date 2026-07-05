@@ -49,6 +49,35 @@ export async function GET(req: NextRequest) {
     const date = sp.get("date") || "";
 
     const partySize = parsePositiveInt(sp.get("partySize"), 1);
+
+    let ticketSelections:
+      | Array<{ ticketTypeId: string; quantity: number }>
+      | undefined = undefined;
+
+    try {
+      const rawTickets = sp.get("ticketSelections");
+
+      if (rawTickets) {
+        const parsed = JSON.parse(rawTickets);
+
+        if (Array.isArray(parsed)) {
+          ticketSelections = parsed
+            .map((item) => ({
+              ticketTypeId: String(item?.ticketTypeId || ""),
+              quantity: Number(item?.quantity || 0),
+            }))
+            .filter(
+              (item) =>
+                item.ticketTypeId &&
+                Number.isFinite(item.quantity) &&
+                item.quantity > 0
+            );
+        }
+      }
+    } catch {
+      ticketSelections = undefined;
+    }
+
     const units = sp.get("units") ? parsePositiveInt(sp.get("units"), 1) : undefined;
     const guests = sp.get("guests") ? parsePositiveInt(sp.get("guests"), 1) : undefined;
 
@@ -91,6 +120,17 @@ export async function GET(req: NextRequest) {
             id: true,
             label: true,
             durationMin: true,
+            priceCents: true,
+            isActive: true,
+            sortOrder: true,
+          },
+        },
+        ticketTypes: {
+          where: { isActive: true },
+          orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+          select: {
+            id: true,
+            label: true,
             priceCents: true,
             isActive: true,
             sortOrder: true,
@@ -145,6 +185,7 @@ export async function GET(req: NextRequest) {
           maxUnitsPerBooking: activity.maxUnitsPerBooking,
           showGuestsForRental: activity.showGuestsForRental,
           durationOptions: activity.durationOptions,
+          ticketTypes: activity.ticketTypes,
         },
         slots: [],
       });
@@ -186,6 +227,7 @@ export async function GET(req: NextRequest) {
           },
           existingBookings: slot.bookings,
           partySize,
+          ticketSelections,
         });
 
         return {

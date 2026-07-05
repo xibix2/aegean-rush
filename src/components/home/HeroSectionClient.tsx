@@ -102,7 +102,7 @@ export function HeroSectionClient({
             </div>
 
             <h1 className="text-[3.05rem] font-black uppercase leading-[0.86] tracking-[-0.075em] text-white sm:text-7xl md:text-8xl">
-              DON'T WAIT
+              DON&apos;T WAIT
               <span className="block bg-gradient-to-r from-pink-400 via-fuchsia-300 to-cyan-200 bg-clip-text text-transparent">
                 IN LINE
               </span>

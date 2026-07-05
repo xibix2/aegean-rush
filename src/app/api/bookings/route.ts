@@ -97,6 +97,13 @@ export async function GET(req: Request) {
             durationMinSnapshot: true,
             pricingLabelSnapshot: true,
             unitPriceSnapshot: true,
+            tickets: {
+              select: {
+                labelSnapshot: true,
+                priceCentsSnapshot: true,
+                quantity: true,
+              },
+            },
           },
           orderBy: { createdAt: "desc" },
         },
@@ -133,6 +140,7 @@ export async function GET(req: Request) {
 
           partySize: b.partySize ?? 1,
           reservedUnits: b.reservedUnits ?? null,
+          tickets: b.tickets ?? [],
 
           totalPrice: b.totalPrice ?? 0,
           unitPriceSnapshot: b.unitPriceSnapshot ?? null,
@@ -155,7 +163,7 @@ export async function GET(req: Request) {
           pricingLabelSnapshot: b.pricingLabelSnapshot ?? null,
 
           guestsPerUnit: s.activity?.guestsPerUnit ?? null,
-
+          
           createdAt: b.createdAt,
         };
       }),

@@ -20,6 +20,14 @@ type DurationOptionLike = {
   sortOrder: number;
 };
 
+type TicketTypeLike = {
+  id: string;
+  label: string;
+  priceCents: number;
+  isActive: boolean;
+  sortOrder: number;
+};
+
 type ActivityLike = {
   id: string;
   name: string;
@@ -31,6 +39,7 @@ type ActivityLike = {
   maxUnitsPerBooking: number | null;
   slotIntervalMin: number | null;
   durationOptions: DurationOptionLike[];
+  ticketTypes?: TicketTypeLike[];
 };
 
 type TimeSlotLike = {
@@ -51,6 +60,11 @@ export type BookingEngineInput = {
 
   startTime?: string | Date | null;
   durationOptionId?: string | null;
+
+  ticketSelections?: Array<{
+    ticketTypeId: string;
+    quantity: number;
+  }> | null;
 
   units?: number | null;
   guests?: number | null;
@@ -76,6 +90,13 @@ export type BookingEngineResult = {
   bookingEndAt: Date;
 
   durationMin: number | null;
+
+  ticketBreakdown?: Array<{
+    ticketTypeId: string;
+    labelSnapshot: string;
+    priceCentsSnapshot: number;
+    quantity: number;
+  }> | null;
 
   unitPrice: number;
   totalPrice: number;
@@ -284,6 +305,61 @@ function usedUnitsForRange(
   return used;
 }
 
+function resolveTicketBreakdown(
+  activity: ActivityLike,
+  selections: BookingEngineInput["ticketSelections"]
+) {
+  const activeTicketTypes = (activity.ticketTypes ?? []).filter((t) => t.isActive);
+
+  if (activeTicketTypes.length === 0) {
+    return {
+      hasTicketTypes: false,
+      partySize: null,
+      totalPrice: null,
+      breakdown: null,
+      errors: [] as string[],
+    };
+  }
+
+  const errors: string[] = [];
+  const selected = selections ?? [];
+
+  const breakdown = activeTicketTypes
+    .map((ticket) => {
+      const found = selected.find((s) => s.ticketTypeId === ticket.id);
+      const quantity =
+        typeof found?.quantity === "number" && Number.isFinite(found.quantity)
+          ? Math.max(0, Math.floor(found.quantity))
+          : 0;
+
+      return {
+        ticketTypeId: ticket.id,
+        labelSnapshot: ticket.label,
+        priceCentsSnapshot: ticket.priceCents,
+        quantity,
+      };
+    })
+    .filter((item) => item.quantity > 0);
+
+  const partySize = breakdown.reduce((sum, item) => sum + item.quantity, 0);
+  const totalPrice = breakdown.reduce(
+    (sum, item) => sum + item.quantity * item.priceCentsSnapshot,
+    0
+  );
+
+  if (partySize <= 0) {
+    errors.push("Please select at least one ticket.");
+  }
+
+  return {
+    hasTicketTypes: true,
+    partySize,
+    totalPrice,
+    breakdown,
+    errors,
+  };
+}
+
 export function getBookingQuoteAndAvailability(
   input: BookingEngineInput
 ): BookingEngineResult {
@@ -293,7 +369,19 @@ export function getBookingQuoteAndAvailability(
   const errors: string[] = [];
 
   const mode = activity.mode;
-  const partySize = coercePartySize(input.partySize);
+  const ticketResolution =
+    mode === ActivityMode.FIXED_SEAT_EVENT
+      ? resolveTicketBreakdown(activity, input.ticketSelections)
+      : null;
+
+  const partySize =
+    ticketResolution?.hasTicketTypes
+      ? ticketResolution.partySize ?? 1
+      : coercePartySize(input.partySize);
+
+  if (ticketResolution?.errors.length) {
+    errors.push(...ticketResolution.errors);
+  }
 
   validatePartyBounds(activity, partySize, errors);
 
@@ -309,7 +397,10 @@ export function getBookingQuoteAndAvailability(
     const used = usedSeatsForFixedEvent(activeBookings);
     const remaining = Math.max(0, slot.capacity - used);
     const unitPrice = getFixedEventPrice(slot, activity);
-    const totalPrice = unitPrice * partySize;
+    const totalPrice =
+      ticketResolution?.hasTicketTypes && ticketResolution.totalPrice != null
+        ? ticketResolution.totalPrice
+        : unitPrice * partySize;
 
     if (remaining < partySize) {
       errors.push("Not enough seats left.");
@@ -336,6 +427,7 @@ export function getBookingQuoteAndAvailability(
       unitPrice,
       totalPrice,
       pricingLabel: null,
+      ticketBreakdown: ticketResolution?.breakdown ?? null,
       remainingCapacity: remaining,
       remainingUnitsForRange: null,
     };

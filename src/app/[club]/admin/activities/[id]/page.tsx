@@ -103,6 +103,44 @@ function parseDurationOptions(formData: FormData) {
   }
 }
 
+function parseTicketTypes(formData: FormData) {
+  const raw = String(formData.get("ticketTypesJson") || "[]");
+
+  let parsed: any[] = [];
+
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    parsed = [];
+  }
+
+  return parsed
+    .map((ticket, index) => {
+      const label = String(ticket?.label || "").trim();
+      const priceEuro = Number(ticket?.priceEuro);
+      const priceCents =
+        Number.isFinite(priceEuro) && priceEuro >= 0
+          ? Math.round(priceEuro * 100)
+          : -1;
+
+      if (!label || priceCents < 0) return null;
+
+      return {
+        label,
+        priceCents,
+        isActive: ticket?.isActive ?? true,
+        sortOrder:
+          typeof ticket?.sortOrder === "number" ? ticket.sortOrder : index,
+      };
+    })
+    .filter(Boolean) as Array<{
+    label: string;
+    priceCents: number;
+    isActive: boolean;
+    sortOrder: number;
+  }>;
+}
+
 /* ============ server actions ============ */
 async function updateActivityAction(
   tenantSlug: string,
@@ -154,6 +192,8 @@ async function updateActivityAction(
     formData.get("showGuestsForRental") === "on";
 
   const parsedDurationOptions = parseDurationOptions(formData);
+
+  const parsedTicketTypes = parseTicketTypes(formData);
 
   let coverImageUrl: string | undefined;
   const uploaded = formData.get("coverFile");
@@ -227,6 +267,23 @@ async function updateActivityAction(
         });
       }
     }
+    if (parsedTicketTypes) {
+      await tx.activityTicketType.deleteMany({
+        where: { activityId: id },
+      });
+
+      if (parsedTicketTypes.length > 0) {
+        await tx.activityTicketType.createMany({
+          data: parsedTicketTypes.map((ticket) => ({
+            activityId: id,
+            label: ticket.label,
+            priceCents: ticket.priceCents,
+            isActive: ticket.isActive,
+            sortOrder: ticket.sortOrder,
+          })),
+        });
+      }
+    }
   });
 
   revalidatePath(`/${tenantSlug}/admin/activities`);
@@ -283,6 +340,9 @@ export default async function ActivityDetailPage({
       durationOptions: {
         orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
       },
+      ticketTypes: {
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+      },
     },
   });
 
@@ -327,6 +387,14 @@ export default async function ActivityDetailPage({
       priceCents: opt.priceCents,
       isActive: opt.isActive,
       sortOrder: opt.sortOrder,
+    })),
+
+    ticketTypes: a.ticketTypes.map((ticket) => ({
+      id: ticket.id,
+      label: ticket.label,
+      priceEuro: ticket.priceCents / 100,
+      isActive: ticket.isActive,
+      sortOrder: ticket.sortOrder,
     })),
   };
 

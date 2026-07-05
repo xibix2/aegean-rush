@@ -124,7 +124,7 @@ export function localWallTimeToUTC(ymd: string, hhmm: string, tz: string): Date 
 
   // First guess: interpret the wall time as if it were local, then subtract offset.
   const guessUtc = new Date(Date.UTC(Y, M - 1, D, h, m, 0, 0));
-  let off1 = tzOffsetMinutesAt(tz, guessUtc);
+  const off1 = tzOffsetMinutesAt(tz, guessUtc);
   let corrected = new Date(guessUtc.getTime() - off1 * 60000);
 
   // One refinement around DST boundaries

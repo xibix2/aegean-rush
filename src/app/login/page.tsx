@@ -239,9 +239,9 @@ export default function AdminLoginPage() {
             {/* Helper row */}
             <div className="mt-6 flex items-center justify-between text-xs opacity-70">
               <span>Use your business admin email & password.</span>
-              <a href="/forgot-password" className="hover:opacity-100">
+              <Link href="/forgot-password" className="hover:opacity-100">
                 {TXT.forgot}
-              </a>
+              </Link>
             </div>
 
             {/* Form */}

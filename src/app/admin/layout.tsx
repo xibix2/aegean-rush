@@ -3,27 +3,29 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { requireSuperAdmin } from "@/lib/admin-guard";
+import { getAdminSession } from "@/lib/auth";
 
 export const revalidate = 0;
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Superadmin — Aegean Rush Admin",
+  title: "Superadmin - Aegean Rush Admin",
 };
 
 export default async function SuperAdminLayout({
   children,
-}: { children: React.ReactNode }) {
+}: {
+  children: React.ReactNode;
+}) {
   try {
-    await requireSuperAdmin(); // throws if not SUPERADMIN
+    await requireSuperAdmin();
     return <>{children}</>;
   } catch {
-    // Not superadmin — figure out best redirect
+    const session = await getAdminSession();
     const jar = await cookies();
-    const role = jar.get("admin_role")?.value;
     const tenant = jar.get("tenant_slug")?.value;
 
-    if (role === "ADMIN" && tenant) {
+    if (session?.role === "ADMIN" && tenant) {
       redirect(`/${tenant}/admin`);
     }
 

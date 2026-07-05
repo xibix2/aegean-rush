@@ -206,8 +206,6 @@ export default function ActivityCarousel({
     [base, t]
   );
 
-  if (data.length === 0) return null;
-
   const trackRef = useRef<HTMLDivElement | null>(null);
   const viewportRef = useRef<HTMLDivElement | null>(null);
 

@@ -123,10 +123,48 @@ function parseDurationOptions(formData: FormData) {
   return out;
 }
 
+function parseTicketTypes(formData: FormData) {
+  const raw = String(formData.get("ticketTypesJson") || "[]");
+
+  let parsed: any[] = [];
+
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    parsed = [];
+  }
+
+  return parsed
+    .map((ticket, index) => {
+      const label = String(ticket?.label || "").trim();
+      const priceEuro = Number(ticket?.priceEuro);
+      const priceCents =
+        Number.isFinite(priceEuro) && priceEuro >= 0
+          ? Math.round(priceEuro * 100)
+          : -1;
+
+      if (!label || priceCents < 0) return null;
+
+      return {
+        label,
+        priceCents,
+        isActive: ticket?.isActive ?? true,
+        sortOrder:
+          typeof ticket?.sortOrder === "number" ? ticket.sortOrder : index,
+      };
+    })
+    .filter(Boolean) as Array<{
+    label: string;
+    priceCents: number;
+    isActive: boolean;
+    sortOrder: number;
+  }>;
+}
+
 /* ====== server action (tenant-scoped via slug) ====== */
 async function createActivityAction(tenantSlug: string, formData: FormData) {
   "use server";
-
+  
   const tenant = await requireTenant(tenantSlug);
   await requireClubAdmin(tenant.id);
 
@@ -184,6 +222,7 @@ async function createActivityAction(tenantSlug: string, formData: FormData) {
   );
 
   const durationOptions = parseDurationOptions(formData);
+  const ticketTypes = parseTicketTypes(formData);
 
   const manualDurationMin = parsePositiveInt(formData.get("durationMin"), 60);
   const manualBasePrice = parseEuroToCents(formData.get("basePriceEuro"), 0);
@@ -246,6 +285,18 @@ async function createActivityAction(tenantSlug: string, formData: FormData) {
                 durationMin: opt.durationMin,
                 priceCents: opt.priceCents,
                 sortOrder: opt.sortOrder,
+              })),
+            },
+          }
+        : {}),
+      ...(mode === "FIXED_SEAT_EVENT" && ticketTypes.length
+        ? {
+            ticketTypes: {
+              create: ticketTypes.map((ticket) => ({
+                label: ticket.label,
+                priceCents: ticket.priceCents,
+                isActive: ticket.isActive,
+                sortOrder: ticket.sortOrder,
               })),
             },
           }

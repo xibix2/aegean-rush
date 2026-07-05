@@ -142,40 +142,73 @@ model Customer {
   @@index([clubId])
 }
 
+model ActivityTicketType {
+  id         String   @id @default(cuid())
+  activityId String
+  label      String
+  priceCents Int
+  isActive   Boolean  @default(true)
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  activity       Activity        @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  bookingTickets BookingTicket[]
+
+  @@index([activityId, sortOrder])
+}
+
+model BookingTicket {
+  id           String  @id @default(cuid())
+  bookingId    String
+  ticketTypeId String?
+
+  labelSnapshot      String
+  priceCentsSnapshot Int
+  quantity           Int
+
+  booking    Booking             @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  ticketType ActivityTicketType? @relation(fields: [ticketTypeId], references: [id], onDelete: SetNull)
+
+  @@index([bookingId])
+  @@index([ticketTypeId])
+}
+
 model Activity {
-  id                 String                   @id @default(cuid())
-  name               String
-  slug               String
-  description        String?
-  durationMin        Int
-  minParty           Int
-  maxParty           Int
-  basePrice          Int?
-  requiresInstructor Boolean
-  coverImageUrl      String?
-  locationId         String
-  active             Boolean                  @default(true)
-  createdAt          DateTime                 @default(now())
-  sport              String                   @default("tennis")
-  updatedAt          DateTime                 @updatedAt
-  clubId             String
-  ageInfo            String?
-  bringText          String?
-  cancellationText   String?
-  guestsPerUnit      Int?
-  showGuestsForRental Boolean @default(false)
-  includedText       String?
-  maxUnitsPerBooking Int?
-  meetingPoint       String?
-  mode               ActivityMode             @default(FIXED_SEAT_EVENT)
-  pricingNotes       String?
-  safetyInfo         String?
-  skillLevel         String?
-  slotIntervalMin    Int?
-  club               Club                     @relation(fields: [clubId], references: [id])
-  durationOptions    ActivityDurationOption[]
-  bookings           Booking[]
-  timeSlots          TimeSlot[]
+  id                  String                   @id @default(cuid())
+  name                String
+  slug                String
+  description         String?
+  durationMin         Int
+  minParty            Int
+  maxParty            Int
+  basePrice           Int?
+  requiresInstructor  Boolean
+  coverImageUrl       String?
+  locationId          String
+  active              Boolean                  @default(true)
+  createdAt           DateTime                 @default(now())
+  sport               String                   @default("tennis")
+  updatedAt           DateTime                 @updatedAt
+  clubId              String
+  ageInfo             String?
+  bringText           String?
+  cancellationText    String?
+  guestsPerUnit       Int?
+  showGuestsForRental Boolean                  @default(false)
+  includedText        String?
+  maxUnitsPerBooking  Int?
+  meetingPoint        String?
+  mode                ActivityMode             @default(FIXED_SEAT_EVENT)
+  pricingNotes        String?
+  safetyInfo          String?
+  skillLevel          String?
+  slotIntervalMin     Int?
+  club                Club                     @relation(fields: [clubId], references: [id])
+  durationOptions     ActivityDurationOption[]
+  bookings            Booking[]
+  timeSlots           TimeSlot[]
+  ticketTypes         ActivityTicketType[]
 
   @@unique([clubId, slug])
   @@index([clubId])
@@ -212,30 +245,31 @@ model TimeSlot {
 }
 
 model Booking {
-  id                   String        @id @default(cuid())
+  id                   String          @id @default(cuid())
   customerId           String
   activityId           String
   timeSlotId           String
   partySize            Int
   totalPrice           Int
-  status               BookingStatus @default(pending)
+  status               BookingStatus   @default(pending)
   notes                String?
-  createdAt            DateTime      @default(now())
+  createdAt            DateTime        @default(now())
   bookingEndAt         DateTime?
   bookingStartAt       DateTime?
   durationMinSnapshot  Int?
   pricingLabelSnapshot String?
-  reservedUnits        Int           @default(1)
+  reservedUnits        Int             @default(1)
   unitPriceSnapshot    Int?
   contactEmail         String?
   contactName          String?
   contactPhone         String?
   cancelledAt          DateTime?
-  publicToken          String        @unique @default(cuid())
-  activity             Activity      @relation(fields: [activityId], references: [id])
-  customer             Customer      @relation(fields: [customerId], references: [id])
-  timeSlot             TimeSlot      @relation(fields: [timeSlotId], references: [id])
+  publicToken          String          @unique @default(cuid())
+  activity             Activity        @relation(fields: [activityId], references: [id])
+  customer             Customer        @relation(fields: [customerId], references: [id])
+  timeSlot             TimeSlot        @relation(fields: [timeSlotId], references: [id])
   payment              Payment?
+  tickets              BookingTicket[]
 
   @@index([timeSlotId])
   @@index([activityId, bookingStartAt, bookingEndAt])

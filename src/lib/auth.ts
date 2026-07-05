@@ -90,7 +90,7 @@ export async function issueAdminSession(input: {
   hours?: number; // default 8h
   cookiePath?: string; // default "/"
 }) {
-  const maxHours = Math.max(1, Math.min(72, input.hours ?? 8));
+  const maxHours = Math.max(1, Math.min(24 * 30, input.hours ?? 8));
   const exp = Math.floor(Date.now() / 1000) + maxHours * 3600;
 
   const session: AdminSession = {
@@ -121,6 +121,30 @@ export async function issueAdminSession(input: {
     maxAge: maxHours * 3600,
   });
 
+  jar.set("admin_email", input.email, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: input.cookiePath ?? "/",
+    maxAge: maxHours * 3600,
+  });
+
+  jar.set("admin_role", input.role, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: input.cookiePath ?? "/",
+    maxAge: maxHours * 3600,
+  });
+
+  jar.set("admin_clubId", input.clubId ?? "", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: input.cookiePath ?? "/",
+    maxAge: input.clubId ? maxHours * 3600 : 0,
+  });
+
   return session;
 }
 
@@ -128,6 +152,9 @@ export async function destroyAdminSession(cookiePath = "/") {
   const jar = await cookies();
   jar.set(SESSION_COOKIE, "", { path: cookiePath, maxAge: 0 });
   jar.set(AUTH_FLAG_COOKIE, "", { path: cookiePath, maxAge: 0 });
+  jar.set("admin_email", "", { path: cookiePath, maxAge: 0 });
+  jar.set("admin_role", "", { path: cookiePath, maxAge: 0 });
+  jar.set("admin_clubId", "", { path: cookiePath, maxAge: 0 });
 }
 
 export async function getAdminSession(): Promise<AdminSession | null> {
@@ -137,19 +164,6 @@ export async function getAdminSession(): Promise<AdminSession | null> {
   const token = jar.get(SESSION_COOKIE)?.value ?? null;
   const sess = verifyToken(token);
   if (sess) return sess;
-
-  // Back-compat fallback (old cookies)
-  const authYes = jar.get(AUTH_FLAG_COOKIE)?.value === "yes";
-  const email = jar.get("admin_email")?.value ?? null;
-  const role =
-    (jar.get("admin_role")?.value as AdminRole | undefined) ?? null;
-  const clubId = jar.get("admin_clubId")?.value ?? null;
-
-  if (authYes && email && role) {
-    // synthesize a short-lived session (15 min) to avoid breaking old flows
-    const exp = Math.floor(Date.now() / 1000) + 15 * 60;
-    return { email, role, clubId, exp };
-  }
 
   return null;
 }

@@ -4,6 +4,7 @@ import { requireSuperAdmin } from "@/lib/admin-guard";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -159,9 +160,9 @@ export default async function NewClubPage() {
           <button className="inline-flex items-center justify-center rounded-xl px-5 h-11 text-sm font-medium btn-accent">
             Create business
           </button>
-          <a href="/admin/clubs" className="text-sm opacity-80 hover:opacity-100">
+          <Link href="/admin/clubs" className="text-sm opacity-80 hover:opacity-100">
             Cancel
-          </a>
+          </Link>
         </div>
       </form>
     </main>

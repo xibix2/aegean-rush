@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -52,12 +53,12 @@ export default function ForgotPasswordPage() {
               If an account exists for <b>{email}</b>, we’ve sent a link to reset your
               password. The link expires in 30 minutes.
             </p>
-            <a
+            <Link
               href="/login"
               className="inline-block mt-4 text-sm opacity-90 hover:opacity-100"
             >
               Back to sign in
-            </a>
+            </Link>
           </div>
         ) : (
           <form

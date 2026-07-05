@@ -14,6 +14,7 @@ function buildClearedResponse(target: URL) {
 
   // Auth + tenant pins
   res.cookies.set("admin_auth", "", common);
+  res.cookies.set("admin_session", "", common);
   res.cookies.set("admin_email", "", common);
   res.cookies.set("admin_role", "", common);
   res.cookies.set("admin_clubId", "", common);

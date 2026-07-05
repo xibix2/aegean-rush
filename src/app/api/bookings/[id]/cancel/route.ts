@@ -14,12 +14,15 @@ const DB = {
   REFUNDED: "refunded",
 } as const;
 
-export async function POST(_req: Request, { params }: { params: { id: string } }) {
+export async function POST(
+  _req: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     const tenant = await requireTenant();
     await requireClubAdmin(tenant.id);
 
-    const id = params.id;
+    const { id } = await params;
     const booking = await prisma.booking.findUnique({
       where: { id },
       include: { activity: true },

@@ -167,7 +167,7 @@ async function sendConfirmationEmail(
   });
   if (!b) return;
 
-  let to = fallbackEmail ?? b.contactEmail ?? b.customer?.email ?? null;
+  const to = fallbackEmail ?? b.contactEmail ?? b.customer?.email ?? null;
 
   const internalNotificationEmails = [
     "aegeanrush@gmail.com",

@@ -13,7 +13,7 @@ export default function StaffInviteEmail(props: {
 
   return (
     <div style={{ fontFamily: "ui-sans-serif, system-ui", lineHeight: 1.5 }}>
-      <h2>You've been invited to {clubName}</h2>
+      <h2>You&apos;ve been invited to {clubName}</h2>
       <p>
         You’ve been invited to join the{" "}
         <strong>{clubName}</strong> dashboard as{" "}

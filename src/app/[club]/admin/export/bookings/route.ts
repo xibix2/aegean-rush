@@ -30,10 +30,11 @@ function csvCell(v: unknown): string {
 
 export async function GET(
   req: Request,
-  { params }: { params: { club: string } }
+  { params }: { params: Promise<{ club: string }> }
 ) {
   try {
-    const slug = params.club;
+    const { club } = await params;
+    const slug = club;
 
     const tenant = await prisma.club.findUnique({
       where: { slug },

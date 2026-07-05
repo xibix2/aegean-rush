@@ -63,7 +63,7 @@ export default function CourtsCarousel({
   tenantSlug?: string;
 }) {
   const t = useT();
-  if (!courts?.length) return null;
+  const safeCourts = Array.isArray(courts) ? courts : [];
 
   const tenantBase = tenantSlug ? `/${tenantSlug}` : "";
 
@@ -71,12 +71,12 @@ export default function CourtsCarousel({
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const imgRefs = useRef<(HTMLImageElement | null)[]>([]);
-  cardRefs.current = new Array(courts.length).fill(null);
-  imgRefs.current = new Array(courts.length).fill(null);
+  cardRefs.current = new Array(safeCourts.length).fill(null);
+  imgRefs.current = new Array(safeCourts.length).fill(null);
 
   const [cardW, setCardW] = useState(300);
   const [viewportW, setViewportW] = useState(0);
-  const [index, setIndex] = useState(Math.floor(courts.length / 2));
+  const [index, setIndex] = useState(Math.floor(safeCourts.length / 2));
   const [anim] = useState(true);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
@@ -94,7 +94,7 @@ export default function CourtsCarousel({
     cardRefs.current.forEach((el) => el && ro.observe(el));
 
     return () => ro.disconnect();
-  }, [courts.length]);
+  }, [safeCourts.length]);
 
   const translateX = useMemo(() => {
     const unit = cardW + GAP_PX;
@@ -113,11 +113,11 @@ export default function CourtsCarousel({
   }, [translateX, anim]);
 
   const goPrev = () => setIndex((i) => Math.max(0, i - 1));
-  const goNext = () => setIndex((i) => Math.min(courts.length - 1, i + 1));
+  const goNext = () => setIndex((i) => Math.min(safeCourts.length - 1, i + 1));
 
   const isActive = (i: number) => i === index;
   const atStart = index === 0;
-  const atEnd = index === courts.length - 1;
+  const atEnd = index === safeCourts.length - 1;
 
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "ArrowLeft") goPrev();
@@ -159,6 +159,8 @@ export default function CourtsCarousel({
     if (img) img.style.transform = "scale(1) translate(0,0)";
   };
 
+  if (!safeCourts.length) return null;
+
   return (
     <div
       className="relative mx-auto max-w-6xl select-none"
@@ -193,7 +195,7 @@ export default function CourtsCarousel({
             transform: `translate3d(${translateX}px,0,0)`,
           }}
         >
-          {courts.map((c, i) => {
+          {safeCourts.map((c, i) => {
             const active = isActive(i);
             const priceLabel = getPriceLabel(c);
             const img = c.coverImageUrl ?? null;
@@ -291,7 +293,7 @@ export default function CourtsCarousel({
       </div>
 
       <div className="mt-1 flex justify-center gap-2 sm:mt-2">
-        {courts.map((_, i) => (
+        {safeCourts.map((_, i) => (
           <button
             key={i}
             onClick={() => setIndex(i)}
@@ -305,7 +307,7 @@ export default function CourtsCarousel({
         ))}
       </div>
 
-      {courts.length > 1 && (
+      {safeCourts.length > 1 && (
         <>
           <button
             type="button"

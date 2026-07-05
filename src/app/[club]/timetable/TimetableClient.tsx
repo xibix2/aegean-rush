@@ -24,6 +24,12 @@ type DurationOption = {
   priceCents: number;
 };
 
+type TicketType = {
+  id: string;
+  label: string;
+  priceCents: number;
+};
+
 type ActivityInfo = {
   id: string;
   name: string;
@@ -33,6 +39,7 @@ type ActivityInfo = {
   maxUnitsPerBooking: number | null;
   showGuestsForRental: boolean;
   durationOptions: DurationOption[];
+  ticketTypes?: TicketType[];
 };
 
 type FixedSlot = {
@@ -131,6 +138,10 @@ function getUnitLabel(activity: ActivityInfo | null) {
 
 function formatMoney(cents: number) {
   return (cents / 100).toFixed(2);
+}
+
+function prevSafeNumber(value: unknown) {
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }
 
 function combineDateAndTime(dateYmd: string, timeHm: string) {
@@ -318,6 +329,7 @@ export default function TimetableClient() {
   const date = params.get("date") ?? "";
 
   const [partySize, setPartySize] = useState<number>(Number(params.get("partySize") ?? 1));
+  const [ticketQuantities, setTicketQuantities] = useState<Record<string, number>>({});
   const [units, setUnits] = useState<number>(Number(params.get("units") ?? 1));
   const [guests, setGuests] = useState<number>(Number(params.get("guests") ?? 1));
   const [selectedTime, setSelectedTime] = useState<string>(params.get("startTime") ?? "");
@@ -434,6 +446,49 @@ export default function TimetableClient() {
     }
   };
 
+  const hasTicketTypes =
+    activity?.mode === "FIXED_SEAT_EVENT" &&
+    !!activity.ticketTypes?.length;
+
+  const totalTicketGuests = useMemo(() => {
+    return Object.values(ticketQuantities).reduce((sum, qty) => sum + Math.max(0, qty), 0);
+  }, [ticketQuantities]);
+
+  const ticketSelections = useMemo(() => {
+    return Object.entries(ticketQuantities)
+      .map(([ticketTypeId, quantity]) => ({
+        ticketTypeId,
+        quantity: Math.max(0, Math.floor(quantity)),
+      }))
+      .filter((item) => item.quantity > 0);
+  }, [ticketQuantities]);
+
+  const selectedTicketTotal = useMemo(() => {
+    if (!activity?.ticketTypes?.length) return null;
+
+    return activity.ticketTypes.reduce((sum, ticket) => {
+      const qty = ticketQuantities[ticket.id] ?? 0;
+      return sum + qty * ticket.priceCents;
+    }, 0);
+  }, [activity?.ticketTypes, ticketQuantities]);
+
+  const onTicketQtyChange = (ticketTypeId: string, next: number) => {
+    const value = Math.max(0, Math.min(20, Number.isFinite(next) ? Math.floor(next) : 0));
+
+    setTicketQuantities((prev) => ({
+      ...prev,
+      [ticketTypeId]: value,
+    }));
+
+    const nextTotal =
+      (activity?.ticketTypes ?? []).reduce((sum, ticket) => {
+        const qty = ticket.id === ticketTypeId ? value : prevSafeNumber(ticketQuantities[ticket.id]);
+        return sum + qty;
+      }, 0) || 1;
+
+    setPartySize(nextTotal);
+  };
+
   const fetchAvailability = async (nextPartySize: number) => {
     if (!activityId || !safeDate) return;
 
@@ -443,6 +498,9 @@ export default function TimetableClient() {
         activityId,
         date: safeDate,
         partySize: String(nextPartySize),
+        ...(ticketSelections.length
+          ? { ticketSelections: JSON.stringify(ticketSelections) }
+          : {}),
       });
 
       if (units > 0) qs.set("units", String(units));
@@ -472,13 +530,23 @@ export default function TimetableClient() {
     try {
       setLoading(true);
 
+      if (hasTicketTypes && totalTicketGuests <= 0) {
+        toast.error("Please select at least one ticket.");
+        return;
+      }
+
       const payload: Record<string, unknown> = {
         activityId,
         slotId,
       };
 
       if (activity?.mode === "FIXED_SEAT_EVENT") {
-        payload.partySize = partySize;
+        if (hasTicketTypes) {
+          payload.partySize = totalTicketGuests;
+          payload.ticketSelections = ticketSelections;
+        } else {
+          payload.partySize = partySize;
+        }
       } else if (activity?.mode === "DYNAMIC_RENTAL") {
         payload.partySize = activity.showGuestsForRental ? guests : 1;
         payload.guests = activity.showGuestsForRental ? guests : undefined;
@@ -531,7 +599,7 @@ export default function TimetableClient() {
     if (!activityId || !safeDate) return;
     fetchAvailability(partySize);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activityId, safeDate, tenantSlug, selectedDurationId, selectedTime, units, guests]);
+  }, [activityId, safeDate, tenantSlug, selectedDurationId, selectedTime, units, guests, ticketSelections]);
 
   useEffect(() => {
     if (!activityId) return;
@@ -796,33 +864,99 @@ export default function TimetableClient() {
 
             {mode === "FIXED_SEAT_EVENT" && (
               <div className={fieldClass()}>
-                <div className="mb-2 text-sm font-medium text-white/88">Guests</div>
-                <div className="flex items-center rounded-2xl border border-white/10 bg-black/20">
-                  <button
-                    className="px-4 py-3 text-base text-white/80 transition hover:bg-white/5"
-                    onClick={() => onPartyChange(partySize - 1)}
-                    disabled={loading}
-                    type="button"
-                  >
-                    −
-                  </button>
-                  <input
-                    type="number"
-                    min={1}
-                    max={20}
-                    value={partySize}
-                    onChange={(e) => onPartyChange(Number(e.target.value))}
-                    className="no-spin w-20 bg-transparent px-2 py-3 text-center text-white outline-none"
-                  />
-                  <button
-                    className="px-4 py-3 text-base text-white/80 transition hover:bg-white/5"
-                    onClick={() => onPartyChange(partySize + 1)}
-                    disabled={loading}
-                    type="button"
-                  >
-                    +
-                  </button>
-                </div>
+                {!hasTicketTypes ? (
+                  <>
+                    <div className="mb-2 text-sm font-medium text-white/88">Guests</div>
+                    <div className="flex items-center rounded-2xl border border-white/10 bg-black/20">
+                      <button
+                        className="px-4 py-3 text-base text-white/80 transition hover:bg-white/5"
+                        onClick={() => onPartyChange(partySize - 1)}
+                        disabled={loading}
+                        type="button"
+                      >
+                        −
+                      </button>
+                      <input
+                        type="number"
+                        min={1}
+                        max={20}
+                        value={partySize}
+                        onChange={(e) => onPartyChange(Number(e.target.value))}
+                        className="no-spin w-20 bg-transparent px-2 py-3 text-center text-white outline-none"
+                      />
+                      <button
+                        className="px-4 py-3 text-base text-white/80 transition hover:bg-white/5"
+                        onClick={() => onPartyChange(partySize + 1)}
+                        disabled={loading}
+                        type="button"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="mb-3 text-sm font-medium text-white/88">Tickets</div>
+
+                    <div className="grid gap-3">
+                      {activity?.ticketTypes?.map((ticket) => {
+                        const qty = ticketQuantities[ticket.id] ?? 0;
+
+                        return (
+                          <div
+                            key={ticket.id}
+                            className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-black/20 px-3 py-2"
+                          >
+                            <div>
+                              <div className="text-sm font-medium text-white/88">
+                                {ticket.label}
+                              </div>
+                              <div className="text-xs text-white/50">
+                                €{formatMoney(ticket.priceCents)}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center rounded-xl border border-white/10 bg-white/[0.04]">
+                              <button
+                                type="button"
+                                disabled={loading}
+                                onClick={() => onTicketQtyChange(ticket.id, qty - 1)}
+                                className="px-3 py-2 text-white/80"
+                              >
+                                −
+                              </button>
+
+                              <input
+                                type="number"
+                                min={0}
+                                max={20}
+                                value={qty}
+                                onChange={(e) =>
+                                  onTicketQtyChange(ticket.id, Number(e.target.value))
+                                }
+                                className="no-spin w-14 bg-transparent px-1 py-2 text-center text-white outline-none"
+                              />
+
+                              <button
+                                type="button"
+                                disabled={loading}
+                                onClick={() => onTicketQtyChange(ticket.id, qty + 1)}
+                                className="px-3 py-2 text-white/80"
+                              >
+                                +
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div className="mt-3 flex justify-between text-sm text-white/70">
+                      <span>Total guests: {totalTicketGuests}</span>
+                      <span>€{formatMoney(selectedTicketTotal ?? 0)}</span>
+                    </div>
+                  </>
+                )}
               </div>
             )}
 
@@ -1028,7 +1162,7 @@ export default function TimetableClient() {
                             <div className="text-right">
                               <div className="text-xs uppercase tracking-[0.18em] text-white/40">Total</div>
                               <div className="mt-1 text-2xl font-semibold text-white">
-                                €{formatMoney(s.totalPrice)}
+                                €{formatMoney(hasTicketTypes ? selectedTicketTotal ?? 0 : s.totalPrice)}
                               </div>
                               <div className="mt-1 text-xs text-white/50">
                                 €{formatMoney(s.unitPrice)} {t("timetable.perPerson")}

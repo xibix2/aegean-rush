@@ -4,14 +4,9 @@ import { randomUUID } from "crypto";
 const prisma = new PrismaClient();
 
 async function main() {
-  const bookings = await prisma.booking.findMany({
-    where: {
-      publicToken: null,
-    },
-    select: {
-      id: true,
-    },
-  });
+  const bookings = await prisma.$queryRaw<Array<{ id: string }>>`
+    SELECT id FROM "Booking" WHERE "publicToken" IS NULL
+  `;
 
   for (const booking of bookings) {
     await prisma.booking.update({

@@ -16,7 +16,14 @@ const Body = z.object({
 
   // fixed event
   partySize: z.coerce.number().int().min(1).optional(),
-
+  ticketSelections: z
+    .array(
+      z.object({
+        ticketTypeId: z.string().cuid(),
+        quantity: z.coerce.number().int().min(0),
+      })
+    )
+    .optional(),
   // rental / hybrid
   startTime: z.union([z.string(), z.date()]).optional(),
   durationOptionId: z.string().cuid().optional(),
@@ -53,6 +60,25 @@ function getBaseUrl(req: NextRequest) {
   }
 
   return requestOrigin?.replace(/\/+$/, "") ?? "http://localhost:3000";
+}
+
+function parseTicketSelectionsRaw(raw: unknown) {
+  if (!raw) return undefined;
+
+  try {
+    const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+
+    if (!Array.isArray(parsed)) return undefined;
+
+    return parsed
+      .map((item) => ({
+        ticketTypeId: String(item?.ticketTypeId || ""),
+        quantity: Number(item?.quantity || 0),
+      }))
+      .filter((item) => item.ticketTypeId && item.quantity > 0);
+  } catch {
+    return undefined;
+  }
 }
 
 function getTenantBase(req: NextRequest, tenantSlug?: string | null) {
@@ -110,6 +136,52 @@ function buildStripeLineItem(args: {
   };
 }
 
+function buildStripeLineItems(args: {
+  activityName: string;
+  mode: ActivityMode;
+  unitPrice: number;
+  quantity: number;
+  pricingLabel: string | null;
+  durationMin: number | null;
+  ticketBreakdown: NonNullable<
+    ReturnType<typeof getBookingQuoteAndAvailability>["ticketBreakdown"]
+  > | null;
+}) {
+  const {
+    activityName,
+    mode,
+    unitPrice,
+    quantity,
+    pricingLabel,
+    durationMin,
+    ticketBreakdown,
+  } = args;
+
+  if (mode === ActivityMode.FIXED_SEAT_EVENT && ticketBreakdown?.length) {
+    return ticketBreakdown.map((ticket) => ({
+      quantity: ticket.quantity,
+      price_data: {
+        currency: "eur",
+        unit_amount: ticket.priceCentsSnapshot,
+        product_data: {
+          name: `${activityName} - ${ticket.labelSnapshot}`,
+        },
+      },
+    }));
+  }
+
+  return [
+    buildStripeLineItem({
+      activityName,
+      mode,
+      unitPrice,
+      quantity,
+      pricingLabel,
+      durationMin,
+    }),
+  ];
+}
+
 async function findOrCreateCustomer(params: {
   clubId: string;
   email?: string;
@@ -158,6 +230,7 @@ async function createSessionAndMaybeRedirect(
     timeSlotId,
     slotId,
     partySize,
+    ticketSelections,
     startTime,
     durationOptionId,
     units,
@@ -177,7 +250,7 @@ async function createSessionAndMaybeRedirect(
   const currency = (tenant.currency || "EUR").toLowerCase();
   const tenantBase = getTenantBase(req, (tenant as any)?.slug);
 
-  const slot = await prisma.timeSlot.findFirst({
+  const slot = await prisma.timeSlot.findFirstOrThrow({
     where: {
       id: tsId,
       activity: {
@@ -211,6 +284,17 @@ async function createSessionAndMaybeRedirect(
               sortOrder: true,
             },
           },
+          ticketTypes: {
+            where: { isActive: true },
+            orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+            select: {
+              id: true,
+              label: true,
+              priceCents: true,
+              isActive: true,
+              sortOrder: true,
+            },
+          },
         },
       },
       bookings: {
@@ -227,12 +311,6 @@ async function createSessionAndMaybeRedirect(
     },
   });
 
-  if (!slot) {
-    return NextResponse.json(
-      { error: "Time slot not found for tenant/activity" },
-      { status: 404 },
-    );
-  }
 
   const quote = getBookingQuoteAndAvailability({
     activity: slot.activity,
@@ -246,6 +324,7 @@ async function createSessionAndMaybeRedirect(
     },
     existingBookings: slot.bookings,
     partySize,
+    ticketSelections,
     startTime,
     durationOptionId,
     units,
@@ -288,6 +367,19 @@ async function createSessionAndMaybeRedirect(
       durationMinSnapshot: quote.durationMin,
       unitPriceSnapshot: quote.unitPrice,
       pricingLabelSnapshot: quote.pricingLabel,
+
+      ...(quote.ticketBreakdown?.length
+        ? {
+            tickets: {
+              create: quote.ticketBreakdown.map((ticket) => ({
+                ticketTypeId: ticket.ticketTypeId,
+                labelSnapshot: ticket.labelSnapshot,
+                priceCentsSnapshot: ticket.priceCentsSnapshot,
+                quantity: ticket.quantity,
+              })),
+            },
+          }
+        : {}),
     },
   });
 
@@ -331,13 +423,14 @@ async function createSessionAndMaybeRedirect(
       ? quote.partySize
       : quote.reservedUnits;
 
-  const stripeLineItem = buildStripeLineItem({
+  const stripeLineItems = buildStripeLineItems({
     activityName: slot.activity.name,
     mode: quote.mode,
     unitPrice: quote.unitPrice,
     quantity: stripeQuantity,
     pricingLabel: quote.pricingLabel,
     durationMin: quote.durationMin,
+    ticketBreakdown: quote.ticketBreakdown ?? null,
   });
 
   let session: Stripe.Checkout.Session;
@@ -365,15 +458,13 @@ async function createSessionAndMaybeRedirect(
       },
       payment_intent_data: paymentIntentData,
       customer_email: customer?.email,
-      line_items: [
-        {
-          ...stripeLineItem,
-          price_data: {
-            ...stripeLineItem.price_data,
-            currency,
-          },
+      line_items: stripeLineItems.map((lineItem) => ({
+        ...lineItem,
+        price_data: {
+          ...lineItem.price_data,
+          currency,
         },
-      ],
+      })),
       expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
 
       after_expiration: {
@@ -433,6 +524,7 @@ export async function POST(req: NextRequest) {
         timeSlotId: form.get("timeSlotId"),
         slotId: form.get("slotId"),
         partySize: form.get("partySize"),
+        ticketSelections: parseTicketSelectionsRaw(form.get("ticketSelections")),
 
         startTime: (form.get("startTime") as string) || undefined,
         durationOptionId: (form.get("durationOptionId") as string) || undefined,
@@ -476,7 +568,9 @@ export async function GET(req: NextRequest) {
       timeSlotId: url.searchParams.get("timeSlotId") || undefined,
       slotId: url.searchParams.get("slotId") || undefined,
       partySize: url.searchParams.get("partySize") || undefined,
-
+      ticketSelections: parseTicketSelectionsRaw(
+        url.searchParams.get("ticketSelections")
+      ),
       startTime: url.searchParams.get("startTime") || undefined,
       durationOptionId: url.searchParams.get("durationOptionId") || undefined,
       units: url.searchParams.get("units") || undefined,
