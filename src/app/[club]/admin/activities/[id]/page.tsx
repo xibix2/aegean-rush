@@ -193,8 +193,6 @@ async function updateActivityAction(
 
   const parsedDurationOptions = parseDurationOptions(formData);
 
-  const parsedTicketTypes = parseTicketTypes(formData);
-
   let coverImageUrl: string | undefined;
   const uploaded = formData.get("coverFile");
 
@@ -267,23 +265,6 @@ async function updateActivityAction(
         });
       }
     }
-    if (parsedTicketTypes) {
-      await tx.activityTicketType.deleteMany({
-        where: { activityId: id },
-      });
-
-      if (parsedTicketTypes.length > 0) {
-        await tx.activityTicketType.createMany({
-          data: parsedTicketTypes.map((ticket) => ({
-            activityId: id,
-            label: ticket.label,
-            priceCents: ticket.priceCents,
-            isActive: ticket.isActive,
-            sortOrder: ticket.sortOrder,
-          })),
-        });
-      }
-    }
   });
 
   revalidatePath(`/${tenantSlug}/admin/activities`);
@@ -340,9 +321,6 @@ export default async function ActivityDetailPage({
       durationOptions: {
         orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
       },
-      ticketTypes: {
-        orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
-      },
     },
   });
 
@@ -389,13 +367,7 @@ export default async function ActivityDetailPage({
       sortOrder: opt.sortOrder,
     })),
 
-    ticketTypes: a.ticketTypes.map((ticket) => ({
-      id: ticket.id,
-      label: ticket.label,
-      priceEuro: ticket.priceCents / 100,
-      isActive: ticket.isActive,
-      sortOrder: ticket.sortOrder,
-    })),
+    ticketTypes: [],
   };
 
   return (

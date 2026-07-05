@@ -284,17 +284,6 @@ async function createSessionAndMaybeRedirect(
               sortOrder: true,
             },
           },
-          ticketTypes: {
-            where: { isActive: true },
-            orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
-            select: {
-              id: true,
-              label: true,
-              priceCents: true,
-              isActive: true,
-              sortOrder: true,
-            },
-          },
         },
       },
       bookings: {
@@ -313,7 +302,7 @@ async function createSessionAndMaybeRedirect(
 
 
   const quote = getBookingQuoteAndAvailability({
-    activity: slot.activity,
+    activity: { ...slot.activity, ticketTypes: [] },
     slot: {
       id: slot.id,
       activityId: slot.activityId,
@@ -368,18 +357,6 @@ async function createSessionAndMaybeRedirect(
       unitPriceSnapshot: quote.unitPrice,
       pricingLabelSnapshot: quote.pricingLabel,
 
-      ...(quote.ticketBreakdown?.length
-        ? {
-            tickets: {
-              create: quote.ticketBreakdown.map((ticket) => ({
-                ticketTypeId: ticket.ticketTypeId,
-                labelSnapshot: ticket.labelSnapshot,
-                priceCentsSnapshot: ticket.priceCentsSnapshot,
-                quantity: ticket.quantity,
-              })),
-            },
-          }
-        : {}),
     },
   });
 

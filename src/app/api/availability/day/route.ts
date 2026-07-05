@@ -125,17 +125,6 @@ export async function GET(req: NextRequest) {
             sortOrder: true,
           },
         },
-        ticketTypes: {
-          where: { isActive: true },
-          orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
-          select: {
-            id: true,
-            label: true,
-            priceCents: true,
-            isActive: true,
-            sortOrder: true,
-          },
-        },
       },
     });
 
@@ -185,7 +174,7 @@ export async function GET(req: NextRequest) {
           maxUnitsPerBooking: activity.maxUnitsPerBooking,
           showGuestsForRental: activity.showGuestsForRental,
           durationOptions: activity.durationOptions,
-          ticketTypes: activity.ticketTypes,
+          ticketTypes: [],
         },
         slots: [],
       });
@@ -215,13 +204,8 @@ export async function GET(req: NextRequest) {
           };
         }
 
-        const quoteActivity =
-          activity.ticketTypes.length > 0 && !ticketSelections?.length
-            ? { ...activity, ticketTypes: [] }
-            : activity;
-
         const quote = getBookingQuoteAndAvailability({
-          activity: quoteActivity,
+          activity: { ...activity, ticketTypes: [] },
           slot: {
             id: slot.id,
             activityId: slot.activityId,

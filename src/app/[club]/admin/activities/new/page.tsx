@@ -222,8 +222,6 @@ async function createActivityAction(tenantSlug: string, formData: FormData) {
   );
 
   const durationOptions = parseDurationOptions(formData);
-  const ticketTypes = parseTicketTypes(formData);
-
   const manualDurationMin = parsePositiveInt(formData.get("durationMin"), 60);
   const manualBasePrice = parseEuroToCents(formData.get("basePriceEuro"), 0);
 
@@ -285,18 +283,6 @@ async function createActivityAction(tenantSlug: string, formData: FormData) {
                 durationMin: opt.durationMin,
                 priceCents: opt.priceCents,
                 sortOrder: opt.sortOrder,
-              })),
-            },
-          }
-        : {}),
-      ...(mode === "FIXED_SEAT_EVENT" && ticketTypes.length
-        ? {
-            ticketTypes: {
-              create: ticketTypes.map((ticket) => ({
-                label: ticket.label,
-                priceCents: ticket.priceCents,
-                isActive: ticket.isActive,
-                sortOrder: ticket.sortOrder,
               })),
             },
           }
