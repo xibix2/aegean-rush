@@ -34,6 +34,8 @@ type ActivityInfo = {
   id: string;
   name: string;
   mode: ActivityMode;
+  minParty: number;
+  maxParty: number;
   slotIntervalMin: number | null;
   guestsPerUnit: number | null;
   maxUnitsPerBooking: number | null;
@@ -319,6 +321,20 @@ function getSelectedTimePercent(options: TimeOption[], selected: string) {
   return (idx / (options.length - 1)) * 100;
 }
 
+function getFixedSlotDisabledLabel(slot: FixedSlot, activity: ActivityInfo | null, fallback: string) {
+  const message = slot.errors?.[0] ?? "";
+  if (message.startsWith("Minimum party size is")) {
+    const min = activity?.minParty ?? slot.requestedPartySize;
+    return `Minimum ${min} guests`;
+  }
+  if (message.startsWith("Maximum party size is")) {
+    const max = activity?.maxParty ?? slot.requestedPartySize;
+    return `Maximum ${max} guests`;
+  }
+  if (message) return message;
+  return fallback;
+}
+
 export default function TimetableClient() {
   const t = useT();
 
@@ -350,6 +366,8 @@ export default function TimetableClient() {
   );
 
   const safeDate = date || minBookable;
+  const minParty = Math.max(1, activity?.minParty ?? 1);
+  const maxParty = Math.max(minParty, activity?.maxParty ?? 20);
 
   const [month, setMonth] = useState(() => Number(safeDate.slice(5, 7)));
   const [year, setYear] = useState(() => Number(safeDate.slice(0, 4)));
@@ -602,6 +620,16 @@ export default function TimetableClient() {
   }, [activityId, safeDate, tenantSlug, selectedDurationId, selectedTime, units, guests, ticketSelections]);
 
   useEffect(() => {
+    if (!activity || activity.mode !== "FIXED_SEAT_EVENT" || hasTicketTypes) return;
+    if (partySize < minParty) {
+      onPartyChange(minParty);
+    } else if (partySize > maxParty) {
+      onPartyChange(maxParty);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activity?.id, activity?.mode, hasTicketTypes, minParty, maxParty, partySize]);
+
+  useEffect(() => {
     if (!activityId) return;
     fetchMonth(year, month);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -628,7 +656,7 @@ export default function TimetableClient() {
   }, [activity, guests, units]);
 
   const onPartyChange = (n: number) => {
-    const v = Math.max(1, Math.min(20, Number.isFinite(n) ? n : 1));
+    const v = Math.max(minParty, Math.min(maxParty, Number.isFinite(n) ? n : minParty));
     setPartySize(v);
     if (activity?.mode === "FIXED_SEAT_EVENT") {
       fetchAvailability(v);
@@ -878,8 +906,8 @@ export default function TimetableClient() {
                       </button>
                       <input
                         type="number"
-                        min={1}
-                        max={20}
+                        min={minParty}
+                        max={maxParty}
                         value={partySize}
                         onChange={(e) => onPartyChange(Number(e.target.value))}
                         className="no-spin w-20 bg-transparent px-2 py-3 text-center text-white outline-none"
@@ -1178,7 +1206,9 @@ export default function TimetableClient() {
                                   : "bg-gradient-to-r from-pink-500 via-fuchsia-500 to-violet-500 shadow-[0_18px_50px_-18px_rgba(236,72,153,0.75)] hover:scale-[1.02]"
                               }`}
                             >
-                              {disabled ? t("timetable.notEnough") : t("timetable.choose")}
+                              {disabled
+                                ? getFixedSlotDisabledLabel(s, activity, t("timetable.notEnough"))
+                                : t("timetable.choose")}
                             </button>
                           </div>
                         </div>
