@@ -430,8 +430,8 @@ export function NewActivityFormClient({
 
           {isFixed && (
             <div className="rounded-xl border border-white/10 bg-black/15 p-4 space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="min-w-0">
                   <h3 className="font-medium">Ticket types (optional)</h3>
                   <p className="text-sm opacity-70">
                     Leave empty to use the normal price per guest.
@@ -441,14 +441,17 @@ export function NewActivityFormClient({
                 <button
                   type="button"
                   onClick={addTicketType}
-                  className="rounded-lg u-border u-surface px-3 py-2 text-sm"
+                  className="shrink-0 rounded-lg u-border u-surface px-3 py-2 text-sm"
                 >
                   + Add ticket type
                 </button>
               </div>
 
               {ticketTypes.map((ticket, index) => (
-                <div key={index} className="grid gap-3 sm:grid-cols-[1fr_160px_auto]">
+                <div
+                  key={index}
+                  className="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(100px,160px)_auto]"
+                >
                   <input
                     placeholder="Adult / Child"
                     value={ticket.label}
@@ -473,7 +476,7 @@ export function NewActivityFormClient({
                   <button
                     type="button"
                     onClick={() => removeTicketType(index)}
-                    className="rounded-lg border border-red-500/20 bg-red-500/10 px-3"
+                    className="h-10 rounded-lg border border-red-500/20 bg-red-500/10 px-3"
                   >
                     Remove
                   </button>
@@ -629,8 +632,8 @@ export function NewActivityFormClient({
 
         {!isFixed && (
           <section className="space-y-5">
-            <div className="flex items-start justify-between gap-4">
-              <div>
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="min-w-0">
                 <h2 className="text-lg font-semibold tracking-tight">
                   Duration & pricing options
                 </h2>
@@ -642,7 +645,7 @@ export function NewActivityFormClient({
               <button
                 type="button"
                 onClick={addDurationRow}
-                className="inline-flex h-10 items-center justify-center rounded-xl px-4 text-sm font-medium u-border u-surface hover:opacity-90 transition"
+                className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl px-4 text-sm font-medium u-border u-surface hover:opacity-90 transition"
               >
                 + Add option
               </button>
@@ -652,7 +655,7 @@ export function NewActivityFormClient({
               {durationOptions.map((row: DurationOptionRow, index: number) => (
                 <div
                   key={row.id}
-                  className="grid gap-3 rounded-2xl u-border u-surface p-4 sm:grid-cols-[1.2fr_0.8fr_0.8fr_auto]"
+                  className="grid gap-3 rounded-2xl u-border u-surface p-4 md:grid-cols-[minmax(0,1.2fr)_minmax(100px,0.8fr)_minmax(100px,0.8fr)_auto]"
                 >
                   <div className="flex flex-col gap-1.5">
                     <label className="text-sm opacity-80">Label</label>

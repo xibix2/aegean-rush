@@ -440,12 +440,12 @@ export function ActivityFormClient({
 
         {(isRental || isHybrid) && (
           <div className="rounded-xl border border-white/10 bg-black/15 p-4 space-y-4">
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="text-sm font-medium">Duration options</div>
               <button
                 type="button"
                 onClick={addDurationOption}
-                className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs hover:bg-white/10 transition"
+                className="shrink-0 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs hover:bg-white/10 transition"
               >
                 Add option
               </button>
@@ -461,7 +461,7 @@ export function ActivityFormClient({
                 {durationOptions.map((opt, index) => (
                   <div
                     key={opt.id ?? index}
-                    className="grid gap-3 rounded-lg border border-white/10 bg-white/5 p-3 sm:grid-cols-[1.2fr_.8fr_.8fr_auto]"
+                    className="grid gap-3 rounded-lg border border-white/10 bg-white/5 p-3 md:grid-cols-[minmax(0,1.2fr)_minmax(100px,.8fr)_minmax(100px,.8fr)_auto]"
                   >
                     <input
                       value={opt.label}
@@ -503,7 +503,7 @@ export function ActivityFormClient({
                     <button
                       type="button"
                       onClick={() => removeDurationOption(index)}
-                      className="rounded-lg border border-red-400/20 bg-red-500/10 px-3 py-2 text-xs text-red-200 hover:bg-red-500/15 transition"
+                      className="h-10 rounded-lg border border-red-400/20 bg-red-500/10 px-3 py-2 text-xs text-red-200 hover:bg-red-500/15 transition"
                     >
                       Remove
                     </button>
@@ -516,8 +516,8 @@ export function ActivityFormClient({
 
         {isFixed && (
           <div className="rounded-xl border border-white/10 bg-black/15 p-4 space-y-4">
-            <div className="flex items-center justify-between gap-3">
-              <div>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="min-w-0">
                 <div className="text-sm font-medium">Ticket types (optional)</div>
                 <div className="mt-1 text-xs opacity-65">
                   Leave empty to use the normal price per guest.
@@ -527,7 +527,7 @@ export function ActivityFormClient({
               <button
                 type="button"
                 onClick={addTicketType}
-                className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs hover:bg-white/10 transition"
+                className="shrink-0 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs hover:bg-white/10 transition"
               >
                 Add ticket
               </button>
@@ -543,7 +543,7 @@ export function ActivityFormClient({
                 {ticketTypes.map((ticket, index) => (
                   <div
                     key={ticket.id ?? index}
-                    className="grid gap-3 rounded-lg border border-white/10 bg-white/5 p-3 sm:grid-cols-[1fr_150px_auto]"
+                    className="grid gap-3 rounded-lg border border-white/10 bg-white/5 p-3 md:grid-cols-[minmax(0,1fr)_minmax(100px,150px)_auto]"
                   >
                     <input
                       value={ticket.label}
@@ -571,7 +571,7 @@ export function ActivityFormClient({
                     <button
                       type="button"
                       onClick={() => removeTicketType(index)}
-                      className="rounded-lg border border-red-400/20 bg-red-500/10 px-3 py-2 text-xs text-red-200 hover:bg-red-500/15 transition"
+                      className="h-10 rounded-lg border border-red-400/20 bg-red-500/10 px-3 py-2 text-xs text-red-200 hover:bg-red-500/15 transition"
                     >
                       Remove
                     </button>
