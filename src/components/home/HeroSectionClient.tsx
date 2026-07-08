@@ -47,17 +47,11 @@ type OfferSlide = {
   stats: Array<{ label: string; value: string }>;
 };
 
-const poseidonBoatImage =
-  "https://q8tnxmhsl7hrrlbk.public.blob.vercel-storage.com/activity_1777363730017_x8hligygcfh.jpeg";
-const poseidonJetBoatImage =
-  "https://q8tnxmhsl7hrrlbk.public.blob.vercel-storage.com/activity_1777024372610_q8ybtkawg9i.jpg";
+const poseidonHeroImage = "/images/hero-poseidon-campaign.webp";
+const poseidonClubCoverImage = "/images/poseidon-rent-a-boat-cover.png";
 
-const paradiseJetSkiImage =
-  "https://q8tnxmhsl7hrrlbk.public.blob.vercel-storage.com/activity_1776415404029_aljeobsrpon.jpg";
-const paradiseParasailingImage =
-  "https://q8tnxmhsl7hrrlbk.public.blob.vercel-storage.com/activity_1776270849596_y1vk9n6flxl.jpg";
-const paradiseSofaImage =
-  "https://q8tnxmhsl7hrrlbk.public.blob.vercel-storage.com/activity_1776415981738_g4u2t5dsem.jpg";
+const paradiseHeroImage = "/images/hero-paradise-campaign.webp";
+const paradiseClubCoverImage = "/images/paradise-watersports-cover.png";
 
 function tenantHref(base: string, path: string) {
   return `${base}${path}`;
@@ -84,8 +78,8 @@ function getSlides(args: {
         subtitle:
           "We can collect guests from their hotel and bring them back after the activity. Less planning, less stress, more bookings.",
         badge: "Free taxi transfer",
-        imageUrl: poseidonBoatImage,
-        imageAlt: "Boat rental in clear blue water near Hersonissos",
+        imageUrl: poseidonHeroImage,
+        imageAlt: "Promotional boat campaign image on clear blue water near Hersonissos",
         primaryLabel: "See activities",
         primaryHref: tenantHref(base, "/activities"),
         secondaryLabel: "Contact us",
@@ -104,8 +98,8 @@ function getSlides(args: {
         subtitle:
           "Reserve your activity online, see real availability, pay securely, and arrive ready for the water.",
         badge: "Skip the desk",
-        imageUrl: poseidonJetBoatImage,
-        imageAlt: "Guests enjoying a Jet Boat activity",
+        imageUrl: poseidonClubCoverImage,
+        imageAlt: "Poseidon campaign image for online booking offers",
         primaryLabel: "Book online",
         primaryHref: tenantHref(base, "/activities"),
         secondaryLabel: "See location",
@@ -127,8 +121,8 @@ function getSlides(args: {
         oldPrice: "EUR 60",
         newPrice: "EUR 45",
         priceNote: "online price",
-        imageUrl: poseidonJetBoatImage,
-        imageAlt: "Jet Boat activity in Hersonissos",
+        imageUrl: poseidonHeroImage,
+        imageAlt: "Poseidon promotional boat banner in Hersonissos",
         primaryLabel: "Book Jet Boat",
         primaryHref: tenantHref(base, "/activities/jet-boat"),
         secondaryLabel: "View all offers",
@@ -147,8 +141,8 @@ function getSlides(args: {
         subtitle:
           "Bring the group together: book six adult tickets for the Jet Boat and the seventh adult comes free.",
         badge: "Made for groups",
-        imageUrl: poseidonJetBoatImage,
-        imageAlt: "Group-friendly Jet Boat ride in Crete",
+        imageUrl: poseidonClubCoverImage,
+        imageAlt: "Poseidon group offer campaign graphic",
         primaryLabel: "Plan group ride",
         primaryHref: tenantHref(base, "/activities/jet-boat"),
         secondaryLabel: "Ask a question",
@@ -167,8 +161,8 @@ function getSlides(args: {
         subtitle:
           "Take the boat out with your group and keep the day flexible. Online booking makes the plan simple.",
         badge: "Most flexible",
-        imageUrl: poseidonBoatImage,
-        imageAlt: "Poseidon boat rental on clear water",
+        imageUrl: poseidonHeroImage,
+        imageAlt: "Poseidon boat rental campaign banner on clear water",
         primaryLabel: "Book boat rental",
         primaryHref: tenantHref(base, "/activities/boat-rental-up-to-8-people"),
         secondaryLabel: "See activities",
@@ -192,8 +186,8 @@ function getSlides(args: {
         subtitle:
           "Hotel pickup and return support removes the biggest booking friction for guests on holiday.",
         badge: "Pickup and return",
-        imageUrl: paradiseJetSkiImage,
-        imageAlt: "Jet Ski activity at Paradise Watersports",
+        imageUrl: paradiseHeroImage,
+        imageAlt: "Paradise Watersports campaign banner with jet ski and parasailing",
         primaryLabel: "See activities",
         primaryHref: tenantHref(base, "/activities"),
         secondaryLabel: "Contact us",
@@ -212,8 +206,8 @@ function getSlides(args: {
         subtitle:
           "Book online before you reach the beach. Your slot is reserved, checkout is secure, and confirmation is instant.",
         badge: "Skip the desk",
-        imageUrl: paradiseJetSkiImage,
-        imageAlt: "Paradise Watersports online booking",
+        imageUrl: paradiseClubCoverImage,
+        imageAlt: "Paradise Watersports online booking campaign graphic",
         primaryLabel: "Book online",
         primaryHref: tenantHref(base, "/activities"),
         secondaryLabel: "Contact us",
@@ -235,8 +229,8 @@ function getSlides(args: {
         oldPrice: "High season price",
         newPrice: "20-min offer",
         priceNote: "limited slots",
-        imageUrl: paradiseJetSkiImage,
-        imageAlt: "Jet Ski ride in Crete",
+        imageUrl: paradiseHeroImage,
+        imageAlt: "Paradise Watersports jet ski campaign banner in Crete",
         primaryLabel: "Book Jet Ski",
         primaryHref: tenantHref(base, "/activities/jet-ski"),
         secondaryLabel: "View all offers",
@@ -258,8 +252,8 @@ function getSlides(args: {
         oldPrice: "Couple flight",
         newPrice: "EUR 95",
         priceNote: "for 2 people",
-        imageUrl: paradiseParasailingImage,
-        imageAlt: "Parasailing activity in Hersonissos",
+        imageUrl: paradiseHeroImage,
+        imageAlt: "Paradise Watersports parasailing campaign banner in Hersonissos",
         primaryLabel: "Book Parasailing",
         primaryHref: tenantHref(base, "/activities/parasailing"),
         secondaryLabel: "Ask a question",
@@ -278,8 +272,8 @@ function getSlides(args: {
         subtitle:
           "A fun, shareable ride for friends and families. Make the minimum group size clear and turn it into a group activity.",
         badge: "Friends and family",
-        imageUrl: paradiseSofaImage,
-        imageAlt: "Crazy Sofa ride at Paradise Watersports",
+        imageUrl: paradiseClubCoverImage,
+        imageAlt: "Paradise Watersports group ride campaign graphic",
         primaryLabel: "Book Sofa Ride",
         primaryHref: tenantHref(base, "/activities/crazy-sofa-ride"),
         secondaryLabel: "See activities",
@@ -302,7 +296,7 @@ function getSlides(args: {
       subtitle:
         "Reserve your activity online before you arrive. No waiting in line. No uncertainty. Just arrive and enjoy the water.",
       badge: "Instant confirmation",
-      imageUrl: poseidonBoatImage,
+      imageUrl: poseidonHeroImage,
       imageAlt: "Watersports activity in Crete",
       primaryLabel,
       primaryHref,
