@@ -149,14 +149,14 @@ export default function BookingClient({
 
   if (!booking) {
     return (
-      <main className="relative mx-auto flex max-w-3xl flex-col items-center px-5 py-24 text-center">
+      <main className="relative mx-auto flex max-w-3xl flex-col items-center px-4 py-16 text-center sm:px-5 sm:py-24">
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(248,113,113,0.16),transparent_65%)]" />
 
-        <div className="mb-8 flex size-28 items-center justify-center rounded-full border border-red-300/20 bg-red-500/10 text-red-300 shadow-[0_0_60px_rgba(248,113,113,0.12)]">
-          <HelpCircle className="size-14" />
+        <div className="mb-6 flex size-24 items-center justify-center rounded-full border border-red-300/20 bg-red-500/10 text-red-300 shadow-[0_0_60px_rgba(248,113,113,0.12)] sm:mb-8 sm:size-28">
+          <HelpCircle className="size-12 sm:size-14" />
         </div>
 
-        <h1 className="text-4xl font-semibold text-white">Booking not found</h1>
+        <h1 className="text-3xl font-semibold text-white sm:text-4xl">Booking not found</h1>
 
         <p className="mt-4 max-w-xl text-base leading-relaxed text-white/68">
           We couldn’t find this booking. If you just completed payment or think
@@ -250,7 +250,7 @@ export default function BookingClient({
     : "border-amber-300/20 bg-amber-400/10 text-amber-300 shadow-[0_0_70px_rgba(251,191,36,0.12)]";
 
   return (
-    <main className="relative mx-auto flex max-w-4xl flex-col items-center px-4 py-20 text-center sm:px-6 sm:py-28">
+    <main className="relative mx-auto flex max-w-4xl flex-col items-center px-3 py-14 text-center sm:px-6 sm:py-28">
       <div
         className={`absolute inset-0 -z-10 ${
           isPaid
@@ -264,13 +264,13 @@ export default function BookingClient({
       <div className="pointer-events-none absolute top-12 h-64 w-64 rounded-full bg-white/[0.03] blur-3xl" />
 
       <div
-        className={`relative mb-8 flex size-28 items-center justify-center rounded-full border ${iconTone}`}
+        className={`relative mb-6 flex size-24 items-center justify-center rounded-full border sm:mb-8 sm:size-28 ${iconTone}`}
       >
         <StatusIcon isPaid={isPaid} isCancelled={isCancelled} />
       </div>
 
       <div className="relative mb-2">
-        <h1 className="text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+        <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-5xl">
           {title}
         </h1>
         <div
@@ -284,19 +284,19 @@ export default function BookingClient({
         />
       </div>
 
-      <div className="mb-8 mt-6 max-w-xl space-y-1.5 text-base leading-relaxed text-white/75">
+      <div className="mb-6 mt-5 max-w-xl space-y-1.5 text-sm leading-6 text-white/75 sm:mb-8 sm:mt-6 sm:text-base sm:leading-relaxed">
         {descriptionLines.map((line, i) => (
           <p key={i}>{line}</p>
         ))}
       </div>
 
       {isUnpaid && (
-        <div className="mb-8 w-full max-w-2xl rounded-[2rem] border border-red-400/25 bg-red-500/[0.09] p-5 text-center shadow-[0_24px_80px_-50px_rgba(248,113,113,0.45)] sm:p-6">
+        <div className="mb-6 w-full max-w-2xl rounded-3xl border border-red-400/25 bg-red-500/[0.09] p-4 text-center shadow-[0_24px_80px_-50px_rgba(248,113,113,0.45)] sm:mb-8 sm:rounded-[2rem] sm:p-6">
           <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl border border-red-300/20 bg-red-500/15 text-red-200">
             <AlertTriangle className="size-7" />
           </div>
 
-          <h2 className="text-2xl font-bold uppercase tracking-tight text-red-200">
+          <h2 className="text-xl font-bold uppercase tracking-tight text-red-200 sm:text-2xl">
             Booking NOT confirmed
           </h2>
 
@@ -345,7 +345,7 @@ export default function BookingClient({
         </div>
       )}
 
-      <div className="mb-6 text-lg font-medium text-white/75">
+      <div className="mb-5 text-base font-medium text-white/75 sm:mb-6 sm:text-lg">
         {t("booking.status")}:{" "}
         <span
           className={
@@ -367,39 +367,39 @@ export default function BookingClient({
             is only available at least 48 hours before the booking start time.
           </div>
 
-          <Card className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-transparent p-6 text-left shadow-lg sm:p-8 [background:linear-gradient(var(--color-card),var(--color-card))_padding-box,linear-gradient(90deg,color-mix(in_oklab,var(--accent-300),transparent_65%),color-mix(in_oklab,var(--accent-400),transparent_70%),color-mix(in_oklab,var(--accent-300),transparent_65%))_border-box]">
-            <CardTitle className="text-2xl">{t("booking.summary")}</CardTitle>
+          <Card className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-transparent p-4 text-left shadow-lg sm:p-8 [background:linear-gradient(var(--color-card),var(--color-card))_padding-box,linear-gradient(90deg,color-mix(in_oklab,var(--accent-300),transparent_65%),color-mix(in_oklab,var(--accent-400),transparent_70%),color-mix(in_oklab,var(--accent-300),transparent_65%))_border-box]">
+            <CardTitle className="text-xl sm:text-2xl">{t("booking.summary")}</CardTitle>
 
             <div className="mt-4 space-y-4">
-              <CardSubtle className="text-lg">
+              <CardSubtle className="text-base sm:text-lg">
                 <b>{t("booking.activity")}:</b>{" "}
                 <span className="font-medium text-white">
                   {booking.timeSlot.activity.name}
                 </span>
               </CardSubtle>
 
-              <CardSubtle className="text-lg">
+              <CardSubtle className="text-base sm:text-lg">
                 <b>{t("booking.date")}:</b>{" "}
                 {format(actualStart, "PPPP p")} – {format(actualEnd, "p")}
               </CardSubtle>
 
               {durationText && mode !== "FIXED_SEAT_EVENT" && (
-                <CardSubtle className="text-lg">
+                <CardSubtle className="text-base sm:text-lg">
                   <b>Duration:</b> {durationText}
                 </CardSubtle>
               )}
 
-              <CardSubtle className="text-lg">
+              <CardSubtle className="text-base sm:text-lg">
                 <b>{bookingTypeLabel}:</b> {bookingTypeValue}
               </CardSubtle>
 
               {unitPriceText && mode !== "FIXED_SEAT_EVENT" && (
-                <CardSubtle className="text-lg">
+                <CardSubtle className="text-base sm:text-lg">
                   <b>Unit price:</b> {unitPriceText}
                 </CardSubtle>
               )}
 
-              <CardSubtle className="text-lg">
+              <CardSubtle className="text-base sm:text-lg">
                 <b>{t("booking.total")}:</b>{" "}
                 <span className="font-semibold">
                   {formatMoney(booking.totalPrice, currencyGlyph)}

@@ -321,24 +321,24 @@ function OfferPriceGraphic({ slide }: { slide: OfferSlide }) {
   if (!slide.oldPrice && !slide.newPrice) return null;
 
   return (
-    <div className="mx-auto mt-5 grid w-full max-w-sm grid-cols-[1fr_auto_1.1fr] items-center gap-2 rounded-3xl border border-white/14 bg-black/38 p-3 shadow-[0_24px_70px_-38px_rgba(236,72,153,0.95)] backdrop-blur-xl md:mx-0">
-      <div className="rounded-2xl border border-red-300/20 bg-red-500/12 px-3 py-3 text-center">
+    <div className="mx-auto mt-4 grid w-full max-w-[19rem] grid-cols-[1fr_auto_1.08fr] items-center gap-1.5 rounded-2xl border border-white/14 bg-black/38 p-2 shadow-[0_24px_70px_-38px_rgba(236,72,153,0.95)] backdrop-blur-xl sm:max-w-sm sm:gap-2 sm:rounded-3xl sm:p-3 md:mx-0 md:mt-5">
+      <div className="rounded-xl border border-red-300/20 bg-red-500/12 px-2 py-2 text-center sm:rounded-2xl sm:px-3 sm:py-3">
         <div className="text-[10px] font-black uppercase tracking-[0.16em] text-red-100/75">
           Before
         </div>
-        <div className="relative mt-1 inline-block text-lg font-black text-white/70">
+        <div className="relative mt-1 inline-block text-sm font-black text-white/70 sm:text-lg">
           {slide.oldPrice}
           <span className="absolute left-[-8%] top-1/2 h-1 w-[116%] -rotate-6 rounded-full bg-red-400 shadow-[0_0_18px_rgba(248,113,113,0.8)]" />
         </div>
       </div>
 
-      <div className="text-xl font-black text-cyan-100">to</div>
+      <div className="text-sm font-black text-cyan-100 sm:text-xl">to</div>
 
-      <div className="rounded-2xl border border-cyan-200/25 bg-cyan-300 px-3 py-3 text-center text-[#06101c] shadow-[0_18px_45px_-24px_rgba(34,211,238,0.95)]">
+      <div className="rounded-xl border border-cyan-200/25 bg-cyan-300 px-2 py-2 text-center text-[#06101c] shadow-[0_18px_45px_-24px_rgba(34,211,238,0.95)] sm:rounded-2xl sm:px-3 sm:py-3">
         <div className="text-[10px] font-black uppercase tracking-[0.16em] opacity-70">
           Now
         </div>
-        <div className="mt-1 text-2xl font-black leading-none">
+        <div className="mt-1 text-xl font-black leading-none sm:text-2xl">
           {slide.newPrice}
         </div>
         {slide.priceNote && (
@@ -432,7 +432,7 @@ export function HeroSectionClient({
       </div>
 
       <div className="relative z-10 flex min-h-[78svh] flex-col justify-between px-4 py-4 sm:px-8 md:min-h-[calc(100svh-7rem)] md:px-10 md:py-8">
-        <div className="mx-auto grid w-full max-w-6xl flex-1 items-center gap-5 py-5 md:grid-cols-[minmax(0,1fr)_380px] md:gap-8 md:py-16">
+        <div className="mx-auto grid w-full max-w-6xl flex-1 items-center gap-4 py-4 md:grid-cols-[minmax(0,1fr)_380px] md:gap-8 md:py-16">
           <div className="max-w-3xl text-center md:text-left">
             <div className="mb-3 inline-flex max-w-full items-center gap-2 rounded-full border border-pink-300/25 bg-pink-500/20 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-pink-50 backdrop-blur sm:text-xs md:mb-4">
               {activeIndex === 0 ? (
@@ -453,21 +453,21 @@ export function HeroSectionClient({
               </span>
             </h1>
 
-            <div className="mt-4 inline-flex items-center gap-2 rounded-2xl border border-cyan-200/25 bg-cyan-300/15 px-4 py-2 text-sm font-black uppercase tracking-[0.12em] text-cyan-50 shadow-[0_14px_45px_-24px_rgba(34,211,238,0.9)]">
-              <Sparkles className="size-4" />
+            <div className="mt-3 inline-flex max-w-full items-center gap-2 rounded-xl border border-cyan-200/25 bg-cyan-300/15 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.12em] text-cyan-50 shadow-[0_14px_45px_-24px_rgba(34,211,238,0.9)] sm:mt-4 sm:rounded-2xl sm:px-4 sm:py-2 sm:text-sm">
+              <Sparkles className="size-3.5 shrink-0 sm:size-4" />
               {activeSlide.badge}
             </div>
 
             <OfferPriceGraphic slide={activeSlide} />
 
-            <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-white/80 md:mx-0 md:mt-5 md:text-lg md:leading-7">
+            <p className="mx-auto mt-3 max-w-2xl text-[13px] leading-5 text-white/80 sm:mt-4 sm:text-sm sm:leading-6 md:mx-0 md:mt-5 md:text-lg md:leading-7">
               {activeSlide.subtitle}
             </p>
 
-            <div className="mt-5 grid gap-2.5 sm:flex md:mt-7 md:justify-start">
+            <div className="mt-4 grid gap-2.5 sm:flex md:mt-7 md:justify-start">
               <Link
                 href={activeSlide.primaryHref}
-                className="group relative inline-flex h-12 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-r from-pink-500 to-fuchsia-500 px-7 text-sm font-bold text-white shadow-[0_18px_55px_-18px_rgba(236,72,153,0.9)] transition hover:scale-[1.03]"
+                className="group relative inline-flex h-11 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-r from-pink-500 to-fuchsia-500 px-6 text-[13px] font-bold text-white shadow-[0_18px_55px_-18px_rgba(236,72,153,0.9)] transition hover:scale-[1.03] sm:h-12 sm:rounded-2xl sm:px-7 sm:text-sm"
               >
                 <span
                   className="hero-anim absolute inset-0 opacity-40"
@@ -483,14 +483,14 @@ export function HeroSectionClient({
 
               <a
                 href={activeSlide.secondaryHref}
-                className="inline-flex h-12 items-center justify-center rounded-2xl border border-white/12 bg-white/[0.08] px-7 text-sm font-bold text-white/88 transition hover:bg-white/12"
+                className="inline-flex h-11 items-center justify-center rounded-xl border border-white/12 bg-white/[0.08] px-6 text-[13px] font-bold text-white/88 transition hover:bg-white/12 sm:h-12 sm:rounded-2xl sm:px-7 sm:text-sm"
               >
                 <MapPin className="mr-2 size-4" />
                 {activeSlide.secondaryLabel}
               </a>
             </div>
 
-            <div className="mt-5 grid grid-cols-3 gap-2 md:mt-8">
+            <div className="mt-5 hidden grid-cols-3 gap-2 sm:grid md:mt-8">
               {activeSlide.stats.map((stat) => (
                 <div
                   key={stat.label}
@@ -540,14 +540,14 @@ export function HeroSectionClient({
             </div>
           </div>
 
-          <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1 md:mx-0 md:justify-center md:overflow-visible md:px-0">
+          <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] md:mx-0 md:justify-center md:overflow-visible md:px-0 [&::-webkit-scrollbar]:hidden">
             {slides.map((slide, index) => (
               <button
                 key={slide.title}
                 type="button"
                 aria-label={`Show ${slide.tabLabel}`}
                 onClick={() => setActiveIndex(index)}
-                className={`h-10 shrink-0 rounded-full border px-3 text-xs font-black uppercase tracking-[0.12em] transition-all ${
+                className={`h-9 shrink-0 rounded-full border px-3 text-[11px] font-black uppercase tracking-[0.12em] transition-all sm:h-10 sm:text-xs ${
                   index === activeIndex
                     ? "border-cyan-200 bg-cyan-200 text-[#06101c]"
                     : "border-white/12 bg-white/8 text-white/72 hover:bg-white/14"

@@ -186,10 +186,10 @@ export default function ActivityDetailsClient({
   ].filter(Boolean) as { title: string; body: string }[];
 
   return (
-    <main className="mx-auto max-w-6xl px-4 pb-12 pt-6 sm:px-6">
-      <section className="overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#070b16] shadow-[0_24px_80px_-45px_rgba(0,0,0,0.95)]">
+    <main className="mx-auto max-w-6xl px-3 pb-10 pt-4 sm:px-6 sm:pb-12 sm:pt-6">
+      <section className="overflow-hidden rounded-3xl border border-white/10 bg-[#070b16] shadow-[0_24px_80px_-45px_rgba(0,0,0,0.95)] sm:rounded-[1.75rem]">
         <div className="grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr]">
-          <div className="relative min-h-[260px] sm:min-h-[340px]">
+          <div className="relative min-h-[230px] sm:min-h-[340px]">
             {activity.coverImageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -198,22 +198,22 @@ export default function ActivityDetailsClient({
                 className="h-full w-full object-cover"
               />
             ) : (
-              <div className="grid h-full min-h-[260px] place-items-center bg-white/[0.03] text-sm text-white/45 sm:min-h-[340px]">
+              <div className="grid h-full min-h-[230px] place-items-center bg-white/[0.03] text-sm text-white/45 sm:min-h-[340px]">
                 {t("activities.preview")}
               </div>
             )}
 
             <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-black/5" />
 
-            <div className="absolute left-4 top-4 flex flex-wrap gap-2">
+            <div className="absolute left-3 right-3 top-3 flex flex-wrap gap-2 sm:left-4 sm:right-auto sm:top-4">
               <Link
                 href={tenantHref("/activities")}
-                className="inline-flex h-10 items-center justify-center rounded-full border border-white/12 bg-black/35 px-4 text-sm font-medium text-white/90 backdrop-blur transition hover:bg-black/45"
+                className="inline-flex h-9 items-center justify-center rounded-full border border-white/12 bg-black/35 px-3 text-xs font-medium text-white/90 backdrop-blur transition hover:bg-black/45 sm:h-10 sm:px-4 sm:text-sm"
               >
                 ← Back
               </Link>
 
-              <span className="inline-flex h-10 items-center justify-center rounded-full border border-white/12 bg-black/35 px-4 text-sm text-white/75 backdrop-blur">
+              <span className="inline-flex h-9 items-center justify-center rounded-full border border-white/12 bg-black/35 px-3 text-xs text-white/75 backdrop-blur sm:h-10 sm:px-4 sm:text-sm">
                 {activity.mode === "FIXED_SEAT_EVENT"
                   ? "Experience"
                   : activity.mode === "DYNAMIC_RENTAL"
@@ -223,26 +223,26 @@ export default function ActivityDetailsClient({
             </div>
           </div>
 
-          <div className="relative p-5 sm:p-6 lg:p-7">
+          <div className="relative p-4 sm:p-6 lg:p-7">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(236,72,153,0.06),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(56,189,248,0.06),transparent_30%)]" />
 
             <div className="relative z-10">
-              <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+              <h1 className="text-[1.65rem] font-semibold leading-tight tracking-tight text-white sm:text-3xl">
                 {activity.name}
               </h1>
 
               {activity.description && (
-                <p className="mt-3 text-sm leading-relaxed text-white/66 sm:text-[15px]">
+                <p className="mt-3 text-sm leading-6 text-white/66 sm:text-[15px] sm:leading-relaxed">
                   {activity.description}
                 </p>
               )}
 
               {overviewItems.length > 0 && (
-                <div className="mt-4 flex flex-wrap gap-2">
+                <div className="mt-4 flex flex-wrap gap-1.5 sm:gap-2">
                   {overviewItems.map((item) => (
                     <span
                       key={item}
-                      className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-white/78"
+                      className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[11px] text-white/78 sm:px-3 sm:text-xs"
                     >
                       {item}
                     </span>
@@ -251,7 +251,7 @@ export default function ActivityDetailsClient({
               )}
 
               {activity.durationOptions.length > 0 ? (
-                <div className="mt-5 rounded-[1.25rem] border border-white/10 bg-white/[0.035] p-4">
+                <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.035] p-3 sm:rounded-[1.25rem] sm:p-4">
                   <h2 className="text-sm font-semibold text-white">
                     Duration & pricing
                   </h2>
@@ -260,7 +260,7 @@ export default function ActivityDetailsClient({
                     {activity.durationOptions.map((opt) => (
                       <div
                         key={opt.id}
-                        className="flex items-center justify-between rounded-xl border border-white/8 bg-black/20 px-3 py-2.5"
+                        className="flex items-center justify-between gap-3 rounded-xl border border-white/8 bg-black/20 px-3 py-2.5"
                       >
                         <div>
                           <div className="text-sm font-medium text-white/88">
@@ -271,7 +271,7 @@ export default function ActivityDetailsClient({
                           </div>
                         </div>
 
-                        <div className="text-sm font-semibold text-white">
+                        <div className="shrink-0 text-sm font-semibold text-white">
                           {formatMoney(currency, opt.priceCents)}
                         </div>
                       </div>
@@ -311,7 +311,7 @@ export default function ActivityDetailsClient({
                 </div>
               )}
 
-              <div className="mt-6 flex flex-col gap-3 border-t border-white/10 pt-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="mt-6 grid gap-3 border-t border-white/10 pt-4 sm:flex sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm font-medium text-white">
                     Ready to book?
@@ -323,7 +323,7 @@ export default function ActivityDetailsClient({
 
                 <Link
                   href={bookingHref}
-                  className="inline-flex h-11 items-center justify-center rounded-full bg-gradient-to-r from-pink-500 via-fuchsia-500 to-violet-500 px-5 text-sm font-medium text-white shadow-[0_18px_50px_-18px_rgba(236,72,153,0.7)] transition hover:scale-[1.02]"
+                  className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-gradient-to-r from-pink-500 via-fuchsia-500 to-violet-500 px-5 text-sm font-medium text-white shadow-[0_18px_50px_-18px_rgba(236,72,153,0.7)] transition hover:scale-[1.02] sm:w-auto sm:rounded-full"
                 >
                   {t("activities.select")}
                 </Link>

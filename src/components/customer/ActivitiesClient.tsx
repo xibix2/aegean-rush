@@ -117,7 +117,7 @@ export default function ActivitiesClient({
   }, [lang]);
 
   return (
-    <main className="mx-auto max-w-7xl px-4 pb-16 pt-8 sm:px-6">
+    <main className="mx-auto max-w-7xl px-3 pb-12 pt-4 sm:px-6 sm:pb-16 sm:pt-8">
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -134,7 +134,7 @@ export default function ActivitiesClient({
         }}
       />
 
-      <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#070b16] px-5 py-8 sm:px-7 md:px-8 md:py-10">
+      <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#070b16] px-4 py-6 sm:rounded-[2rem] sm:px-7 md:px-8 md:py-10">
         <div
           className="pointer-events-none absolute inset-0"
           aria-hidden
@@ -143,18 +143,18 @@ export default function ActivitiesClient({
               "radial-gradient(900px 320px at 50% -10%, rgba(56,189,248,0.15), transparent 60%), radial-gradient(700px 260px at 85% 10%, rgba(236,72,153,0.10), transparent 55%)",
           }}
         />
-        <div className="relative z-10 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+        <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-[11px] uppercase tracking-[0.22em] text-white/72 backdrop-blur-xl">
               <span className="h-2 w-2 rounded-full bg-sky-300 shadow-[0_0_14px_rgba(56,189,248,0.65)]" />
               Water experiences
             </div>
 
-            <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl md:text-5xl">
+            <h1 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:mt-4 sm:text-4xl md:text-5xl">
               {t("activities.title")}
             </h1>
 
-            <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/64 sm:text-base">
+            <p className="mt-2 max-w-xl text-sm leading-6 text-white/64 sm:mt-3 sm:text-base sm:leading-relaxed">
               {t("activities.subtitle")}
             </p>
           </div>
@@ -162,7 +162,7 @@ export default function ActivitiesClient({
           <Link
             href={tenantHref("/")}
             title={t("activities.backTitle")}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-white/12 bg-white/[0.05] px-5 text-sm font-medium text-white/90 backdrop-blur transition hover:bg-white/[0.08]"
+            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/12 bg-white/[0.05] px-5 text-sm font-medium text-white/90 backdrop-blur transition hover:bg-white/[0.08] sm:w-auto sm:rounded-2xl"
           >
             <span aria-hidden>←</span>
             {t("activities.back")}
@@ -170,7 +170,7 @@ export default function ActivitiesClient({
         </div>
       </section>
 
-      <div className="mt-8 md:mt-10" />
+      <div className="mt-5 sm:mt-8 md:mt-10" />
 
       {activities.length === 0 && (
         <div className="rounded-2xl border border-[--color-border] bg-[--color-card] p-6 text-center text-sm text-muted-foreground">
@@ -182,7 +182,7 @@ export default function ActivitiesClient({
         </div>
       )}
 
-      <section className="grid grid-cols-1 gap-6 md:gap-7">
+      <section className="grid grid-cols-1 gap-4 sm:gap-6 md:gap-7">
         {activities.map((a, idx) => {
           const img = a.coverImageUrl ?? null;
 
@@ -254,7 +254,7 @@ export default function ActivitiesClient({
           return (
             <article
               key={a.id}
-              className="card-appear group relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#070b16] transition duration-300 hover:-translate-y-0.5 hover:border-white/15"
+              className="card-appear group relative overflow-hidden rounded-3xl border border-white/10 bg-[#070b16] transition duration-300 hover:-translate-y-0.5 hover:border-white/15 sm:rounded-[2rem]"
               style={{
                 animationDelay: `${0.04 * idx}s`,
                 boxShadow:
@@ -262,7 +262,7 @@ export default function ActivitiesClient({
               }}
             >
               <div className="grid grid-cols-1 lg:grid-cols-[1.08fr_1fr]">
-                <div className="relative min-h-[260px] overflow-hidden sm:min-h-[320px]">
+                <div className="relative min-h-[210px] overflow-hidden sm:min-h-[320px]">
                   {img ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -272,7 +272,7 @@ export default function ActivitiesClient({
                       loading="lazy"
                     />
                   ) : (
-                    <div className="grid h-full min-h-[260px] place-items-center bg-white/[0.03] text-xs text-white/45 sm:min-h-[320px]">
+                    <div className="grid h-full min-h-[210px] place-items-center bg-white/[0.03] text-xs text-white/45 sm:min-h-[320px]">
                       {t("activities.preview")}
                     </div>
                   )}
@@ -280,24 +280,24 @@ export default function ActivitiesClient({
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/18 to-black/10" />
                 </div>
 
-                <div className="relative flex flex-col p-5 sm:p-6 lg:p-7">
+                <div className="relative flex flex-col p-4 sm:p-6 lg:p-7">
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(236,72,153,0.08),transparent_30%),radial-gradient(circle_at_bottom_left,rgba(56,189,248,0.07),transparent_32%)]" />
 
                   <div className="relative z-10 flex h-full flex-col">
                     <div>
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0">
                           <div className="inline-flex rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-[11px] font-medium text-white/78">
                             {badge}
                           </div>
 
-                          <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white">
+                          <h2 className="mt-2 text-xl font-semibold tracking-tight text-white sm:mt-3 sm:text-2xl">
                             {a.name}
                           </h2>
                         </div>
 
                         {price && (
-                          <div className="rounded-2xl border border-white/10 bg-black/25 px-3 py-2 text-right backdrop-blur-xl">
+                          <div className="w-fit rounded-xl border border-white/10 bg-black/25 px-3 py-2 text-left backdrop-blur-xl sm:rounded-2xl sm:text-right">
                             <div className="text-[10px] uppercase tracking-[0.18em] text-white/45">
                               From
                             </div>
@@ -314,7 +314,7 @@ export default function ActivitiesClient({
                       </p>
                     </div>
 
-                    <div className="mt-5 flex flex-wrap gap-2.5">
+                    <div className="mt-4 flex flex-wrap gap-2 sm:mt-5 sm:gap-2.5">
                       {pills.slice(0, 3).map((pill) => (
                         <span
                           key={pill}
@@ -338,17 +338,17 @@ export default function ActivitiesClient({
                       </div>
                     )}
 
-                    <div className="mt-6 flex flex-col gap-2 border-t border-white/10 pt-5 sm:flex-row sm:items-center sm:justify-end">
+                    <div className="mt-5 grid gap-2 border-t border-white/10 pt-4 sm:mt-6 sm:flex sm:items-center sm:justify-end sm:pt-5">
                       <Link
                         href={detailsHref}
-                        className="inline-flex h-12 items-center justify-center rounded-2xl border border-white/12 bg-white/[0.05] px-5 text-sm font-medium text-white/90 transition hover:bg-white/[0.08]"
+                        className="inline-flex h-11 items-center justify-center rounded-xl border border-white/12 bg-white/[0.05] px-5 text-sm font-medium text-white/90 transition hover:bg-white/[0.08] sm:h-12 sm:rounded-2xl"
                       >
                         Learn more
                       </Link>
 
                       <Link
                         href={bookingHref}
-                        className="inline-flex h-12 items-center justify-center rounded-2xl bg-gradient-to-r from-pink-500 via-fuchsia-500 to-violet-500 px-6 text-sm font-medium text-white shadow-[0_18px_50px_-18px_rgba(236,72,153,0.75)] transition hover:scale-[1.02]"
+                        className="inline-flex h-11 items-center justify-center rounded-xl bg-gradient-to-r from-pink-500 via-fuchsia-500 to-violet-500 px-6 text-sm font-medium text-white shadow-[0_18px_50px_-18px_rgba(236,72,153,0.75)] transition hover:scale-[1.02] sm:h-12 sm:rounded-2xl"
                       >
                         {t("activities.select")}
                       </Link>

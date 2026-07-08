@@ -244,11 +244,11 @@ function modeLabel(mode: ActivityMode) {
 }
 
 function cardClass() {
-  return "rounded-3xl border border-white/10 bg-[#070b16] p-4 shadow-[0_24px_80px_-45px_rgba(0,0,0,0.95)] sm:rounded-[1.6rem] sm:p-5";
+  return "rounded-2xl border border-white/10 bg-[#070b16] p-3 shadow-[0_24px_80px_-45px_rgba(0,0,0,0.95)] sm:rounded-[1.6rem] sm:p-5";
 }
 
 function fieldClass() {
-  return "rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-3";
+  return "rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-3 sm:px-4";
 }
 
 function chunkTimeOptions(options: TimeOption[], size = 24) {
@@ -776,8 +776,8 @@ export default function TimetableClient() {
           `,
         }}
       />
-      <main className="mx-auto max-w-5xl px-3 pb-10 pt-4 sm:px-6 sm:pb-12 sm:pt-6">
-        <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#070b16] px-4 py-6 sm:rounded-[2rem] sm:px-7 md:px-8 md:py-8">
+      <main className="mx-auto max-w-5xl px-3 pb-10 pt-3 sm:px-6 sm:pb-12 sm:pt-6">
+        <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#070b16] px-4 py-5 sm:rounded-[2rem] sm:px-7 sm:py-6 md:px-8 md:py-8">
           <div
             className="pointer-events-none absolute inset-0"
             aria-hidden
@@ -797,15 +797,15 @@ export default function TimetableClient() {
             >
               ← Back to Experiences
             </Link>
-            <h1 className="mt-4 text-2xl font-semibold tracking-tight text-white sm:text-4xl">
+            <h1 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:mt-4 sm:text-4xl">
               {t("timetable.title")}
             </h1>
 
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/64 sm:text-base">
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-white/64 sm:mt-3 sm:text-base sm:leading-relaxed">
               Choose your date and time, then continue to secure checkout.
             </p>
 
-            <div className="mt-5 flex flex-wrap gap-2">
+            <div className="mt-4 flex flex-wrap gap-2 sm:mt-5">
               <span className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white/78">
                 {modeLabel(mode)}
               </span>
@@ -824,9 +824,9 @@ export default function TimetableClient() {
           </div>
         </section>
 
-        <section className="mt-6 grid gap-5">
+        <section className="mt-4 grid gap-4 sm:mt-6 sm:gap-5">
           <div className={cardClass()}>
-            <div className="mb-4 flex items-center justify-between gap-3">
+            <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
               <div>
                 <p className="text-[11px] uppercase tracking-[0.18em] text-white/42">Step 1</p>
                 <h2 className="mt-1 text-lg font-semibold text-white">Choose your date</h2>
@@ -933,9 +933,9 @@ export default function TimetableClient() {
                         return (
                           <div
                             key={ticket.id}
-                            className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-black/20 px-3 py-2"
+                            className="grid gap-3 rounded-2xl border border-white/10 bg-black/20 px-3 py-3 sm:flex sm:items-center sm:justify-between sm:py-2"
                           >
-                            <div>
+                            <div className="min-w-0">
                               <div className="text-sm font-medium text-white/88">
                                 {ticket.label}
                               </div>
@@ -944,12 +944,12 @@ export default function TimetableClient() {
                               </div>
                             </div>
 
-                            <div className="flex items-center rounded-xl border border-white/10 bg-white/[0.04]">
+                            <div className="flex w-full items-center justify-between rounded-xl border border-white/10 bg-white/[0.04] sm:w-auto">
                               <button
                                 type="button"
                                 disabled={loading}
                                 onClick={() => onTicketQtyChange(ticket.id, qty - 1)}
-                                className="px-3 py-2 text-white/80"
+                                className="min-h-11 px-4 py-2 text-white/80 sm:min-h-0 sm:px-3"
                               >
                                 −
                               </button>
@@ -962,14 +962,14 @@ export default function TimetableClient() {
                                 onChange={(e) =>
                                   onTicketQtyChange(ticket.id, Number(e.target.value))
                                 }
-                                className="no-spin w-14 bg-transparent px-1 py-2 text-center text-white outline-none"
+                                className="no-spin w-16 bg-transparent px-1 py-2 text-center text-white outline-none sm:w-14"
                               />
 
                               <button
                                 type="button"
                                 disabled={loading}
                                 onClick={() => onTicketQtyChange(ticket.id, qty + 1)}
-                                className="px-3 py-2 text-white/80"
+                                className="min-h-11 px-4 py-2 text-white/80 sm:min-h-0 sm:px-3"
                               >
                                 +
                               </button>
@@ -979,7 +979,7 @@ export default function TimetableClient() {
                       })}
                     </div>
 
-                    <div className="mt-3 flex justify-between text-sm text-white/70">
+                    <div className="mt-3 flex items-center justify-between gap-3 text-sm text-white/70">
                       <span>Total guests: {totalTicketGuests}</span>
                       <span>€{formatMoney(selectedTicketTotal ?? 0)}</span>
                     </div>
@@ -1174,7 +1174,7 @@ export default function TimetableClient() {
                     const end = s.end ? new Date(s.end) : null;
 
                     return (
-                      <div key={s.id} className="rounded-3xl border border-white/10 bg-white/[0.03] p-4 sm:rounded-[1.5rem] sm:p-5">
+                      <div key={s.id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-3 sm:rounded-[1.5rem] sm:p-5">
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                           <div>
                             <div className="text-xl font-semibold text-white">
@@ -1187,7 +1187,7 @@ export default function TimetableClient() {
                           </div>
 
                           <div className="flex flex-col gap-3 sm:items-end">
-                            <div className="text-right">
+                            <div className="text-left sm:text-right">
                               <div className="text-xs uppercase tracking-[0.18em] text-white/40">Total</div>
                               <div className="mt-1 text-2xl font-semibold text-white">
                                 €{formatMoney(hasTicketTypes ? selectedTicketTotal ?? 0 : s.totalPrice)}
@@ -1236,7 +1236,7 @@ export default function TimetableClient() {
                   const disabled = !selectedDuration || !activeOption || !s.canFit;
 
                   return (
-                    <div key={s.id} className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-5">
+                    <div key={s.id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-3 sm:rounded-[1.5rem] sm:p-5">
                       <div className="flex flex-col gap-5">
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                           <div>
@@ -1298,8 +1298,8 @@ export default function TimetableClient() {
                         )}
 
                         {timeOptions.length > 0 && (
-                          <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                            <div className="flex items-center justify-between gap-3">
+                          <div className="rounded-2xl border border-white/10 bg-black/20 p-3 sm:p-4">
+                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                               <div>
                                 <div className="text-sm font-medium text-white/88">
                                   Availability through the day
@@ -1387,7 +1387,7 @@ export default function TimetableClient() {
                                 <span>{timeOptions[timeOptions.length - 1]?.label}</span>
                               </div>
 
-                              <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[11px] text-white/40">
+                              <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-2 text-[11px] text-white/40 sm:flex sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-4">
                                 <span className="inline-flex items-center gap-1.5">
                                   <span className="h-2.5 w-5 rounded-full bg-zinc-700/80" />
                                   Unavailable
