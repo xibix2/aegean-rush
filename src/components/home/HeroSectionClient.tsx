@@ -2,15 +2,16 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 import {
   CalendarDays,
-  ShieldCheck,
-  CircleDot,
+  Car,
   MapPin,
+  Percent,
+  ShieldCheck,
   Sparkles,
-  Clock3,
+  Waves,
   Zap,
-  TimerReset,
 } from "lucide-react";
 import { useT } from "@/components/I18nProvider";
 
@@ -26,6 +27,233 @@ type HeroSectionClientProps = {
   secondaryCtaHref?: string | null;
   microText?: string | null;
 };
+
+type OfferSlide = {
+  eyebrow: string;
+  title: string;
+  highlight: string;
+  subtitle: string;
+  badge: string;
+  imageUrl: string;
+  imageAlt: string;
+  primaryLabel: string;
+  primaryHref: string;
+  secondaryLabel: string;
+  secondaryHref: string;
+  stats: Array<{ label: string; value: string }>;
+};
+
+const poseidonBoatImage =
+  "https://q8tnxmhsl7hrrlbk.public.blob.vercel-storage.com/activity_1777363730017_x8hligygcfh.jpeg";
+const poseidonJetBoatImage =
+  "https://q8tnxmhsl7hrrlbk.public.blob.vercel-storage.com/activity_1777024372610_q8ybtkawg9i.jpg";
+
+const paradiseJetSkiImage =
+  "https://q8tnxmhsl7hrrlbk.public.blob.vercel-storage.com/activity_1776415404029_aljeobsrpon.jpg";
+const paradiseParasailingImage =
+  "https://q8tnxmhsl7hrrlbk.public.blob.vercel-storage.com/activity_1776270849596_y1vk9n6flxl.jpg";
+const paradiseSofaImage =
+  "https://q8tnxmhsl7hrrlbk.public.blob.vercel-storage.com/activity_1776415981738_g4u2t5dsem.jpg";
+
+function tenantHref(base: string, path: string) {
+  return `${base}${path}`;
+}
+
+function getSlides(args: {
+  tenantSlug: string;
+  primaryLabel: string;
+  primaryHref: string;
+  secondaryLabel: string;
+  secondaryHref: string;
+}): OfferSlide[] {
+  const { tenantSlug, primaryLabel, primaryHref, secondaryLabel, secondaryHref } =
+    args;
+  const base = `/${tenantSlug}`;
+
+  if (tenantSlug === "poseidon-rent-a-boat") {
+    return [
+      {
+        eyebrow: "Free hotel transfer",
+        title: "Pickup and return",
+        highlight: "included",
+        subtitle:
+          "We can collect guests from their hotel and bring them back after the activity, making the booking feel easy before they even arrive.",
+        badge: "Best travel perk",
+        imageUrl: poseidonBoatImage,
+        imageAlt: "Boat rental in clear blue water near Hersonissos",
+        primaryLabel: "See activities",
+        primaryHref: tenantHref(base, "/activities"),
+        secondaryLabel: "Contact us",
+        secondaryHref: tenantHref(base, "/contact"),
+        stats: [
+          { label: "Hotel pickup", value: "Free" },
+          { label: "Return ride", value: "Included" },
+          { label: "Checkout", value: "Online" },
+        ],
+      },
+      {
+        eyebrow: "Limited-time offer",
+        title: "Jet Boat Adventure",
+        highlight: "EUR 45",
+        subtitle:
+          "Usually EUR 60 for adults. Book the 60-minute Jet Boat online and lock in the summer price before arriving.",
+        badge: "Save EUR 15",
+        imageUrl: poseidonJetBoatImage,
+        imageAlt: "Jet Boat activity in Hersonissos",
+        primaryLabel: "Book Jet Boat",
+        primaryHref: tenantHref(base, "/activities/jet-boat"),
+        secondaryLabel: "View all offers",
+        secondaryHref: tenantHref(base, "/activities"),
+        stats: [
+          { label: "Adult ticket", value: "EUR 45" },
+          { label: "Usually", value: "EUR 60" },
+          { label: "Group deal", value: "6+1 free" },
+        ],
+      },
+      {
+        eyebrow: "Group deal",
+        title: "Jet Boat 6+1",
+        highlight: "free adult",
+        subtitle:
+          "Bring the group together: book six adult tickets for the Jet Boat and the seventh adult comes free.",
+        badge: "Made for groups",
+        imageUrl: poseidonJetBoatImage,
+        imageAlt: "Group-friendly Jet Boat ride in Crete",
+        primaryLabel: "Plan group ride",
+        primaryHref: tenantHref(base, "/activities/jet-boat"),
+        secondaryLabel: "Ask a question",
+        secondaryHref: tenantHref(base, "/contact"),
+        stats: [
+          { label: "Adults", value: "6+1" },
+          { label: "Transfer", value: "Free" },
+          { label: "Confirm", value: "Instant" },
+        ],
+      },
+      {
+        eyebrow: "Private boat day",
+        title: "Boat Rental",
+        highlight: "from EUR 100",
+        subtitle:
+          "Take the boat out with your group and keep the day flexible. Online booking makes the plan simple.",
+        badge: "Most flexible",
+        imageUrl: poseidonBoatImage,
+        imageAlt: "Poseidon boat rental on clear water",
+        primaryLabel: "Book boat rental",
+        primaryHref: tenantHref(base, "/activities/boat-rental-up-to-8-people"),
+        secondaryLabel: "See activities",
+        secondaryHref: tenantHref(base, "/activities"),
+        stats: [
+          { label: "From", value: "EUR 100" },
+          { label: "Transfer", value: "Free" },
+          { label: "Best for", value: "Groups" },
+        ],
+      },
+    ];
+  }
+
+  if (tenantSlug === "paradisewatersports") {
+    return [
+      {
+        eyebrow: "Free hotel transfer",
+        title: "Arrive the easy way",
+        highlight: "taxi included",
+        subtitle:
+          "Hotel pickup and return support removes the biggest booking friction for guests on holiday.",
+        badge: "Easy from hotel",
+        imageUrl: paradiseJetSkiImage,
+        imageAlt: "Jet Ski activity at Paradise Watersports",
+        primaryLabel: "See activities",
+        primaryHref: tenantHref(base, "/activities"),
+        secondaryLabel: "Contact us",
+        secondaryHref: tenantHref(base, "/contact"),
+        stats: [
+          { label: "Pickup", value: "Free" },
+          { label: "Return", value: "Included" },
+          { label: "Book", value: "Online" },
+        ],
+      },
+      {
+        eyebrow: "Big summer discount",
+        title: "20-minute Jet Ski",
+        highlight: "offer ride",
+        subtitle:
+          "A short, exciting ride is one of the easiest holiday decisions. Reserve a Jet Ski slot online before arriving.",
+        badge: "Fast decision",
+        imageUrl: paradiseJetSkiImage,
+        imageAlt: "Jet Ski ride in Crete",
+        primaryLabel: "Book Jet Ski",
+        primaryHref: tenantHref(base, "/activities/jet-ski"),
+        secondaryLabel: "View all offers",
+        secondaryHref: tenantHref(base, "/activities"),
+        stats: [
+          { label: "Duration", value: "20 min" },
+          { label: "Transfer", value: "Free" },
+          { label: "Confirm", value: "Instant" },
+        ],
+      },
+      {
+        eyebrow: "Couples offer",
+        title: "Parasailing for two",
+        highlight: "EUR 95",
+        subtitle:
+          "A strong couple-friendly offer: two people, one memorable flight, and simple hotel transfer support.",
+        badge: "Couple favorite",
+        imageUrl: paradiseParasailingImage,
+        imageAlt: "Parasailing activity in Hersonissos",
+        primaryLabel: "Book Parasailing",
+        primaryHref: tenantHref(base, "/activities/parasailing"),
+        secondaryLabel: "Ask a question",
+        secondaryHref: tenantHref(base, "/contact"),
+        stats: [
+          { label: "For two", value: "EUR 95" },
+          { label: "Pickup", value: "Free" },
+          { label: "Best for", value: "Couples" },
+        ],
+      },
+      {
+        eyebrow: "Group fun",
+        title: "Crazy Sofa Ride",
+        highlight: "from EUR 20",
+        subtitle:
+          "A fun, shareable ride for friends and families. Make the minimum group size clear and turn it into a group activity.",
+        badge: "Friends and family",
+        imageUrl: paradiseSofaImage,
+        imageAlt: "Crazy Sofa ride at Paradise Watersports",
+        primaryLabel: "Book Sofa Ride",
+        primaryHref: tenantHref(base, "/activities/crazy-sofa-ride"),
+        secondaryLabel: "See activities",
+        secondaryHref: tenantHref(base, "/activities"),
+        stats: [
+          { label: "From", value: "EUR 20" },
+          { label: "Minimum", value: "2 guests" },
+          { label: "Transfer", value: "Free" },
+        ],
+      },
+    ];
+  }
+
+  return [
+    {
+      eyebrow: "Book before you arrive",
+      title: "Skip the queue",
+      highlight: "online",
+      subtitle:
+        "Reserve your activity online before you arrive. No waiting in line. No uncertainty. Just arrive and enjoy the water.",
+      badge: "Instant confirmation",
+      imageUrl: poseidonBoatImage,
+      imageAlt: "Watersports activity in Crete",
+      primaryLabel,
+      primaryHref,
+      secondaryLabel,
+      secondaryHref,
+      stats: [
+        { label: "Availability", value: "Live" },
+        { label: "Payment", value: "Secure" },
+        { label: "Confirm", value: "Instant" },
+      ],
+    },
+  ];
+}
 
 export function HeroSectionClient({
   tenantSlug,
@@ -44,20 +272,44 @@ export function HeroSectionClient({
   const resolvedSecondaryCtaLabel = secondaryCtaLabel || "Find our location";
   const resolvedSecondaryCtaHref = secondaryCtaHref || "#meeting-point";
 
+  const slides = useMemo(
+    () =>
+      getSlides({
+        tenantSlug,
+        primaryLabel: resolvedPrimaryCtaLabel,
+        primaryHref: resolvedPrimaryCtaHref,
+        secondaryLabel: resolvedSecondaryCtaLabel,
+        secondaryHref: resolvedSecondaryCtaHref,
+      }),
+    [
+      tenantSlug,
+      resolvedPrimaryCtaLabel,
+      resolvedPrimaryCtaHref,
+      resolvedSecondaryCtaLabel,
+      resolvedSecondaryCtaHref,
+    ],
+  );
+
+  const [activeIndex, setActiveIndex] = useState(0);
+  const activeSlide = slides[activeIndex] ?? slides[0];
+
+  useEffect(() => {
+    if (slides.length <= 1) return;
+    const timer = window.setInterval(() => {
+      setActiveIndex((current) => (current + 1) % slides.length);
+    }, 6500);
+    return () => window.clearInterval(timer);
+  }, [slides.length]);
+
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [tenantSlug]);
+
   return (
-    <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#050816] px-3 py-4 text-white shadow-[0_30px_120px_-40px_rgba(0,0,0,0.8)] sm:rounded-[2rem] sm:px-8 sm:py-8 md:px-10 md:py-10">
+    <section className="relative min-h-[calc(100svh-7rem)] overflow-hidden rounded-3xl border border-white/10 bg-[#050816] text-white shadow-[0_30px_120px_-40px_rgba(0,0,0,0.8)] sm:rounded-[2rem]">
       <style
         dangerouslySetInnerHTML={{
           __html: `
-@keyframes heroDrift {
-  0% { transform: translateX(0px) translateY(0px) scale(1) }
-  50% { transform: translateX(20px) translateY(-12px) scale(1.04) }
-  100% { transform: translateX(-10px) translateY(8px) scale(0.98) }
-}
-@keyframes heroPulse {
-  0%,100% { opacity: .45; transform: scale(1) }
-  50% { opacity: .8; transform: scale(1.08) }
-}
 @keyframes heroShimmer {
   0% { transform: translateX(-120%) }
   100% { transform: translateX(120%) }
@@ -70,72 +322,53 @@ export function HeroSectionClient({
       />
 
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_20%,rgba(236,72,153,0.25),transparent_28%),radial-gradient(circle_at_82%_20%,rgba(56,189,248,0.22),transparent_30%),linear-gradient(180deg,#07111f_0%,#050816_58%,#03050d_100%)]" />
-
-        <div
-          className="hero-anim absolute -left-24 top-[-7rem] h-[18rem] w-[18rem] rounded-full blur-3xl sm:-left-20 sm:top-[-6rem] sm:h-[22rem] sm:w-[22rem]"
-          style={{
-            background:
-              "radial-gradient(circle, rgba(236,72,153,0.26) 0%, rgba(236,72,153,0.08) 45%, transparent 72%)",
-            animation: "heroDrift 14s ease-in-out infinite",
-          }}
-        />
-
-        <div
-          className="hero-anim absolute right-[-7rem] top-[1rem] h-[16rem] w-[16rem] rounded-full blur-3xl sm:right-[-5rem] sm:top-[2rem] sm:h-[20rem] sm:w-[20rem]"
-          style={{
-            background:
-              "radial-gradient(circle, rgba(34,211,238,0.18) 0%, rgba(34,211,238,0.06) 45%, transparent 72%)",
-            animation: "heroPulse 11s ease-in-out infinite",
-          }}
-        />
-
-        <div className="absolute inset-x-0 bottom-0 h-[45%] bg-gradient-to-t from-black/80 via-slate-950/35 to-transparent" />
+        {slides.map((slide, index) => (
+          <div
+            key={slide.title}
+            className={`absolute inset-0 bg-cover bg-center transition-opacity duration-700 ${
+              index === activeIndex ? "opacity-100" : "opacity-0"
+            }`}
+            style={{ backgroundImage: `url(${slide.imageUrl})` }}
+          />
+        ))}
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(3,7,18,0.96)_0%,rgba(3,7,18,0.78)_42%,rgba(3,7,18,0.38)_100%)]" />
+        <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-[#03050d] via-[#03050d]/45 to-transparent" />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-6xl">
-        <div className="grid overflow-hidden rounded-[1.6rem] border border-white/10 bg-black/35 shadow-[0_28px_110px_-55px_rgba(0,0,0,0.95)] backdrop-blur-xl md:grid-cols-[1.05fr_0.95fr]">
-          <div className="relative px-5 py-7 text-center sm:px-8 md:px-10 md:py-10 md:text-left">
-            <div className="mb-3 inline-flex max-w-full items-center gap-2 rounded-full border border-pink-300/25 bg-pink-500/15 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-pink-100 sm:text-xs">
-              <TimerReset className="size-3.5 shrink-0" />
-              <span className="truncate">Skip the queue — book online</span>
+      <div className="relative z-10 flex min-h-[calc(100svh-7rem)] flex-col justify-between px-5 py-6 sm:px-8 md:px-10 md:py-8">
+        <div className="mx-auto grid w-full max-w-6xl flex-1 items-center gap-8 py-10 md:grid-cols-[minmax(0,1fr)_380px] md:py-16">
+          <div className="max-w-3xl text-center md:text-left">
+            <div className="mb-4 inline-flex max-w-full items-center gap-2 rounded-full border border-pink-300/25 bg-pink-500/20 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-pink-50 backdrop-blur sm:text-xs">
+              {activeIndex === 0 ? (
+                <Car className="size-3.5 shrink-0" />
+              ) : activeSlide.eyebrow.toLowerCase().includes("offer") ||
+                activeSlide.eyebrow.toLowerCase().includes("deal") ? (
+                <Percent className="size-3.5 shrink-0" />
+              ) : (
+                <Sparkles className="size-3.5 shrink-0" />
+              )}
+              <span className="truncate">{activeSlide.eyebrow}</span>
             </div>
 
-            <h1 className="text-[3.05rem] font-black uppercase leading-[0.86] tracking-[-0.075em] text-white sm:text-7xl md:text-8xl">
-              DON&apos;T WAIT
-              <span className="block bg-gradient-to-r from-pink-400 via-fuchsia-300 to-cyan-200 bg-clip-text text-transparent">
-                IN LINE
+            <h1 className="text-[2.85rem] font-black uppercase leading-[0.9] text-white sm:text-6xl md:text-7xl">
+              {activeSlide.title}
+              <span className="block bg-gradient-to-r from-pink-300 via-fuchsia-200 to-cyan-100 bg-clip-text text-transparent">
+                {activeSlide.highlight}
               </span>
             </h1>
 
-            <div className="mt-3 inline-block -rotate-1 bg-cyan-300 px-4 py-1.5 text-2xl font-black uppercase tracking-tight text-[#06101c] shadow-[0_14px_45px_-22px_rgba(34,211,238,0.9)] sm:text-4xl">
-              Book Before You Arrive
+            <div className="mt-4 inline-flex items-center gap-2 rounded-2xl border border-cyan-200/25 bg-cyan-300/15 px-4 py-2 text-sm font-black uppercase tracking-[0.12em] text-cyan-50 shadow-[0_14px_45px_-24px_rgba(34,211,238,0.9)]">
+              <Sparkles className="size-4" />
+              {activeSlide.badge}
             </div>
 
-            <div className="mt-6 grid gap-2 sm:flex sm:flex-wrap md:justify-start">
-              <div className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/12 bg-white/[0.06] px-4 py-3 text-sm text-white/85">
-                <Sparkles className="size-4 text-pink-300" />
-                Guaranteed spot
-                <span className="rounded-lg border border-cyan-300/25 bg-cyan-300/10 px-2 py-1 font-black tracking-[0.12em] text-cyan-100">
-                  ONLINE
-                </span>
-              </div>
-
-              <div className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/12 bg-white/[0.06] px-4 py-3 text-sm text-white/85">
-                <Clock3 className="size-4 text-cyan-300" />
-                Fast check-in
-              </div>
-            </div>
-
-            <p className="mx-auto mt-5 max-w-xl text-sm leading-6 text-white/70 md:mx-0 md:text-base">
-                Reserve your activity online before you arrive.
-                No waiting in line. No uncertainty.
-                Just arrive and enjoy the water.
+            <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-white/78 md:mx-0 md:text-lg">
+              {activeSlide.subtitle}
             </p>
 
-            <div className="mt-6 grid gap-2.5 sm:flex md:justify-start">
+            <div className="mt-7 grid gap-2.5 sm:flex md:justify-start">
               <Link
-                href={resolvedPrimaryCtaHref}
+                href={activeSlide.primaryHref}
                 className="group relative inline-flex h-12 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-r from-pink-500 to-fuchsia-500 px-7 text-sm font-bold text-white shadow-[0_18px_55px_-18px_rgba(236,72,153,0.9)] transition hover:scale-[1.03]"
               >
                 <span
@@ -146,87 +379,83 @@ export function HeroSectionClient({
                     animation: "heroShimmer 3.8s linear infinite",
                   }}
                 />
-                <CircleDot className="relative mr-2 size-4" />
-                <span className="relative">{resolvedPrimaryCtaLabel}</span>
+                <Waves className="relative mr-2 size-4" />
+                <span className="relative">{activeSlide.primaryLabel}</span>
               </Link>
 
               <a
-                href={resolvedSecondaryCtaHref}
+                href={activeSlide.secondaryHref}
                 className="inline-flex h-12 items-center justify-center rounded-2xl border border-white/12 bg-white/[0.08] px-7 text-sm font-bold text-white/88 transition hover:bg-white/12"
               >
                 <MapPin className="mr-2 size-4" />
-                {resolvedSecondaryCtaLabel}
+                {activeSlide.secondaryLabel}
               </a>
             </div>
 
-            <p className="mt-4 text-xs text-white/45">
-              Online booking gives you real-time availability, secure checkout,
-              and instant confirmation.
-            </p>
+            <div className="mt-8 grid gap-2 sm:grid-cols-3">
+              {activeSlide.stats.map((stat) => (
+                <div
+                  key={stat.label}
+                  className="rounded-2xl border border-white/12 bg-black/28 px-4 py-3 backdrop-blur"
+                >
+                  <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/46">
+                    {stat.label}
+                  </div>
+                  <div className="mt-1 text-lg font-black text-white">
+                    {stat.value}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div className="relative hidden min-h-[430px] overflow-hidden md:block">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_35%,rgba(236,72,153,0.36),transparent_28%),radial-gradient(circle_at_45%_55%,rgba(34,211,238,0.28),transparent_34%),linear-gradient(135deg,#07111f,#04101d_55%,#021827)]" />
-            <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-cyan-500/25 to-transparent" />
-
-            <div className="absolute right-8 top-10 rounded-full border border-pink-300/25 bg-black/35 px-7 py-6 text-center shadow-[0_0_45px_rgba(236,72,153,0.25)]">
-              <div className="text-xs font-black uppercase tracking-[0.2em] text-pink-200">
-                Fast
-              </div>
-              <div className="text-5xl font-black tracking-[-0.08em] text-white">
-                Check
-              </div>
-              <div className="text-xs font-black uppercase tracking-[0.16em] text-pink-200">
-                In
-              </div>
-            </div>
-
-            <div className="absolute bottom-12 right-10 h-48 w-72 rotate-[-8deg] rounded-[3rem] border border-cyan-200/20 bg-gradient-to-br from-cyan-300/35 via-sky-500/20 to-black/20 shadow-[0_35px_90px_-35px_rgba(34,211,238,0.9)]" />
-            <div className="absolute bottom-20 right-24 h-20 w-28 rotate-[-8deg] rounded-full bg-black/45 blur-sm" />
-            <div className="absolute bottom-24 right-28 text-7xl drop-shadow-[0_0_25px_rgba(34,211,238,0.45)]">
-              🌊
-            </div>
-            <div className="absolute bottom-32 right-36 text-7xl drop-shadow-[0_0_25px_rgba(236,72,153,0.35)]">
-              🏄
-            </div>
-
-            <div className="absolute bottom-8 left-8 right-8 grid grid-cols-3 gap-3 rounded-3xl border border-white/10 bg-black/30 p-4 backdrop-blur-xl">
-              <div className="text-center">
-                <CalendarDays className="mx-auto size-5 text-cyan-300" />
-                <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.14em] text-white/75">
-                  Real-time
-                </p>
-              </div>
-              <div className="text-center">
-                <ShieldCheck className="mx-auto size-5 text-pink-300" />
-                <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.14em] text-white/75">
-                  Secure
-                </p>
-              </div>
-              <div className="text-center">
-                <Zap className="mx-auto size-5 text-cyan-200" />
-                <p className="mt-2 text-[10px] font-bold uppercase tracking-[0.14em] text-white/75">
-                  Instant
-                </p>
-              </div>
-            </div>
+          <div className="hidden rounded-[1.75rem] border border-white/12 bg-black/30 p-4 shadow-[0_28px_90px_-45px_rgba(0,0,0,0.95)] backdrop-blur-xl md:block">
+            <div
+              className="aspect-[4/5] rounded-[1.35rem] bg-cover bg-center"
+              style={{ backgroundImage: `url(${activeSlide.imageUrl})` }}
+              role="img"
+              aria-label={activeSlide.imageAlt}
+            />
           </div>
         </div>
 
-        <div className="mt-4 hidden flex-wrap items-center justify-center gap-2 sm:mt-5 md:flex">
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-3 py-1.5 text-[11px] text-white/80 backdrop-blur-xl sm:px-3.5 sm:text-xs">
-            <CalendarDays className="size-3.5 text-cyan-300" />
-            {t("home.trust.realTime")}
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 border-t border-white/10 pt-5 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-wrap justify-center gap-2 md:justify-start">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/8 px-3 py-1.5 text-[11px] text-white/84 backdrop-blur-xl sm:px-3.5 sm:text-xs">
+              <Car className="size-3.5 text-cyan-300" />
+              Free hotel transfer
+            </div>
+
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/8 px-3 py-1.5 text-[11px] text-white/84 backdrop-blur-xl sm:px-3.5 sm:text-xs">
+              <ShieldCheck className="size-3.5 text-pink-300" />
+              {t("home.trust.secureCheckout")}
+            </div>
+
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/8 px-3 py-1.5 text-[11px] text-white/84 backdrop-blur-xl sm:px-3.5 sm:text-xs">
+              <CalendarDays className="size-3.5 text-cyan-200" />
+              {t("home.trust.realTime")}
+            </div>
+
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/8 px-3 py-1.5 text-[11px] text-white/84 backdrop-blur-xl sm:px-3.5 sm:text-xs">
+              <Zap className="size-3.5 text-cyan-200" />
+              Instant confirmation
+            </div>
           </div>
 
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-3 py-1.5 text-[11px] text-white/80 backdrop-blur-xl sm:px-3.5 sm:text-xs">
-            <ShieldCheck className="size-3.5 text-pink-300" />
-            {t("home.trust.secureCheckout")}
-          </div>
-
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/6 px-3 py-1.5 text-[11px] text-white/80 backdrop-blur-xl sm:px-3.5 sm:text-xs">
-            <Zap className="size-3.5 text-cyan-200" />
-            Instant confirmation
+          <div className="flex justify-center gap-2">
+            {slides.map((slide, index) => (
+              <button
+                key={slide.title}
+                type="button"
+                aria-label={`Show offer ${index + 1}`}
+                onClick={() => setActiveIndex(index)}
+                className={`h-2.5 rounded-full transition-all ${
+                  index === activeIndex
+                    ? "w-8 bg-cyan-200"
+                    : "w-2.5 bg-white/35 hover:bg-white/60"
+                }`}
+              />
+            ))}
           </div>
         </div>
       </div>
