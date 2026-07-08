@@ -29,11 +29,15 @@ type HeroSectionClientProps = {
 };
 
 type OfferSlide = {
+  tabLabel: string;
   eyebrow: string;
   title: string;
   highlight: string;
   subtitle: string;
   badge: string;
+  oldPrice?: string;
+  newPrice?: string;
+  priceNote?: string;
   imageUrl: string;
   imageAlt: string;
   primaryLabel: string;
@@ -73,12 +77,13 @@ function getSlides(args: {
   if (tenantSlug === "poseidon-rent-a-boat") {
     return [
       {
+        tabLabel: "Transfer",
         eyebrow: "Free hotel transfer",
         title: "Pickup and return",
-        highlight: "included",
+        highlight: "free",
         subtitle:
-          "We can collect guests from their hotel and bring them back after the activity, making the booking feel easy before they even arrive.",
-        badge: "Best travel perk",
+          "We can collect guests from their hotel and bring them back after the activity. Less planning, less stress, more bookings.",
+        badge: "Free taxi transfer",
         imageUrl: poseidonBoatImage,
         imageAlt: "Boat rental in clear blue water near Hersonissos",
         primaryLabel: "See activities",
@@ -92,12 +97,36 @@ function getSlides(args: {
         ],
       },
       {
+        tabLabel: "No queue",
+        eyebrow: "Book before you arrive",
+        title: "Don't wait",
+        highlight: "in line",
+        subtitle:
+          "Reserve your activity online, see real availability, pay securely, and arrive ready for the water.",
+        badge: "Skip the desk",
+        imageUrl: poseidonJetBoatImage,
+        imageAlt: "Guests enjoying a Jet Boat activity",
+        primaryLabel: "Book online",
+        primaryHref: tenantHref(base, "/activities"),
+        secondaryLabel: "See location",
+        secondaryHref: "#meeting-point",
+        stats: [
+          { label: "Availability", value: "Live" },
+          { label: "Checkout", value: "Secure" },
+          { label: "Confirm", value: "Instant" },
+        ],
+      },
+      {
+        tabLabel: "Jet Boat",
         eyebrow: "Limited-time offer",
         title: "Jet Boat Adventure",
-        highlight: "EUR 45",
+        highlight: "save EUR 15",
         subtitle:
-          "Usually EUR 60 for adults. Book the 60-minute Jet Boat online and lock in the summer price before arriving.",
-        badge: "Save EUR 15",
+          "The 60-minute Jet Boat adult ticket is usually EUR 60. Online summer price is now EUR 45.",
+        badge: "Adult ticket deal",
+        oldPrice: "EUR 60",
+        newPrice: "EUR 45",
+        priceNote: "online price",
         imageUrl: poseidonJetBoatImage,
         imageAlt: "Jet Boat activity in Hersonissos",
         primaryLabel: "Book Jet Boat",
@@ -111,6 +140,7 @@ function getSlides(args: {
         ],
       },
       {
+        tabLabel: "6+1",
         eyebrow: "Group deal",
         title: "Jet Boat 6+1",
         highlight: "free adult",
@@ -130,6 +160,7 @@ function getSlides(args: {
         ],
       },
       {
+        tabLabel: "Boat",
         eyebrow: "Private boat day",
         title: "Boat Rental",
         highlight: "from EUR 100",
@@ -154,12 +185,13 @@ function getSlides(args: {
   if (tenantSlug === "paradisewatersports") {
     return [
       {
+        tabLabel: "Transfer",
         eyebrow: "Free hotel transfer",
         title: "Arrive the easy way",
-        highlight: "taxi included",
+        highlight: "free taxi",
         subtitle:
           "Hotel pickup and return support removes the biggest booking friction for guests on holiday.",
-        badge: "Easy from hotel",
+        badge: "Pickup and return",
         imageUrl: paradiseJetSkiImage,
         imageAlt: "Jet Ski activity at Paradise Watersports",
         primaryLabel: "See activities",
@@ -173,12 +205,36 @@ function getSlides(args: {
         ],
       },
       {
+        tabLabel: "No queue",
+        eyebrow: "Book before you arrive",
+        title: "Don't wait",
+        highlight: "in line",
+        subtitle:
+          "Book online before you reach the beach. Your slot is reserved, checkout is secure, and confirmation is instant.",
+        badge: "Skip the desk",
+        imageUrl: paradiseJetSkiImage,
+        imageAlt: "Paradise Watersports online booking",
+        primaryLabel: "Book online",
+        primaryHref: tenantHref(base, "/activities"),
+        secondaryLabel: "Contact us",
+        secondaryHref: tenantHref(base, "/contact"),
+        stats: [
+          { label: "Availability", value: "Live" },
+          { label: "Payment", value: "Secure" },
+          { label: "Confirm", value: "Instant" },
+        ],
+      },
+      {
+        tabLabel: "Jet Ski",
         eyebrow: "Big summer discount",
         title: "20-minute Jet Ski",
-        highlight: "offer ride",
+        highlight: "big offer",
         subtitle:
-          "A short, exciting ride is one of the easiest holiday decisions. Reserve a Jet Ski slot online before arriving.",
-        badge: "Fast decision",
+          "A short, exciting ride is one of the easiest holiday decisions. Make it feel like the deal they should grab today.",
+        badge: "Summer discount",
+        oldPrice: "High season price",
+        newPrice: "20-min offer",
+        priceNote: "limited slots",
         imageUrl: paradiseJetSkiImage,
         imageAlt: "Jet Ski ride in Crete",
         primaryLabel: "Book Jet Ski",
@@ -192,12 +248,16 @@ function getSlides(args: {
         ],
       },
       {
+        tabLabel: "Parasail",
         eyebrow: "Couples offer",
         title: "Parasailing for two",
         highlight: "EUR 95",
         subtitle:
           "A strong couple-friendly offer: two people, one memorable flight, and simple hotel transfer support.",
         badge: "Couple favorite",
+        oldPrice: "Couple flight",
+        newPrice: "EUR 95",
+        priceNote: "for 2 people",
         imageUrl: paradiseParasailingImage,
         imageAlt: "Parasailing activity in Hersonissos",
         primaryLabel: "Book Parasailing",
@@ -211,6 +271,7 @@ function getSlides(args: {
         ],
       },
       {
+        tabLabel: "Sofa",
         eyebrow: "Group fun",
         title: "Crazy Sofa Ride",
         highlight: "from EUR 20",
@@ -234,6 +295,7 @@ function getSlides(args: {
 
   return [
     {
+      tabLabel: "Online",
       eyebrow: "Book before you arrive",
       title: "Skip the queue",
       highlight: "online",
@@ -253,6 +315,40 @@ function getSlides(args: {
       ],
     },
   ];
+}
+
+function OfferPriceGraphic({ slide }: { slide: OfferSlide }) {
+  if (!slide.oldPrice && !slide.newPrice) return null;
+
+  return (
+    <div className="mx-auto mt-5 grid w-full max-w-sm grid-cols-[1fr_auto_1.1fr] items-center gap-2 rounded-3xl border border-white/14 bg-black/38 p-3 shadow-[0_24px_70px_-38px_rgba(236,72,153,0.95)] backdrop-blur-xl md:mx-0">
+      <div className="rounded-2xl border border-red-300/20 bg-red-500/12 px-3 py-3 text-center">
+        <div className="text-[10px] font-black uppercase tracking-[0.16em] text-red-100/75">
+          Before
+        </div>
+        <div className="relative mt-1 inline-block text-lg font-black text-white/70">
+          {slide.oldPrice}
+          <span className="absolute left-[-8%] top-1/2 h-1 w-[116%] -rotate-6 rounded-full bg-red-400 shadow-[0_0_18px_rgba(248,113,113,0.8)]" />
+        </div>
+      </div>
+
+      <div className="text-xl font-black text-cyan-100">to</div>
+
+      <div className="rounded-2xl border border-cyan-200/25 bg-cyan-300 px-3 py-3 text-center text-[#06101c] shadow-[0_18px_45px_-24px_rgba(34,211,238,0.95)]">
+        <div className="text-[10px] font-black uppercase tracking-[0.16em] opacity-70">
+          Now
+        </div>
+        <div className="mt-1 text-2xl font-black leading-none">
+          {slide.newPrice}
+        </div>
+        {slide.priceNote && (
+          <div className="mt-1 text-[10px] font-black uppercase tracking-[0.12em] opacity-75">
+            {slide.priceNote}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export function HeroSectionClient({
@@ -306,7 +402,7 @@ export function HeroSectionClient({
   }, [tenantSlug]);
 
   return (
-    <section className="relative min-h-[calc(100svh-7rem)] overflow-hidden rounded-3xl border border-white/10 bg-[#050816] text-white shadow-[0_30px_120px_-40px_rgba(0,0,0,0.8)] sm:rounded-[2rem]">
+    <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#050816] text-white shadow-[0_30px_120px_-40px_rgba(0,0,0,0.8)] sm:rounded-[2rem] md:min-h-[calc(100svh-7rem)]">
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -335,10 +431,10 @@ export function HeroSectionClient({
         <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-[#03050d] via-[#03050d]/45 to-transparent" />
       </div>
 
-      <div className="relative z-10 flex min-h-[calc(100svh-7rem)] flex-col justify-between px-5 py-6 sm:px-8 md:px-10 md:py-8">
-        <div className="mx-auto grid w-full max-w-6xl flex-1 items-center gap-8 py-10 md:grid-cols-[minmax(0,1fr)_380px] md:py-16">
+      <div className="relative z-10 flex min-h-[78svh] flex-col justify-between px-4 py-4 sm:px-8 md:min-h-[calc(100svh-7rem)] md:px-10 md:py-8">
+        <div className="mx-auto grid w-full max-w-6xl flex-1 items-center gap-5 py-5 md:grid-cols-[minmax(0,1fr)_380px] md:gap-8 md:py-16">
           <div className="max-w-3xl text-center md:text-left">
-            <div className="mb-4 inline-flex max-w-full items-center gap-2 rounded-full border border-pink-300/25 bg-pink-500/20 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-pink-50 backdrop-blur sm:text-xs">
+            <div className="mb-3 inline-flex max-w-full items-center gap-2 rounded-full border border-pink-300/25 bg-pink-500/20 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-pink-50 backdrop-blur sm:text-xs md:mb-4">
               {activeIndex === 0 ? (
                 <Car className="size-3.5 shrink-0" />
               ) : activeSlide.eyebrow.toLowerCase().includes("offer") ||
@@ -350,7 +446,7 @@ export function HeroSectionClient({
               <span className="truncate">{activeSlide.eyebrow}</span>
             </div>
 
-            <h1 className="text-[2.85rem] font-black uppercase leading-[0.9] text-white sm:text-6xl md:text-7xl">
+            <h1 className="text-[clamp(2.35rem,13vw,4.25rem)] font-black uppercase leading-[0.88] text-white md:text-7xl">
               {activeSlide.title}
               <span className="block bg-gradient-to-r from-pink-300 via-fuchsia-200 to-cyan-100 bg-clip-text text-transparent">
                 {activeSlide.highlight}
@@ -362,11 +458,13 @@ export function HeroSectionClient({
               {activeSlide.badge}
             </div>
 
-            <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-white/78 md:mx-0 md:text-lg">
+            <OfferPriceGraphic slide={activeSlide} />
+
+            <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-white/80 md:mx-0 md:mt-5 md:text-lg md:leading-7">
               {activeSlide.subtitle}
             </p>
 
-            <div className="mt-7 grid gap-2.5 sm:flex md:justify-start">
+            <div className="mt-5 grid gap-2.5 sm:flex md:mt-7 md:justify-start">
               <Link
                 href={activeSlide.primaryHref}
                 className="group relative inline-flex h-12 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-r from-pink-500 to-fuchsia-500 px-7 text-sm font-bold text-white shadow-[0_18px_55px_-18px_rgba(236,72,153,0.9)] transition hover:scale-[1.03]"
@@ -392,16 +490,16 @@ export function HeroSectionClient({
               </a>
             </div>
 
-            <div className="mt-8 grid gap-2 sm:grid-cols-3">
+            <div className="mt-5 grid grid-cols-3 gap-2 md:mt-8">
               {activeSlide.stats.map((stat) => (
                 <div
                   key={stat.label}
-                  className="rounded-2xl border border-white/12 bg-black/28 px-4 py-3 backdrop-blur"
+                  className="rounded-2xl border border-white/12 bg-black/32 px-2 py-2 backdrop-blur md:px-4 md:py-3"
                 >
-                  <div className="text-[10px] font-bold uppercase tracking-[0.16em] text-white/46">
+                  <div className="text-[9px] font-bold uppercase tracking-[0.12em] text-white/46 md:text-[10px] md:tracking-[0.16em]">
                     {stat.label}
                   </div>
-                  <div className="mt-1 text-lg font-black text-white">
+                  <div className="mt-1 text-sm font-black text-white md:text-lg">
                     {stat.value}
                   </div>
                 </div>
@@ -419,8 +517,8 @@ export function HeroSectionClient({
           </div>
         </div>
 
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 border-t border-white/10 pt-5 md:flex-row md:items-center md:justify-between">
-          <div className="flex flex-wrap justify-center gap-2 md:justify-start">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 border-t border-white/10 pt-4 md:flex-row md:items-center md:justify-between md:pt-5">
+          <div className="hidden flex-wrap justify-center gap-2 md:flex md:justify-start">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/8 px-3 py-1.5 text-[11px] text-white/84 backdrop-blur-xl sm:px-3.5 sm:text-xs">
               <Car className="size-3.5 text-cyan-300" />
               Free hotel transfer
@@ -442,19 +540,21 @@ export function HeroSectionClient({
             </div>
           </div>
 
-          <div className="flex justify-center gap-2">
+          <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1 md:mx-0 md:justify-center md:overflow-visible md:px-0">
             {slides.map((slide, index) => (
               <button
                 key={slide.title}
                 type="button"
-                aria-label={`Show offer ${index + 1}`}
+                aria-label={`Show ${slide.tabLabel}`}
                 onClick={() => setActiveIndex(index)}
-                className={`h-2.5 rounded-full transition-all ${
+                className={`h-10 shrink-0 rounded-full border px-3 text-xs font-black uppercase tracking-[0.12em] transition-all ${
                   index === activeIndex
-                    ? "w-8 bg-cyan-200"
-                    : "w-2.5 bg-white/35 hover:bg-white/60"
+                    ? "border-cyan-200 bg-cyan-200 text-[#06101c]"
+                    : "border-white/12 bg-white/8 text-white/72 hover:bg-white/14"
                 }`}
-              />
+              >
+                {slide.tabLabel}
+              </button>
             ))}
           </div>
         </div>
