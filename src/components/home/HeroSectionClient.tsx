@@ -40,6 +40,8 @@ type OfferSlide = {
   priceNote?: string;
   imageUrl: string;
   imageAlt: string;
+  imagePosition?: string;
+  previewPosition?: string;
   primaryLabel: string;
   primaryHref: string;
   secondaryLabel: string;
@@ -49,9 +51,14 @@ type OfferSlide = {
 
 const poseidonHeroImage = "/images/hero-poseidon-campaign.webp";
 const poseidonClubCoverImage = "/images/poseidon-rent-a-boat-cover.png";
+const transferHeroImage = "/images/hero-transfer-campaign.webp";
+const noQueueHeroImage = "/images/hero-no-queue-campaign.webp";
+const jetBoatHeroImage = "/images/hero-jet-boat-campaign.webp";
+const boatRentalHeroImage = "/images/hero-boat-rental-campaign.webp";
 
 const paradiseHeroImage = "/images/hero-paradise-campaign.webp";
 const paradiseClubCoverImage = "/images/paradise-watersports-cover.png";
+const parasailingHeroImage = "/images/hero-parasailing-campaign.webp";
 
 function tenantHref(base: string, path: string) {
   return `${base}${path}`;
@@ -78,8 +85,10 @@ function getSlides(args: {
         subtitle:
           "We can collect guests from their hotel and bring them back after the activity. Less planning, less stress, more bookings.",
         badge: "Free taxi transfer",
-        imageUrl: poseidonHeroImage,
-        imageAlt: "Promotional boat campaign image on clear blue water near Hersonissos",
+        imageUrl: transferHeroImage,
+        imageAlt: "Free hotel transfer campaign image near the Hersonissos coastline",
+        imagePosition: "70% center",
+        previewPosition: "72% center",
         primaryLabel: "See activities",
         primaryHref: tenantHref(base, "/activities"),
         secondaryLabel: "Contact us",
@@ -98,8 +107,10 @@ function getSlides(args: {
         subtitle:
           "Reserve your activity online, see real availability, pay securely, and arrive ready for the water.",
         badge: "Skip the desk",
-        imageUrl: poseidonClubCoverImage,
-        imageAlt: "Poseidon campaign image for online booking offers",
+        imageUrl: noQueueHeroImage,
+        imageAlt: "Online booking campaign image for skipping the line",
+        imagePosition: "72% center",
+        previewPosition: "74% center",
         primaryLabel: "Book online",
         primaryHref: tenantHref(base, "/activities"),
         secondaryLabel: "See location",
@@ -121,8 +132,10 @@ function getSlides(args: {
         oldPrice: "EUR 60",
         newPrice: "EUR 45",
         priceNote: "online price",
-        imageUrl: poseidonHeroImage,
-        imageAlt: "Poseidon promotional boat banner in Hersonissos",
+        imageUrl: jetBoatHeroImage,
+        imageAlt: "Jet Boat discount campaign image in Hersonissos",
+        imagePosition: "72% center",
+        previewPosition: "76% center",
         primaryLabel: "Book Jet Boat",
         primaryHref: tenantHref(base, "/activities/jet-boat"),
         secondaryLabel: "View all offers",
@@ -143,6 +156,8 @@ function getSlides(args: {
         badge: "Made for groups",
         imageUrl: poseidonClubCoverImage,
         imageAlt: "Poseidon group offer campaign graphic",
+        imagePosition: "68% center",
+        previewPosition: "72% center",
         primaryLabel: "Plan group ride",
         primaryHref: tenantHref(base, "/activities/jet-boat"),
         secondaryLabel: "Ask a question",
@@ -161,8 +176,10 @@ function getSlides(args: {
         subtitle:
           "Take the boat out with your group and keep the day flexible. Online booking makes the plan simple.",
         badge: "Most flexible",
-        imageUrl: poseidonHeroImage,
-        imageAlt: "Poseidon boat rental campaign banner on clear water",
+        imageUrl: boatRentalHeroImage,
+        imageAlt: "Private boat rental campaign image on clear water",
+        imagePosition: "72% center",
+        previewPosition: "76% center",
         primaryLabel: "Book boat rental",
         primaryHref: tenantHref(base, "/activities/boat-rental-up-to-8-people"),
         secondaryLabel: "See activities",
@@ -186,8 +203,10 @@ function getSlides(args: {
         subtitle:
           "Hotel pickup and return support removes the biggest booking friction for guests on holiday.",
         badge: "Pickup and return",
-        imageUrl: paradiseHeroImage,
-        imageAlt: "Paradise Watersports campaign banner with jet ski and parasailing",
+        imageUrl: transferHeroImage,
+        imageAlt: "Free hotel transfer campaign image near the Hersonissos coastline",
+        imagePosition: "70% center",
+        previewPosition: "72% center",
         primaryLabel: "See activities",
         primaryHref: tenantHref(base, "/activities"),
         secondaryLabel: "Contact us",
@@ -206,8 +225,10 @@ function getSlides(args: {
         subtitle:
           "Book online before you reach the beach. Your slot is reserved, checkout is secure, and confirmation is instant.",
         badge: "Skip the desk",
-        imageUrl: paradiseClubCoverImage,
-        imageAlt: "Paradise Watersports online booking campaign graphic",
+        imageUrl: noQueueHeroImage,
+        imageAlt: "Paradise Watersports online booking campaign image",
+        imagePosition: "72% center",
+        previewPosition: "74% center",
         primaryLabel: "Book online",
         primaryHref: tenantHref(base, "/activities"),
         secondaryLabel: "Contact us",
@@ -231,6 +252,8 @@ function getSlides(args: {
         priceNote: "limited slots",
         imageUrl: paradiseHeroImage,
         imageAlt: "Paradise Watersports jet ski campaign banner in Crete",
+        imagePosition: "78% center",
+        previewPosition: "82% center",
         primaryLabel: "Book Jet Ski",
         primaryHref: tenantHref(base, "/activities/jet-ski"),
         secondaryLabel: "View all offers",
@@ -252,8 +275,10 @@ function getSlides(args: {
         oldPrice: "Couple flight",
         newPrice: "EUR 95",
         priceNote: "for 2 people",
-        imageUrl: paradiseHeroImage,
+        imageUrl: parasailingHeroImage,
         imageAlt: "Paradise Watersports parasailing campaign banner in Hersonissos",
+        imagePosition: "72% center",
+        previewPosition: "76% center",
         primaryLabel: "Book Parasailing",
         primaryHref: tenantHref(base, "/activities/parasailing"),
         secondaryLabel: "Ask a question",
@@ -274,6 +299,8 @@ function getSlides(args: {
         badge: "Friends and family",
         imageUrl: paradiseClubCoverImage,
         imageAlt: "Paradise Watersports group ride campaign graphic",
+        imagePosition: "70% center",
+        previewPosition: "74% center",
         primaryLabel: "Book Sofa Ride",
         primaryHref: tenantHref(base, "/activities/crazy-sofa-ride"),
         secondaryLabel: "See activities",
@@ -298,6 +325,8 @@ function getSlides(args: {
       badge: "Instant confirmation",
       imageUrl: poseidonHeroImage,
       imageAlt: "Watersports activity in Crete",
+      imagePosition: "72% center",
+      previewPosition: "76% center",
       primaryLabel,
       primaryHref,
       secondaryLabel,
@@ -415,10 +444,13 @@ export function HeroSectionClient({
         {slides.map((slide, index) => (
           <div
             key={slide.title}
-            className={`absolute inset-0 bg-cover bg-center transition-opacity duration-700 ${
+            className={`absolute inset-0 bg-cover transition-opacity duration-700 ${
               index === activeIndex ? "opacity-100" : "opacity-0"
             }`}
-            style={{ backgroundImage: `url(${slide.imageUrl})` }}
+            style={{
+              backgroundImage: `url(${slide.imageUrl})`,
+              backgroundPosition: slide.imagePosition ?? "center center",
+            }}
           />
         ))}
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(3,7,18,0.96)_0%,rgba(3,7,18,0.78)_42%,rgba(3,7,18,0.38)_100%)]" />
@@ -503,8 +535,14 @@ export function HeroSectionClient({
 
           <div className="hidden rounded-[1.75rem] border border-white/12 bg-black/30 p-4 shadow-[0_28px_90px_-45px_rgba(0,0,0,0.95)] backdrop-blur-xl md:block">
             <div
-              className="aspect-[4/5] rounded-[1.35rem] bg-cover bg-center"
-              style={{ backgroundImage: `url(${activeSlide.imageUrl})` }}
+              className="aspect-[4/5] rounded-[1.35rem] bg-cover"
+              style={{
+                backgroundImage: `url(${activeSlide.imageUrl})`,
+                backgroundPosition:
+                  activeSlide.previewPosition ??
+                  activeSlide.imagePosition ??
+                  "center center",
+              }}
               role="img"
               aria-label={activeSlide.imageAlt}
             />
