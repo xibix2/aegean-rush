@@ -95,7 +95,7 @@ function getCheckoutConflictStatus(errors: string[]) {
       "Not enough seats left.",
       "Not enough units available for the selected time range.",
       "This slot has no available capacity.",
-      "Bookings must be made at least 2 hours before start time.",
+      "Bookings must be made at least 30 minutes before start time.",
     ].includes(e),
   );
 

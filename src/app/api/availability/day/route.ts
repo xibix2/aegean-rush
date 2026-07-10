@@ -7,7 +7,7 @@ import { getBookingQuoteAndAvailability } from "@/lib/booking-engine";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-const MIN_BOOKING_NOTICE_MINUTES = 120;
+const MIN_BOOKING_NOTICE_MINUTES = 30;
 
 function roundUpToInterval(date: Date, intervalMin: number) {
   const ms = intervalMin * 60 * 1000;
@@ -213,7 +213,7 @@ export async function GET(req: NextRequest) {
             unitPrice: 0,
             totalPrice: 0,
             requestedPartySize: partySize,
-            errors: ["Booking closed (less than 2 hours remaining)"],
+            errors: ["Booking closed (less than 30 minutes remaining)"],
           };
         }
 
@@ -294,7 +294,7 @@ export async function GET(req: NextRequest) {
           availableWindowEnd: slot.endAt?.toISOString() ?? null,
           bookedRanges,
           canFit: false,
-          errors: ["Booking closed (less than 2 hours remaining)"],
+          errors: ["Booking closed (less than 30 minutes remaining)"],
         };
       }
 
@@ -312,7 +312,7 @@ export async function GET(req: NextRequest) {
           start: slot.startAt.toISOString(),
           end: slot.endAt ? slot.endAt.toISOString() : null,
           capacity: slot.capacity,
-          availableWindowStart: slot.startAt.toISOString(),
+          availableWindowStart: effectiveWindowStart.toISOString(),
           availableWindowEnd: slot.endAt ? slot.endAt.toISOString() : null,
           bookedRanges,
           durationOptions: activity.durationOptions.map((d) => ({

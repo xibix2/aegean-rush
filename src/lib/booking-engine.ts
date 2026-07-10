@@ -110,7 +110,7 @@ export type BookingEngineResult = {
 const PENDING_HOLD_MINUTES = 30;
 const RENTAL_BOOKING_STEP_MINUTES = 5;
 
-const MIN_BOOKING_NOTICE_MINUTES = 120;
+const MIN_BOOKING_NOTICE_MINUTES = 30;
 
 function isFreshPending(createdAt: Date, now: Date) {
   return (now.getTime() - createdAt.getTime()) / 60000 < PENDING_HOLD_MINUTES;
@@ -273,7 +273,7 @@ function validateBookingNotice(
 
   if (start < minAllowedTime) {
     errors.push(
-      `Bookings must be made at least ${MIN_BOOKING_NOTICE_MINUTES / 60} hours before start time.`
+      `Bookings must be made at least ${MIN_BOOKING_NOTICE_MINUTES} minutes before start time.`
     );
   }
 }
