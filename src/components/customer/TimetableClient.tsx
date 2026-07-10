@@ -105,7 +105,7 @@ export default function TimetableClient({
 
     fetch(`/api/availability?${qs}`, {
       cache: "no-store",
-      headers: slug ? { "x-tenant-slug": slug } : undefined, // 👈 pass tenant to server
+      headers: slug ? { "x-tenant-slug": slug } : undefined,
     })
       .then(async (r) => {
         if (!r.ok) {

@@ -26,7 +26,6 @@ async function upsertSlot({ clubSlug, activitySlug, startISO, endISO, capacity, 
 }
 
 async function main() {
-  // adjust as you like; these match your previous test
   await upsertSlot({
     clubSlug: "city-racket",
     activitySlug: "morning-court",

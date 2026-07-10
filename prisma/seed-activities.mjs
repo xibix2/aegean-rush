@@ -41,7 +41,7 @@ async function main() {
   for (const r of rows) {
     const data = { ...r, clubId: club.id };
     const up = await prisma.activity.upsert({
-      where: { clubId_slug: { clubId: club.id, slug: r.slug } }, // 👈 compound unique
+      where: { clubId_slug: { clubId: club.id, slug: r.slug } },
       update: data,
       create: data,
       select: { id: true, slug: true, clubId: true },

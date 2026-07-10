@@ -58,22 +58,17 @@ type BookingsDict = {
   table: BookingsTableDict;
   summary: BookingsSummaryDict;
 
-  /** ---- Back-compat ALIASES for older code (safe to keep) ---- */
-  // filter pills (aliases)
+  /** Legacy aliases used by older admin components. */
   all?: string;
   pending?: string;
   confirmed?: string;
   cancelled?: string;
   refunded?: string;
-
-  // table headers (aliases)
   created?: string;
   status?: string;
   activityCourt?: string;
   playersShort?: string;
   amountShort?: string;
-
-  // summary bar (aliases)
   bookingsLabel?: string;
   confirmedLabel?: string;
   cancelledLabel?: string;
@@ -91,7 +86,6 @@ export type I18nDict = {
   common: CommonDict;
 };
 
-/** English strings */
 const en: I18nDict = {
   nav: {
     courts: "Courts",
@@ -105,9 +99,9 @@ const en: I18nDict = {
     settings: "Settings",
   },
   bookings: {
-    title: "Admin — Bookings",
+    title: "Admin - Bookings",
     date: "Date",
-    searchPlaceholder: "Search name / email / activity…",
+    searchPlaceholder: "Search name / email / activity...",
     sortNewest: "Sort: Newest",
     sortOldest: "Sort: Oldest",
     refresh: "Refresh",
@@ -138,8 +132,6 @@ const en: I18nDict = {
       cancelled: "Cancelled",
       revenue: "Revenue:",
     },
-
-    // ---- aliases for back-compat (optional to keep) ----
     all: "All",
     pending: "Pending",
     confirmed: "Confirmed",
@@ -161,7 +153,6 @@ const en: I18nDict = {
   },
 };
 
-/** Greek strings */
 const el: I18nDict = {
   nav: {
     courts: "Γήπεδα",
@@ -208,8 +199,6 @@ const el: I18nDict = {
       cancelled: "Ακυρωμένες",
       revenue: "Έσοδα:",
     },
-
-    // ---- aliases for back-compat (optional to keep) ----
     all: "Όλες",
     pending: "Σε εκκρεμότητα",
     confirmed: "Επιβεβαιωμένες",
@@ -231,7 +220,6 @@ const el: I18nDict = {
   },
 };
 
-/** Registry */
 const DICTS: Record<Lang, I18nDict> = { en, el };
 
 /** Read language from cookie (Next 15: cookies() is async) */

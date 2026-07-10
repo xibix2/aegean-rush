@@ -16,7 +16,7 @@ export default function AdminCalendarClient({
   activities,
   initialActivityId,
   initialMonth, // "YYYY-MM"
-  tenantSlug, // 👈 optional, for multi-tenant paths
+  tenantSlug,
 }: {
   activities: { id: string; name: string }[];
   initialActivityId?: string;
@@ -181,7 +181,7 @@ export default function AdminCalendarClient({
         />
       )}
 
-      {/* ✅ MOBILE FIX: allow horizontal scroll + give calendar a min width */}
+      {/* The calendar keeps a fixed grid width and scrolls on narrow screens. */}
       <div className="-mx-4 px-4 sm:mx-0 sm:px-0 ">
         <div className="min-w-[820px] sm:min-w-0">
           <MonthCalendar

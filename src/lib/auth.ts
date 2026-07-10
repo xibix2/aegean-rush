@@ -3,9 +3,6 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { cookies } from "next/headers";
 
-/* =========================
-   Password verification (unchanged behavior)
-   ========================= */
 export function verifyAdminPassword(password: string): boolean {
   const hash = process.env.ADMIN_PASSWORD_HASH;
   if (hash && typeof hash === "string" && hash.length > 0) {
@@ -20,11 +17,7 @@ export function verifyAdminPassword(password: string): boolean {
   return false;
 }
 
-/* =========================
-   Minimal signed session token (HMAC, httpOnly cookie)
-   ========================= */
-
-// ✅ All roles that can log into the dashboard
+// Dashboard roles share one signed session format; route guards decide access.
 export type AdminRole =
   | "SUPERADMIN"
   | "ADMIN"
@@ -35,7 +28,7 @@ export type AdminRole =
 export type AdminSession = {
   email: string;
   role: AdminRole;
-  clubId: string | null; // null for SUPERADMIN
+  clubId: string | null;
   exp: number; // unix seconds
 };
 
@@ -87,7 +80,7 @@ function verifyToken(token?: string | null): AdminSession | null {
 export async function issueAdminSession(input: {
   email: string;
   role: AdminRole;
-  clubId: string | null; // null for SUPERADMIN
+  clubId: string | null;
   hours?: number; // default 8h
   cookiePath?: string; // default "/"
 }) {
@@ -104,7 +97,8 @@ export async function issueAdminSession(input: {
   const token = signSession(session);
   const jar = await cookies();
 
-  // Main httpOnly session
+  // The signed cookie is the source of truth; the smaller cookies keep older
+  // middleware and admin screens working during the session migration.
   jar.set(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
@@ -161,12 +155,11 @@ export async function destroyAdminSession(cookiePath = "/") {
 export async function getAdminSession(): Promise<AdminSession | null> {
   const jar = await cookies();
 
-  // Preferred: signed token
   const token = jar.get(SESSION_COOKIE)?.value ?? null;
   const sess = verifyToken(token);
   if (sess) return sess;
 
-  // Back-compat fallback for the existing login flow and already-issued cookies.
+  // Existing cookies without admin_session are trusted briefly, then expire.
   const authYes = jar.get(AUTH_FLAG_COOKIE)?.value === "yes";
   const email = jar.get("admin_email")?.value ?? null;
   const role =

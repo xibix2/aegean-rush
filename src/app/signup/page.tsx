@@ -24,8 +24,6 @@ async function createClubAndAdmin(formData: FormData) {
 
   const name = String(formData.get("name") || "").trim();
   let slug = String(formData.get("slug") || "").trim().toLowerCase();
-
-  // ✅ NEW: location (optional)
   const location = String(formData.get("location") || "").trim();
 
   const adminEmail = String(formData.get("adminEmail") || "")
@@ -42,41 +40,33 @@ async function createClubAndAdmin(formData: FormData) {
   slug = slug ? slugify(slug) : slugify(name);
   if (!slug) throw new Error("Slug is required");
 
-  // Make sure slug is unique
   const existingClub = await prisma.club.findUnique({ where: { slug } });
   if (existingClub) throw new Error("This slug is already in use");
 
-  // Default currency is EUR now (no field on the form)
   const currency = "EUR";
 
-  // Create club (billing fields will be handled by Stripe flow later)
   const club = await prisma.club.create({
     data: {
       name,
       slug,
       currency,
-      // ✅ NEW: save location (null if empty)
       location: location || null,
-      // subscriptionPlan & subscriptionStatus use Prisma defaults (BASIC / INACTIVE)
     },
     select: { id: true, slug: true },
   });
 
-  // Create basic settings row
   await prisma.appSetting.upsert({
     where: { clubId: club.id },
     update: {},
     create: { clubId: club.id, tz: "Europe/Athens" },
   });
 
-  // Ensure no duplicate admin email in this club (paranoia)
   const dup = await prisma.user.findFirst({
     where: { clubId: club.id, email: adminEmail },
     select: { id: true },
   });
   if (dup) throw new Error("Admin email already exists for this club");
 
-  // Create the initial ADMIN user
   const hash = bcrypt.hashSync(adminPassword, 10);
   await prisma.user.create({
     data: {
@@ -87,7 +77,6 @@ async function createClubAndAdmin(formData: FormData) {
     },
   });
 
-  // Issue admin session cookies (same style as login)
   const jar = await cookies();
   const hours = 8;
   const maxAge = Math.max(1, Math.min(24 * 30, hours)) * 60 * 60;
@@ -108,7 +97,6 @@ async function createClubAndAdmin(formData: FormData) {
 
   jar.set("tenant_slug", club.slug, common);
 
-  // Step 2: send them to the nice billing screen you already have
   redirect(`/onboarding/${club.slug}/billing?from=signup`);
 }
 
@@ -117,7 +105,7 @@ export default function SignupPage() {
     backMain: "Back to main site",
     title: "Create your business",
     subtitle:
-      "Set up your business and your first admin account. On the next step, you’ll connect Stripe to receive payouts from bookings.",
+      "Set up your business and your first admin account. On the next step, you will connect Stripe to receive payouts from bookings.",
     badge: "Stripe payout setup next",
     sectionClub: "Business details",
     sectionAdmin: "Admin account",
@@ -183,7 +171,7 @@ export default function SignupPage() {
             className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs u-border u-surface/70 backdrop-blur hover:u-surface-2 transition"
             title={TXT.backMain}
           >
-            <span aria-hidden>←</span>
+            <span aria-hidden>&lt;</span>
             {TXT.backMain}
           </Link>
 
@@ -297,7 +285,7 @@ export default function SignupPage() {
                   type="password"
                   required
                   minLength={8}
-                  placeholder="••••••••"
+                  placeholder="********"
                   className="mt-1 w-full h-11 rounded-xl border border-white/10 bg-black/25 px-3 focus:outline-none focus:ring-1 focus:ring-[var(--accent-400)]"
                 />
                 <small className="opacity-60">{TXT.pwHint}</small>
@@ -317,7 +305,7 @@ export default function SignupPage() {
 
               <div className="pt-2 flex items-center justify-between text-[11px] opacity-60">
                 <span>Powered by Aegean Rush</span>
-                <span className="opacity-70">You’ll connect Stripe payouts next</span>
+                <span className="opacity-70">You will connect Stripe payouts next</span>
               </div>
             </form>
           </div>

@@ -14,8 +14,6 @@ import path from "node:path";
 export const revalidate = 0;
 export const dynamic = "force-dynamic";
 
-/* ------------------------ Utils ------------------------ */
-
 async function saveImageFile(file: File | null): Promise<string | null> {
   if (!file || file.size === 0) return null;
 
@@ -35,15 +33,13 @@ async function saveImageFile(file: File | null): Promise<string | null> {
   return null;
 }
 
-/* ------------------------ Server Action: Save ------------------------ */
 async function saveSettings(formData: FormData) {
   "use server";
 
-  // 🔒 scope to current club
   const tenant = await requireTenant();
   const session = await requireClubAdminStrict(tenant.id);
 
-  // ❌ Block MANAGER / COACH / STAFF from changing settings
+  // Settings are club-wide; non-admin staff should not change them.
   if (session.role !== "ADMIN" && session.role !== "SUPERADMIN") {
     redirect(`/${tenant.slug}/admin?forbidden=settings`);
   }
@@ -84,7 +80,6 @@ async function saveSettings(formData: FormData) {
   };
 
   try {
-    // 1) DB-backed (tz only) — per-tenant by clubId
     const tz = resolveTz(val("tz", DEFAULT_TZ));
     await prisma.appSetting.upsert({
       where: { clubId: tenant.id },
@@ -92,7 +87,7 @@ async function saveSettings(formData: FormData) {
       create: { clubId: tenant.id, tz },
     });
 
-    // 2) Cookie-backed UI prefs — namespaced per tenant (matches ui-prefs-client)
+    // UI preferences are stored per tenant so admins can switch clubs safely.
     const jar = await cookies();
     const theme = val("theme", "dark");
     const rawAccent = val("accent", "pink");
@@ -100,8 +95,6 @@ async function saveSettings(formData: FormData) {
     // BASIC plan: forced pink; PRO/ENTERPRISE can pick from select
     const accent = isBasic ? "pink" : rawAccent || "pink";
 
-    // Language gating: PRO + ENTERPRISE only
-    // BASIC users keep their existing cookie value (don’t overwrite)
     const key = (base: string) => `${base}__${tenant.slug}`;
     const currentLang =
       jar.get(key("ui_lang"))?.value ?? jar.get("ui_lang")?.value ?? "en";
@@ -113,7 +106,7 @@ async function saveSettings(formData: FormData) {
     const currency = Array.from(rawCurrency)[0] || "€";
 
     const compact = formData.get("compact") ? "1" : "0";
-    const sessionHrs = val("session", "8"); // keep global unless you want per-tenant admin sessions
+    const sessionHrs = val("session", "8");
 
     // tenant-scoped UI cookies (namespaced + tenant path)
     jar.set(key("ui_theme"), theme, uiCookieOpts);
@@ -129,7 +122,7 @@ async function saveSettings(formData: FormData) {
     // keep tz in UI cookie too, tenant-scoped
     jar.set(key("ui_tz"), tz, uiCookieOpts);
 
-    // Session hours preference — global
+    // Session lifetime is global because the auth cookie is not tenant-scoped.
     jar.set("admin_session_hours", sessionHrs, globalCookieOpts);
 
     // 3) Branding fields stored on Club (gated by plan)
@@ -141,8 +134,6 @@ async function saveSettings(formData: FormData) {
 
     const emailFromName = canUseEnterpriseBranding ? val("emailFromName") : "";
     const emailFromEmail = canUseEnterpriseBranding ? val("emailFromEmail") : "";
-
-    // logo upload (optional) — ENTERPRISE only
     const uploadedLogo = canUseEnterpriseBranding
       ? ((formData.get("logoFile") as File) || null)
       : null;
@@ -163,11 +154,10 @@ async function saveSettings(formData: FormData) {
               primaryHex: primaryHex || null,
             }
           : {}),
-        ...(logoKey ? { logoKey } : {}), // only update logoKey if a new file was uploaded
+        ...(logoKey ? { logoKey } : {}),
       },
     });
 
-    // 4) Revalidate tenant-scoped pages
     const base = `/${tenant.slug}`;
     revalidatePath(`${base}/admin`);
     revalidatePath(`${base}/admin/bookings`);
@@ -176,8 +166,6 @@ async function saveSettings(formData: FormData) {
     revalidatePath(`${base}/admin/settings`);
     revalidatePath(`${base}/timetable`);
     revalidatePath(base);
-
-    // 5) Round-trip
     redirect(`${base}/admin/settings?saved=1`);
   } catch (err) {
     console.error("[saveSettings] failed:", err);
@@ -185,17 +173,15 @@ async function saveSettings(formData: FormData) {
   }
 }
 
-/* ------------------------ Page ------------------------ */
 export default async function AdminSettingsPage({
   searchParams,
 }: {
   searchParams?: Record<string, string | string[] | undefined>;
 }) {
-  // 🔒 tenant first
   const tenant = await requireTenant();
   const session = await requireClubAdminStrict(tenant.id);
 
-  // ❌ Block MANAGER / COACH / STAFF from viewing settings page at all
+  // Settings contain billing and branding controls, so only admins can view them.
   if (session.role !== "ADMIN" && session.role !== "SUPERADMIN") {
     return (
       <main className="max-w-3xl mx-auto px-6 py-24 text-center space-y-6">
@@ -212,7 +198,7 @@ export default async function AdminSettingsPage({
             href={`/${tenant.slug}/admin`}
             className="inline-flex items-center rounded-full u-border u-surface px-4 py-2 text-sm hover:u-surface-2 transition"
           >
-            ← Back to dashboard
+            Back to dashboard
           </Link>
         </div>
       </main>
@@ -238,7 +224,7 @@ export default async function AdminSettingsPage({
     },
   });
 
-  // Read cookie defaults (UI only) — namespaced first, then fallback to legacy global keys
+  // Prefer tenant-scoped UI cookies; fall back to older global cookies.
   const jar = await cookies();
   const key = (base: string) => `${base}__${tenant.slug}`;
 

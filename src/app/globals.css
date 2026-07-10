@@ -16,7 +16,6 @@
   --accent-400: #f472b6;
   --accent-500: #ec4899;
   --accent-600: #db2777;
-  /* ✅ added */
   --accent-700: #be185d;
   --accent-800: #9d174d;
 
@@ -47,7 +46,7 @@
 }
 
 /* ======================================================================
-   THEME CONTROL (Settings → data-theme on <html>)
+   THEME CONTROL (Settings data-theme on <html>)
    - dark / light / auto (auto respects prefers-color-scheme)
 ====================================================================== */
 /* Dark */
@@ -64,7 +63,6 @@ html[data-theme="dark"] {
   --accent-400: #f472b6;
   --accent-500: #ec4899;
   --accent-600: #db2777;
-  /* ✅ added */
   --accent-700: #be185d;
   --accent-800: #9d174d;
 
@@ -390,14 +388,13 @@ html[data-theme="auto"] { color-scheme: dark; }
 }
 
 /* ======================================================================
-   ACCENT CONTROL (Settings → data-accent on <html>)
+   ACCENT CONTROL (Settings data-accent on <html>)
    Exposes --accent-400/500/600 + --accent-glow used in gradients & glow
 ====================================================================== */
 html[data-accent="pink"] {
   --accent-400:#f472b6;
   --accent-500:#ec4899;
   --accent-600:#db2777;
-  /* ✅ added */
   --accent-700:#be185d;
   --accent-800:#9d174d;
 
@@ -407,7 +404,6 @@ html[data-accent="blue"] {
   --accent-400:#60a5fa;
   --accent-500:#3b82f6;
   --accent-600:#2563eb;
-  /* ✅ added */
   --accent-700:#1d4ed8;
   --accent-800:#1e40af;
 
@@ -417,7 +413,6 @@ html[data-accent="emerald"] {
   --accent-400:#34d399;
   --accent-500:#10b981;
   --accent-600:#059669;
-  /* ✅ added */
   --accent-700:#047857;
   --accent-800:#065f46;
 
@@ -425,7 +420,7 @@ html[data-accent="emerald"] {
 }
 
 /* ======================================================================
-   COMPACT DENSITY (Settings → data-compact="1" on <html>)
+   COMPACT DENSITY (Settings data-compact="1" on <html>)
 ====================================================================== */
 html[data-compact="1"] .compact\:tight > * { margin-block: .35rem; }
 html[data-compact="1"] .compact\:p       { padding: .5rem; }
@@ -439,7 +434,7 @@ html[data-compact="1"] .compact\:h-10    { height: 2.5rem; }
 html, body { height: 100%; }
 
 body {
-  overflow-x: clip; /* ✅ prevents horizontal scroll but avoids nasty layout clipping issues */
+  overflow-x: clip;
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif);
@@ -542,7 +537,6 @@ thead.sticky-head {
   background-size:220% 100%;
   animation:accentFlow 12s ease-in-out infinite;
   filter:brightness(1.06) contrast(1.03);
-  /* ✅ safe fallback so text never goes dark-on-dark */
   color:var(--color-brand-foreground, #fff);
   border-radius:12px;
   box-shadow:0 8px 26px -12px color-mix(in oklab, var(--accent-700), transparent 70%);
@@ -561,7 +555,7 @@ thead.sticky-head {
 }
 
 /* ======================================================================
-   Inputs – minor polish for date picker in dark mode
+   Inputs: date picker polish in dark mode
 ====================================================================== */
 input[type="date"]::-webkit-calendar-picker-indicator {
   filter: invert(0.8) sepia(1) saturate(5) hue-rotate(250deg);

@@ -19,7 +19,7 @@ const TAGLINES = [
   "Built for busy players who hate waiting on the phone.",
 ];
 
-const PAGE_SIZE = 9; // ⬅⬅⬅ CHANGED FROM 12 TO 9
+const PAGE_SIZE = 9;
 
 export function ClubsGrid({ clubs }: { clubs: { id: string; name: string; slug: string }[] }) {
   const [page, setPage] = useState(0);

@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export async function GET() {
-  await requireSuperAdmin(); // 🔒
+  await requireSuperAdmin();
   const clubs = await prisma.club.findMany({
     orderBy: { createdAt: "desc" },
     select: { id: true, name: true, slug: true, createdAt: true },

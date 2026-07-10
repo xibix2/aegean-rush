@@ -36,7 +36,7 @@ export async function POST(
     });
     if (!booking) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-    // ✅ Ensure this booking belongs to this tenant
+    // Tenant guard: public booking IDs must not cross club boundaries.
     if (booking.activity.clubId !== tenant.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }

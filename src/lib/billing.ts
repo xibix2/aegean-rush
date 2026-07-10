@@ -1,21 +1,11 @@
 // src/lib/billing.ts
 import { SubscriptionPlan } from "@prisma/client";
 
-/**
- * Central Stripe price IDs.
- *
- * We first try environment variables (for production / Vercel),
- * and if they are missing we fall back to the hard-coded test
- * price IDs you gave me.
- *
- * This means everything works even if env loading is buggy.
- */
-
-// Test price IDs (from your Stripe test account)
+// Stripe price IDs prefer environment variables, with test IDs as local fallback.
 const FALLBACK_BASIC = "price_1SXbIKIZhRHwblwMt1wtIGAa";
 const FALLBACK_PRO = "price_1SXbJ6IZhRHwblwMcVSutkYx";
 const FALLBACK_ENTERPRISE = "price_1SXbKdIZhRHwblwMqSkEM6kw";
-// Founder €39 enterprise price
+// Founder EUR 39 enterprise price.
 const FALLBACK_ENTERPRISE_FOUNDER = "price_1SYTmBIZhRHwblwMDMn6aSlG";
 
 export const PRICE_BASIC =
@@ -32,9 +22,6 @@ export const PRICE_ENTERPRISE_FOUNDER =
   process.env.FOUNDER_ENTERPRISE_PRICE_ID ||
   FALLBACK_ENTERPRISE_FOUNDER;
 
-/**
- * Map our internal plan enum → Stripe Price ID.
- */
 export function getStripePriceIdForPlan(plan: SubscriptionPlan): string {
   switch (plan) {
     case "BASIC":
@@ -48,10 +35,6 @@ export function getStripePriceIdForPlan(plan: SubscriptionPlan): string {
   }
 }
 
-/**
- * Map Stripe price ID → internal plan enum.
- * Used in the webhook when we get a subscription from Stripe.
- */
 export function resolvePlanFromPriceId(
   priceId?: string | null,
 ): SubscriptionPlan {
@@ -68,14 +51,11 @@ export function resolvePlanFromPriceId(
 
   if (priceId === PRICE_BASIC) return "BASIC";
 
-  // Unknown price → don’t break, just fall back
+  // Unknown Stripe prices should not block access; default to Basic.
   return "BASIC";
 }
 
-/**
- * Optional: metadata for UI / superadmin pages.
- * (unchanged from before, you can tweak prices later)
- */
+// Display metadata only; Stripe price IDs remain the billing source of truth.
 export const PLAN_META: Record<
   SubscriptionPlan,
   {

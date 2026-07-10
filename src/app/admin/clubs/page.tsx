@@ -8,10 +8,9 @@ import ConfirmDeleteButton from "@/components/admin/ConfirmDeleteButton";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
-// ✅ Make sure this page (and the server action) run in Node.js, not edge
 export const runtime = "nodejs";
 
-/** 🔥 HARD DELETE everything for a business/operator (server action) */
+// Deletes a tenant and every dependent record that Prisma cannot cascade for us.
 async function deleteClub(formData: FormData) {
   "use server";
 
@@ -36,47 +35,38 @@ async function deleteClub(formData: FormData) {
     }
 
     await prisma.$transaction(async (tx) => {
-      // 🔹 Staff invites for this club
       await tx.staffInvite.deleteMany({
         where: { clubId: club.id },
       });
 
-      // 🔹 Payments linked to bookings for this club
       await tx.payment.deleteMany({
         where: { booking: { timeSlot: { activity: { clubId: club.id } } } },
       });
 
-      // 🔹 Bookings
       await tx.booking.deleteMany({
         where: { timeSlot: { activity: { clubId: club.id } } },
       });
 
-      // 🔹 Time slots
       await tx.timeSlot.deleteMany({
         where: { activity: { clubId: club.id } },
       });
 
-      // 🔹 Activities
       await tx.activity.deleteMany({
         where: { clubId: club.id },
       });
 
-      // 🔹 Customers
       await tx.customer.deleteMany({
         where: { clubId: club.id },
       });
 
-      // 🔹 Users bound to this club
       await tx.user.deleteMany({
         where: { clubId: club.id },
       });
 
-      // 🔹 App settings for this club
       await tx.appSetting.deleteMany({
         where: { clubId: club.id },
       });
 
-      // 🔹 Finally the club itself
       await tx.club.delete({
         where: { id: club.id },
       });
@@ -85,7 +75,6 @@ async function deleteClub(formData: FormData) {
     revalidatePath("/admin/clubs");
   } catch (err) {
     console.error("[deleteClub] Hard-delete failed:", err);
-    // Don't rethrow – we log it, but we don't crash the whole page
   }
 }
 
