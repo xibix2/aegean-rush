@@ -1,5 +1,11 @@
 import * as React from "react";
 
+type TicketLine = {
+  label: string;
+  quantity: number;
+  priceCents: number;
+};
+
 export default function BookingConfirmed({
   activity,
   startISO,
@@ -10,6 +16,9 @@ export default function BookingConfirmed({
   logoUrl,
   bookingToken,
   brandPrimary,
+  customerName,
+  arrivalText,
+  tickets,
 }: {
   activity: string;
   startISO: string;
@@ -20,355 +29,279 @@ export default function BookingConfirmed({
   logoUrl?: string | null;
   bookingToken?: string;
   brandPrimary?: string | null;
+  customerName?: string | null;
+  arrivalText?: string | null;
+  tickets?: TicketLine[];
 }) {
   const start = new Date(startISO);
   const end = new Date(endISO);
+  const color = brandPrimary || "#ec4899";
+  const timeZone = "Europe/Athens";
 
-  const color = brandPrimary || "#22c55e";
-
-  const TIMEZONE = "Europe/Athens";
-
-  const formatterDate = new Intl.DateTimeFormat("en-GB", {
-    timeZone: TIMEZONE,
-    weekday: "short",
+  const dateLabel = new Intl.DateTimeFormat("en-GB", {
+    timeZone,
+    weekday: "long",
     day: "2-digit",
-    month: "short",
+    month: "long",
     year: "numeric",
-  });
+  }).format(start);
 
-  const formatterTime = new Intl.DateTimeFormat("en-GB", {
-    timeZone: TIMEZONE,
+  const timeFormatter = new Intl.DateTimeFormat("en-GB", {
+    timeZone,
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
   });
 
-  const formatterDayKey = new Intl.DateTimeFormat("en-CA", {
-    timeZone: TIMEZONE,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
+  const timeLabel = `${timeFormatter.format(start)} - ${timeFormatter.format(end)}`;
+  const total = `EUR ${(totalCents / 100).toFixed(2)}`;
+  const greeting = customerName?.trim()
+    ? `Hi ${customerName.trim()},`
+    : "Hi there,";
+  const resolvedArrivalText =
+    arrivalText ||
+    "Please arrive 10-15 minutes before your activity start time for check-in and preparation.";
 
-  const sameDay = formatterDayKey.format(start) === formatterDayKey.format(end);
+  const rowLabelStyle: React.CSSProperties = {
+    margin: "0 0 4px",
+    fontSize: 11,
+    letterSpacing: "0.12em",
+    textTransform: "uppercase",
+    color: "#64748b",
+    fontWeight: 700,
+  };
 
-  const dateLabel = formatterDate.format(start);
-  const timeLabel = sameDay
-    ? `${formatterTime.format(start)} – ${formatterTime.format(end)}`
-    : `${formatterTime.format(start)} – ${formatterTime.format(
-        end
-      )} (next day)`;
-
-  const totalEuros = (totalCents || 0) / 100;
+  const rowValueStyle: React.CSSProperties = {
+    margin: 0,
+    fontSize: 15,
+    lineHeight: "22px",
+    color: "#0f172a",
+    fontWeight: 700,
+  };
 
   return (
     <div
       style={{
+        margin: 0,
+        padding: "28px 12px",
+        backgroundColor: "#eef8fb",
         fontFamily:
           "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-        color: "#020617",
-        maxWidth: 520,
-        margin: "0 auto",
-        padding: "0 16px 24px",
-        backgroundColor: "#020617",
       }}
     >
       <div
         style={{
-          backgroundColor: "#0b1220",
-          borderRadius: 16,
-          padding: 20,
-          border: "1px solid rgba(148, 163, 184, 0.4)",
-          boxShadow: "0 18px 45px rgba(15,23,42,0.7)",
+          maxWidth: 620,
+          margin: "0 auto",
+          overflow: "hidden",
+          borderRadius: 24,
+          backgroundColor: "#ffffff",
+          border: "1px solid #dbeafe",
+          boxShadow: "0 20px 60px rgba(15, 23, 42, 0.12)",
         }}
       >
         <div
           style={{
-            height: 4,
-            borderRadius: 999,
-            backgroundImage: `linear-gradient(90deg, transparent, ${color}, transparent)`,
-            marginBottom: 16,
-          }}
-        />
-
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            marginBottom: 16,
+            padding: "24px 24px 22px",
+            color: "#ffffff",
+            background: `linear-gradient(135deg, ${color}, #06b6d4)`,
           }}
         >
-          {logoUrl ? (
-            <img
-              src={logoUrl}
-              alt={clubName}
-              style={{
-                width: 44,
-                height: 44,
-                objectFit: "cover",
-                borderRadius: 12,
-                border: "1px solid rgba(148,163,184,0.35)",
-                backgroundColor: "#111827",
-                flexShrink: 0,
-              }}
-            />
-          ) : null}
-
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div
-              style={{
-                fontSize: 11,
-                textTransform: "uppercase",
-                letterSpacing: "0.16em",
-                color: "#e5e7eb",
-                marginBottom: 3,
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
-            >
-              Booking confirmed
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            {logoUrl ? (
+              <img
+                src={logoUrl}
+                alt={clubName}
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 14,
+                  objectFit: "cover",
+                  border: "1px solid rgba(255,255,255,0.55)",
+                  backgroundColor: "rgba(255,255,255,0.16)",
+                }}
+              />
+            ) : null}
+            <div>
+              <p
+                style={{
+                  margin: "0 0 5px",
+                  fontSize: 12,
+                  letterSpacing: "0.14em",
+                  textTransform: "uppercase",
+                  fontWeight: 800,
+                  opacity: 0.9,
+                }}
+              >
+                Booking confirmed
+              </p>
+              <h1 style={{ margin: 0, fontSize: 26, lineHeight: "31px" }}>
+                You are booked
+              </h1>
             </div>
-
-            <h2
-              style={{
-                margin: 0,
-                fontSize: 18,
-                fontWeight: 600,
-                color: "#f9fafb",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
-            >
-              Your activity is confirmed 🎉
-            </h2>
-
-            <p
-              style={{
-                margin: "4px 0 0",
-                fontSize: 12,
-                color: "#9ca3af",
-              }}
-            >
-              {clubName}
-            </p>
           </div>
         </div>
 
-        <div
-          style={{
-            marginTop: 8,
-            borderRadius: 14,
-            background:
-              "radial-gradient(circle at 0% 0%, rgba(34,197,94,0.18), transparent 55%), radial-gradient(circle at 100% 100%, rgba(56,189,248,0.18), transparent 55%)",
-            border: "1px solid rgba(148,163,184,0.5)",
-            padding: 14,
-          }}
-        >
-          <div style={{ marginBottom: 10 }}>
-            <div
-              style={{
-                fontSize: 11,
-                textTransform: "uppercase",
-                letterSpacing: "0.15em",
-                color: "#9ca3af",
-                marginBottom: 2,
-              }}
-            >
-              Activity
-            </div>
-
-            <div
-              style={{
-                fontSize: 14,
-                fontWeight: 500,
-                color: "#f9fafb",
-              }}
-            >
-              {activity}
-            </div>
-          </div>
+        <div style={{ padding: 24 }}>
+          <p
+            style={{
+              margin: "0 0 12px",
+              fontSize: 16,
+              lineHeight: "25px",
+              color: "#0f172a",
+              fontWeight: 700,
+            }}
+          >
+            {greeting}
+          </p>
+          <p
+            style={{
+              margin: "0 0 20px",
+              fontSize: 15,
+              lineHeight: "24px",
+              color: "#475569",
+            }}
+          >
+            Thank you for booking with {clubName}. Your activity is confirmed
+            and your spot is reserved.
+          </p>
 
           <div
             style={{
-              display: "grid",
-              gridTemplateColumns: "minmax(0, 1.7fr) minmax(0, 1fr)",
-              gap: 12,
-              alignItems: "flex-start",
+              borderRadius: 18,
+              border: "1px solid #dbeafe",
+              backgroundColor: "#f8fafc",
+              padding: 18,
             }}
           >
-            <div>
-              <div
-                style={{
-                  fontSize: 11,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.15em",
-                  color: "#9ca3af",
-                  marginBottom: 2,
-                }}
-              >
-                When
-              </div>
+            <div style={{ marginBottom: 16 }}>
+              <p style={rowLabelStyle}>Activity</p>
+              <p style={{ ...rowValueStyle, fontSize: 18 }}>{activity}</p>
+            </div>
 
-              <div
-                style={{
-                  fontSize: 13,
-                  color: "#e5e7eb",
-                }}
-              >
-                {dateLabel}
-                <span style={{ opacity: 0.75 }}> · </span>
-                {timeLabel}
-                <span style={{ opacity: 0.7 }}> Greek local time</span>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 14,
+              }}
+            >
+              <div>
+                <p style={rowLabelStyle}>Date</p>
+                <p style={rowValueStyle}>{dateLabel}</p>
+              </div>
+              <div>
+                <p style={rowLabelStyle}>Time</p>
+                <p style={rowValueStyle}>{timeLabel}</p>
+                <p style={{ margin: "4px 0 0", fontSize: 12, color: "#64748b" }}>
+                  Greek local time
+                </p>
+              </div>
+              <div>
+                <p style={rowLabelStyle}>Guests</p>
+                <p style={rowValueStyle}>{partySize}</p>
+              </div>
+              <div>
+                <p style={rowLabelStyle}>Total paid</p>
+                <p style={{ ...rowValueStyle, color }}>{total}</p>
               </div>
             </div>
 
-            <div>
+            {tickets && tickets.length > 0 ? (
               <div
                 style={{
-                  fontSize: 11,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.15em",
-                  color: "#9ca3af",
-                  marginBottom: 2,
+                  marginTop: 16,
+                  paddingTop: 14,
+                  borderTop: "1px solid #e2e8f0",
                 }}
               >
-                Details
+                <p style={rowLabelStyle}>Tickets</p>
+                {tickets.map((ticket) => (
+                  <p
+                    key={ticket.label}
+                    style={{
+                      margin: "4px 0 0",
+                      fontSize: 14,
+                      color: "#334155",
+                    }}
+                  >
+                    {ticket.quantity} x {ticket.label} - EUR{" "}
+                    {(ticket.priceCents / 100).toFixed(2)}
+                  </p>
+                ))}
               </div>
-
-              <div
-                style={{
-                  fontSize: 13,
-                  color: "#e5e7eb",
-                  marginBottom: 2,
-                }}
-              >
-                Guests: <span style={{ fontWeight: 500 }}>{partySize}</span>
-              </div>
-
-              <div
-                style={{
-                  fontSize: 13,
-                  color: "#e5e7eb",
-                }}
-              >
-                Total:{" "}
-                <span
-                  style={{
-                    fontWeight: 600,
-                    color,
-                  }}
-                >
-                  €{totalEuros.toFixed(2)}
-                </span>
-              </div>
-            </div>
+            ) : null}
           </div>
-        </div>
 
-        <div
-          style={{
-            marginTop: 16,
-            fontSize: 13,
-            color: "#e5e7eb",
-            lineHeight: 1.5,
-          }}
-        >
-          <p style={{ margin: "0 0 8px" }}>
-            Please arrive <span style={{ fontWeight: 500 }}>10 minutes early</span>{" "}
-            so there’s enough time for check-in and any pre-activity preparation
-            at <span style={{ fontWeight: 500 }}>{clubName}</span>.
-          </p>
-
-          <p style={{ margin: 0 }}>
-            Bring this email with you in case your booking needs to be verified.
-            Follow any instructions shared by the operator before arrival.
-          </p>
-        </div>
-
-        {bookingToken ? (
           <div
             style={{
               marginTop: 18,
-              padding: 14,
-              borderRadius: 12,
-              backgroundColor: "rgba(15, 23, 42, 0.6)",
-              border: "1px solid rgba(148, 163, 184, 0.35)",
-              textAlign: "center",
+              borderRadius: 18,
+              border: "1px solid #bae6fd",
+              backgroundColor: "#ecfeff",
+              padding: 18,
             }}
           >
-            <div
-              style={{
-                fontSize: 11,
-                textTransform: "uppercase",
-                letterSpacing: "0.15em",
-                color: "#9ca3af",
-                marginBottom: 6,
-              }}
-            >
-              Your booking token
-            </div>
-
-            <div
-              style={{
-                fontSize: 16,
-                fontWeight: 700,
-                color: "#f9fafb",
-                letterSpacing: "0.05em",
-                wordBreak: "break-all",
-              }}
-            >
-              {bookingToken}
-            </div>
-
             <p
               style={{
-                margin: "8px 0 0",
-                fontSize: 12,
-                color: "#9ca3af",
-                lineHeight: 1.5,
+                margin: "0 0 6px",
+                fontSize: 14,
+                color: "#0e7490",
+                fontWeight: 800,
               }}
             >
-              Keep this token safe. Use it on the website if you need to manage,
-              cancel, or refund your booking.
+              Arrival instructions
+            </p>
+            <p
+              style={{
+                margin: 0,
+                fontSize: 15,
+                lineHeight: "24px",
+                color: "#155e75",
+              }}
+            >
+              {resolvedArrivalText}
             </p>
           </div>
-        ) : null}
 
-        <hr
-          style={{
-            marginTop: 20,
-            marginBottom: 10,
-            border: "none",
-            borderTop: "1px solid rgba(55,65,81,0.9)",
-          }}
-        />
+          {bookingToken ? (
+            <div
+              style={{
+                marginTop: 18,
+                borderRadius: 16,
+                border: "1px solid #e2e8f0",
+                padding: 16,
+                textAlign: "center",
+              }}
+            >
+              <p style={rowLabelStyle}>Booking reference</p>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 16,
+                  letterSpacing: "0.04em",
+                  color: "#0f172a",
+                  fontWeight: 800,
+                  wordBreak: "break-all",
+                }}
+              >
+                {bookingToken}
+              </p>
+            </div>
+          ) : null}
 
-        <p
-          style={{
-            fontSize: 11,
-            color: "#9ca3af",
-            margin: 0,
-            lineHeight: 1.5,
-          }}
-        >
-          If you have any questions or need to make a change, simply reply to
-          this email and <span style={{ fontWeight: 500 }}>{clubName}</span>{" "}
-          will get back to you.
-        </p>
-
-        <p
-          style={{
-            fontSize: 10,
-            color: "#6b7280",
-            marginTop: 10,
-          }}
-        >
-          Thank you for booking with {clubName}. We hope you have an amazing
-          experience. 🌊
-        </p>
+          <p
+            style={{
+              margin: "20px 0 0",
+              fontSize: 13,
+              lineHeight: "21px",
+              color: "#64748b",
+            }}
+          >
+            Bring this email with you. If you have questions or need to change
+            something, reply to this email and the team will help you.
+          </p>
+        </div>
       </div>
     </div>
   );

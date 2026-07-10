@@ -22,6 +22,19 @@ const DB = {
   REFUNDED: "refunded",
 } as const;
 
+function getArrivalInstruction(activityName: string) {
+  const normalized = activityName.toLowerCase();
+  const isBoatRental =
+    normalized.includes("boat rental") ||
+    (normalized.includes("rent") && normalized.includes("boat"));
+
+  if (isBoatRental) {
+    return "Please arrive 30 minutes before your boat rental start time for check-in, safety briefing, and preparation.";
+  }
+
+  return "Please arrive 10-15 minutes before your activity start time for check-in and preparation.";
+}
+
 /* =========================
    Action State
    ========================= */
@@ -303,6 +316,8 @@ export async function createAdminBooking(
             clubName: tenant.name,
             logoUrl: club?.logoKey ?? undefined,
             brandPrimary: tenant.primaryHex ?? undefined,
+            customerName: name || null,
+            arrivalText: getArrivalInstruction(slot.activity.name),
           }),
         });
       } catch (err: any) {

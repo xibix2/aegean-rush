@@ -4,7 +4,6 @@ import prisma from "@/lib/prisma";
 import { resend, FROM } from "@/lib/email";
 import BookingConfirmed from "@/emails/BookingConfirmed";
 import { createEvent } from "ics";
-import { toZonedTime } from "date-fns-tz";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -142,10 +141,126 @@ async function attachRealCustomerToBooking(
   });
 }
 
-async function sendConfirmationEmail(
-  bookingId: string,
-  fallbackEmail?: string,
-) {
+function getArrivalInstruction(activityName: string) {
+  const normalized = activityName.toLowerCase();
+  const isBoatRental =
+    normalized.includes("boat rental") ||
+    (normalized.includes("rent") && normalized.includes("boat"));
+
+  if (isBoatRental) {
+    return "Please arrive 30 minutes before your boat rental start time for check-in, safety briefing, and preparation.";
+  }
+
+  return "Please arrive 10-15 minutes before your activity start time for check-in and preparation.";
+}
+
+function formatLocalDateTime(date: Date, timeZone: string) {
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone,
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(date);
+}
+
+function icsDate(date: Date): [number, number, number, number, number] {
+  return [
+    date.getUTCFullYear(),
+    date.getUTCMonth() + 1,
+    date.getUTCDate(),
+    date.getUTCHours(),
+    date.getUTCMinutes(),
+  ];
+}
+
+function buildInternalBookingText(input: {
+  clubName: string;
+  activityName: string;
+  bookingStart: Date;
+  bookingEnd: Date;
+  timeZone: string;
+  customerName: string | null;
+  customerEmail: string | null;
+  customerPhone: string | null;
+  partySize: number;
+  reservedUnits: number;
+  durationMin: number | null;
+  pricingLabel: string | null;
+  totalCents: number;
+  bookingToken: string;
+  arrivalText: string;
+  tickets: Array<{ label: string; quantity: number; priceCents: number }>;
+}) {
+  const lines = [
+    "New online booking paid",
+    "",
+    `Club: ${input.clubName}`,
+    `Activity: ${input.activityName}`,
+    `Start: ${formatLocalDateTime(input.bookingStart, input.timeZone)} (${input.timeZone})`,
+    `End: ${formatLocalDateTime(input.bookingEnd, input.timeZone)} (${input.timeZone})`,
+    `Arrival note: ${input.arrivalText}`,
+    "",
+    `Customer name: ${input.customerName || "Not provided"}`,
+    `Customer email: ${input.customerEmail || "Not provided"}`,
+    `Customer phone: ${input.customerPhone || "Not provided"}`,
+    "",
+    `Guests: ${input.partySize}`,
+    `Reserved units: ${input.reservedUnits}`,
+    `Duration: ${input.pricingLabel || (input.durationMin ? `${input.durationMin} min` : "Default")}`,
+    `Total paid: EUR ${(input.totalCents / 100).toFixed(2)}`,
+    `Booking token: ${input.bookingToken}`,
+  ];
+
+  if (input.tickets.length > 0) {
+    lines.push("", "Tickets:");
+    for (const ticket of input.tickets) {
+      lines.push(
+        `- ${ticket.quantity} x ${ticket.label} @ EUR ${(ticket.priceCents / 100).toFixed(2)}`,
+      );
+    }
+  }
+
+  return lines.join("\n");
+}
+
+async function sendInternalBookingNotification(input: {
+  from: string;
+  replyTo?: string;
+  recipients: string[];
+  clubName: string;
+  activityName: string;
+  bookingStart: Date;
+  bookingEnd: Date;
+  timeZone: string;
+  customerName: string | null;
+  customerEmail: string | null;
+  customerPhone: string | null;
+  partySize: number;
+  reservedUnits: number;
+  durationMin: number | null;
+  pricingLabel: string | null;
+  totalCents: number;
+  bookingToken: string;
+  arrivalText: string;
+  tickets: Array<{ label: string; quantity: number; priceCents: number }>;
+}) {
+  const recipients = Array.from(new Set(input.recipients.filter(Boolean)));
+  if (recipients.length === 0) return;
+
+  await resend.emails.send({
+    from: input.from,
+    to: recipients,
+    subject: `New booking paid: ${input.activityName}`,
+    text: buildInternalBookingText(input),
+    ...(input.replyTo ? { reply_to: input.replyTo } : {}),
+  });
+}
+
+async function sendBookingEmails(bookingId: string, fallbackEmail?: string) {
   const b = await prisma.booking.findUnique({
     where: { id: bookingId },
     include: {
@@ -163,16 +278,18 @@ async function sendConfirmationEmail(
         },
       },
       customer: true,
+      tickets: true,
     },
   });
+
   if (!b) return;
 
-  const to = fallbackEmail ?? b.contactEmail ?? b.customer?.email ?? null;
-
   const internalNotificationEmails = [
-    "aegeanrush@gmail.com",
-    "watersportsofparadise@gmail.com",
+    "tassosxanthis@gmail.com",
+    "paradisewatersports@gmail.com",
   ];
+
+  const to = fallbackEmail ?? b.contactEmail ?? b.customer?.email ?? null;
 
   if (fallbackEmail && b.customer?.email?.startsWith("guest+")) {
     try {
@@ -182,11 +299,6 @@ async function sendConfirmationEmail(
       });
     } catch {}
   }
-  const recipients = Array.from(
-    new Set([to, ...internalNotificationEmails].filter(Boolean))
-  ) as string[];
-
-  if (recipients.length === 0) return;
 
   const bookingStart = b.bookingStartAt ?? b.timeSlot.startAt;
   const bookingEnd =
@@ -196,80 +308,112 @@ async function sendConfirmationEmail(
 
   const club = b.timeSlot.activity.club;
   const clubName = club?.name ?? "Your business";
-  const logoUrl = buildAbsoluteUrl(club?.logoKey ?? null);
-  const brandPrimary = club?.primaryHex ?? null;
-
-  const clubTz =
-    club?.setting?.tz?.trim() || process.env.TZ?.trim() || "Europe/Athens";
-
-  const startLocal = toZonedTime(bookingStart, clubTz);
-  const endLocal = toZonedTime(bookingEnd, clubTz);
-
-  const { error, value } = createEvent({
-    title: b.timeSlot.activity.name,
-    start: [
-      startLocal.getFullYear(),
-      startLocal.getMonth() + 1,
-      startLocal.getDate(),
-      startLocal.getHours(),
-      startLocal.getMinutes(),
-    ],
-    end: [
-      endLocal.getFullYear(),
-      endLocal.getMonth() + 1,
-      endLocal.getDate(),
-      endLocal.getHours(),
-      endLocal.getMinutes(),
-    ],
-    description: `Meeting point: ${clubName}`,
-    status: "CONFIRMED",
-  });
-  const icsBase64 = error ? undefined : Buffer.from(value!).toString("base64");
-
   const senderDisplayName =
     (club?.emailFromName && club.emailFromName.trim().length > 0
       ? club.emailFromName.trim()
       : clubName) || "Your business";
 
-  function parseFromAddress(from: string): { email: string } {
-    const match = from.match(/<(.*)>/);
-    if (match) {
-      return { email: match[1].trim() };
-    }
-    return { email: from.trim() };
+  function parseFromAddress(fromAddress: string): { email: string } {
+    const match = fromAddress.match(/<(.*)>/);
+    if (match) return { email: match[1].trim() };
+    return { email: fromAddress.trim() };
   }
 
   const defaultFromEmail = parseFromAddress(FROM).email;
   const from = `${senderDisplayName} <${defaultFromEmail}>`;
-
   const replyTo =
     club?.emailFromEmail && club.emailFromEmail.includes("@")
       ? club.emailFromEmail.trim()
       : undefined;
 
+  const clubTz =
+    club?.setting?.tz?.trim() || process.env.TZ?.trim() || "Europe/Athens";
+  const activityName = b.timeSlot.activity.name;
+  const logoUrl = buildAbsoluteUrl(club?.logoKey ?? null);
+  const brandPrimary = club?.primaryHex ?? null;
+  const customerName = b.contactName || b.customer?.name || null;
+  const customerEmail = fallbackEmail ?? b.contactEmail ?? b.customer?.email ?? null;
+  const customerPhone = b.contactPhone || b.customer?.phone || null;
+  const arrivalText = getArrivalInstruction(activityName);
+  const ticketLines = b.tickets.map((ticket) => ({
+    label: ticket.labelSnapshot,
+    quantity: ticket.quantity,
+    priceCents: ticket.priceCentsSnapshot,
+  }));
+
+  const { error, value } = createEvent({
+    title: activityName,
+    start: icsDate(bookingStart),
+    startInputType: "utc",
+    startOutputType: "utc",
+    end: icsDate(bookingEnd),
+    endInputType: "utc",
+    endOutputType: "utc",
+    description: `Meeting point: ${clubName}`,
+    status: "CONFIRMED",
+  });
+  const icsBase64 = error ? undefined : Buffer.from(value!).toString("base64");
+
+  if (to) {
+    try {
+      await resend.emails.send({
+        from,
+        to,
+        subject: `Your booking with ${senderDisplayName} is confirmed`,
+        react: BookingConfirmed({
+          activity: activityName,
+          startISO: bookingStart.toISOString(),
+          endISO: bookingEnd.toISOString(),
+          partySize: b.partySize,
+          totalCents: b.totalPrice!,
+          clubName: senderDisplayName,
+          logoUrl,
+          brandPrimary,
+          bookingToken: b.publicToken,
+          customerName,
+          arrivalText,
+          tickets: ticketLines,
+        }),
+        ...(replyTo ? { reply_to: replyTo } : {}),
+        attachments: icsBase64
+          ? [{ filename: "booking.ics", content: icsBase64 }]
+          : undefined,
+      });
+    } catch (e) {
+      console.error(
+        "Failed to send customer booking email:",
+        (e as any)?.message || e,
+      );
+    }
+  }
+
   try {
-    await resend.emails.send({
+    await sendInternalBookingNotification({
       from,
-      to: recipients,
-      subject: `Your booking with ${senderDisplayName} is confirmed ✅`,
-      react: BookingConfirmed({
-        activity: b.timeSlot.activity.name,
-        startISO: bookingStart.toISOString(),
-        endISO: bookingEnd.toISOString(),
-        partySize: b.partySize,
-        totalCents: b.totalPrice!,
-        clubName: senderDisplayName,
-        logoUrl,
-        brandPrimary,
-        bookingToken: b.publicToken,
-      }),
-      ...(replyTo ? { reply_to: replyTo } : {}),
-      attachments: icsBase64
-        ? [{ filename: "booking.ics", content: icsBase64 }]
-        : undefined,
+      replyTo: customerEmail || replyTo,
+      recipients: internalNotificationEmails,
+      clubName: senderDisplayName,
+      activityName,
+      bookingStart,
+      bookingEnd,
+      timeZone: clubTz,
+      customerName,
+      customerEmail,
+      customerPhone,
+      partySize: b.partySize,
+      reservedUnits: b.reservedUnits,
+      durationMin: b.durationMinSnapshot,
+      pricingLabel: b.pricingLabelSnapshot,
+      totalCents: b.totalPrice!,
+      bookingToken: b.publicToken,
+      arrivalText,
+      tickets: ticketLines,
     });
   } catch (e) {
-    console.error("❌ Resend error:", (e as any)?.message || e);
+    console.error(
+      "Failed to send internal booking email:",
+      (e as any)?.message || e,
+    );
   }
 }
 
@@ -401,7 +545,7 @@ async function handleSuccessfulCheckoutSession(
   }
 
   if (!result.alreadyPaid) {
-    await sendConfirmationEmail(bookingId, payerEmail || undefined);
+    await sendBookingEmails(bookingId, payerEmail || undefined);
   }
 }
 
