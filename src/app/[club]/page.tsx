@@ -7,7 +7,7 @@ import CourtsSection from "@/app/_sections/ExperiencesSection";
 import CourtsSkeleton from "@/components/ui/CourtsSkeleton";
 import { HeroSectionClient } from "@/components/home/HeroSectionClient";
 import { CourtsHeaderClient } from "@/components/home/CourtsHeaderClient";
-import { GallerySectionClient } from "@/components/home/GallerySectionClient";
+import { SocialSectionClient } from "@/components/home/SocialSectionClient";
 import { HowItWorksSectionClient } from "@/components/home/HowItWorksSectionClient";
 import { WhyChooseUsSectionClient } from "@/components/home/WhyChooseUsSectionClient";
 import { FaqSectionClient } from "@/components/home/FaqSectionClient";
@@ -98,17 +98,6 @@ export default async function ClubHome({
       secondaryCtaHref: true,
       badgeText: true,
       dataJson: true,
-      galleryImages: {
-        orderBy: {
-          sortOrder: "asc",
-        },
-        select: {
-          id: true,
-          imageUrl: true,
-          altText: true,
-          caption: true,
-        },
-      },
       faqItems: {
         orderBy: {
           sortOrder: "asc",
@@ -147,6 +136,10 @@ export default async function ClubHome({
           <Suspense fallback={<CourtsSkeleton />}>
             <CourtsSection tenantSlug={slug} />
           </Suspense>
+        </section>
+
+        <section className="scroll-mt-24 md:scroll-mt-36">
+          <SocialSectionClient clubSlug={slug} clubName={tenant.name} />
         </section>
       </div>
     );
@@ -208,11 +201,7 @@ export default async function ClubHome({
           case "GALLERY":
             return (
               <section key={section.id} className="scroll-mt-24 md:scroll-mt-36">
-                <GallerySectionClient
-                  title={section.title}
-                  subtitle={section.subtitle}
-                  images={section.galleryImages}
-                />
+                <SocialSectionClient clubSlug={slug} clubName={tenant.name} />
               </section>
             );
 

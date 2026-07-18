@@ -285,7 +285,7 @@ async function sendBookingEmails(bookingId: string, fallbackEmail?: string) {
   if (!b) return;
 
   const internalNotificationEmails = [
-    "tassosxanthis@gmail.com",
+    "aegeanrush@gmail.com",
     "paradisewatersports@gmail.com",
   ];
 
