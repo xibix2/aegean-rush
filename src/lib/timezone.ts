@@ -7,10 +7,31 @@ import { cookies } from "next/headers";
 
 const TZ_COOKIE = "tz";
 
-export const DEFAULT_TZ =
-  process.env.ADMIN_TZ ||
-  process.env.TZ ||
-  "Europe/Athens";
+const SAFE_DEFAULT_TZ = "Europe/Athens";
+
+function normalizeIanaTz(input?: string | null): string {
+  const value = (input || "").trim();
+  // Some Node/Linux environments expose POSIX-style values such as ":UTC".
+  // Intl.DateTimeFormat expects the IANA identifier without the leading colon.
+  return value.startsWith(":") ? value.slice(1) : value;
+}
+
+function isValidIanaTz(tz: string): boolean {
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: tz }).format(0);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+const configuredDefaultTz = normalizeIanaTz(
+  process.env.ADMIN_TZ || process.env.TZ
+);
+
+export const DEFAULT_TZ = isValidIanaTz(configuredDefaultTz)
+  ? configuredDefaultTz
+  : SAFE_DEFAULT_TZ;
 
 // A small curated list for the admin dropdown.
 export const COMMON_TZS = [
@@ -29,21 +50,11 @@ export const COMMON_TZS = [
 /* Utilities                                                          */
 /* ------------------------------------------------------------------ */
 
-function isValidIanaTz(tz: string): boolean {
-  try {
-    // Will throw for invalid timeZone identifiers
-    new Intl.DateTimeFormat("en-US", { timeZone: tz }).format(0);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 /**
  * Get a safe IANA timezone (from provided value or fallback).
  */
 export function resolveTz(input?: string | null): string {
-  const cand = (input || "").trim();
+  const cand = normalizeIanaTz(input);
   if (cand && isValidIanaTz(cand)) return cand;
   return DEFAULT_TZ;
 }
