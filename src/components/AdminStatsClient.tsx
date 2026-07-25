@@ -1,148 +1,185 @@
-// src/components/admin/AdminStatsClient.tsx
 "use client";
 
 import * as React from "react";
 import {
-  ResponsiveContainer,
-  LineChart,
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
   Line,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  Tooltip,
-  CartesianGrid,
-  BarChart,
-  Bar,
 } from "recharts";
 import { readUiPrefsFromDocument } from "@/lib/ui-prefs-client";
 import { useT } from "@/components/I18nProvider";
+import type {
+  ActivityStats,
+  AdminStats,
+  StatsBucket,
+  WeekdayStats,
+} from "@/lib/admin-stats";
 
-/* --------- Types ---------- */
-type Daily = {
-  date: string;
-  bookings: number;
-  seats: number;
-  capacity: number;
-  revenueCents: number;
-  refundsCents: number;
-  paidBookings: number;
+const CHART_COLORS = {
+  online: "#38bdf8",
+  walkIn: "#a78bfa",
+  refunds: "#fb7185",
+  paid: "#34d399",
+  pending: "#fbbf24",
+  cancelled: "#94a3b8",
+  guests: "#22d3ee",
 };
 
-type ActivityAgg = {
-  activityId: string;
-  name: string;
-  seats: number;
-  revenueCents: number;
-  bookings: number;
-};
-
-type Summary = {
-  revenue: number; // euros
-  refunds: number; // euros
-  seats: number;
-  utilization: number; // 0..1
-  conversion: number; // 0..1
-  paidBookings: number;
-  bookings: number;
-};
-
-/** Map UI currency symbol → ISO code for Intl */
 const SYMBOL_TO_CODE: Record<string, "EUR" | "USD" | "GBP"> = {
   "€": "EUR",
   "$": "USD",
   "£": "GBP",
 };
 
+type Props = {
+  rangeLabel: string;
+  bucketUnit: "day" | "month";
+  periods: StatsBucket[];
+  activities: ActivityStats[];
+  weekdays: WeekdayStats[];
+  summary: AdminStats["totals"];
+};
+
 export default function AdminStatsClient({
   rangeLabel,
-  daily,
+  bucketUnit,
+  periods,
   activities,
+  weekdays,
   summary,
-}: {
-  rangeLabel: string;
-  daily: Daily[];
-  activities: ActivityAgg[];
-  summary: Summary;
-}) {
+}: Props) {
   const t = useT();
-
-  // UI currency from cookie
   const [currencySymbol, setCurrencySymbol] = React.useState("€");
+  const [mounted, setMounted] = React.useState(false);
+
   React.useEffect(() => {
     const prefs = readUiPrefsFromDocument();
     if (prefs.currency) setCurrencySymbol(prefs.currency);
-  }, []);
-
-  const currencyCode = React.useMemo(
-    () => SYMBOL_TO_CODE[currencySymbol] ?? "EUR",
-    [currencySymbol]
-  );
-
-  // ⚠️ Hydration-safe: avoid locale formatting until after mount
-  const [mounted, setMounted] = React.useState(false);
-  React.useEffect(() => {
     setMounted(true);
   }, []);
 
+  const currencyCode = SYMBOL_TO_CODE[currencySymbol] ?? "EUR";
   const money = React.useCallback(
-    (v: number) => {
-      if (!mounted) return "—"; // same on server + first client render → no mismatch
+    (value: number) => {
+      if (!mounted) return "€—";
       return new Intl.NumberFormat(undefined, {
         style: "currency",
         currency: currencyCode,
-      }).format(v);
+        maximumFractionDigits: 2,
+      }).format(value);
     },
     [currencyCode, mounted]
   );
 
-  const revenueData = React.useMemo(
-    () =>
-      daily.map((d) => ({
-        date: d.date.slice(5), // MM-DD
-        revenue: d.revenueCents / 100,
-      })),
-    [daily]
-  );
+  const percent = (value: number) =>
+    `${new Intl.NumberFormat(undefined, {
+      maximumFractionDigits: 1,
+    }).format(value * 100)}%`;
 
-  const seatsData = React.useMemo(
-    () =>
-      daily.map((d) => ({
-        date: d.date.slice(5),
-        seats: d.seats,
-      })),
-    [daily]
-  );
+  const revenueTrend = periods.map((period) => ({
+    label: period.label,
+    online: period.onlineRevenueCents / 100,
+    walkIn: period.walkInRevenueCents / 100,
+    refunds: period.refundsCents / 100,
+  }));
 
-  const topActivities = React.useMemo(
-    () =>
-      activities.map((a) => ({
-        name: a.name,
-        revenue: a.revenueCents / 100,
-      })),
-    [activities]
-  );
+  const bookingTrend = periods.map((period) => ({
+    label: period.label,
+    bookings: period.bookings,
+    guests: period.seats,
+  }));
 
-  const pct = (v: number) => `${Math.round(v * 100)}%`;
+  const activityData = activities.map((activity) => ({
+    name: activity.name,
+    online: activity.onlineRevenueCents / 100,
+    walkIn: activity.walkInRevenueCents / 100,
+  }));
 
-  const netRevenue = Math.max(0, summary.revenue - summary.refunds);
+  const sourceData = [
+    {
+      name: t("admin.stats.sources.online"),
+      value: summary.onlineNetRevenueCents / 100,
+      color: CHART_COLORS.online,
+    },
+    {
+      name: t("admin.stats.sources.walkIn"),
+      value: summary.walkInNetRevenueCents / 100,
+      color: CHART_COLORS.walkIn,
+    },
+  ].filter((item) => item.value > 0);
+
+  const statusData = [
+    {
+      name: t("admin.stats.status.paid"),
+      value: summary.paidBookings,
+      color: CHART_COLORS.paid,
+    },
+    {
+      name: t("admin.stats.status.pending"),
+      value: summary.pendingBookings,
+      color: CHART_COLORS.pending,
+    },
+    {
+      name: t("admin.stats.status.cancelled"),
+      value: summary.cancelledBookings,
+      color: CHART_COLORS.cancelled,
+    },
+    {
+      name: t("admin.stats.status.refunded"),
+      value: summary.refundedBookings,
+      color: CHART_COLORS.refunds,
+    },
+  ].filter((item) => item.value > 0);
+
+  const tooltipStyle = {
+    background: "rgba(16,18,28,0.96)",
+    border: "1px solid rgba(255,255,255,0.14)",
+    borderRadius: 12,
+    color: "white",
+  };
+
+  const tick = { fill: "rgba(255,255,255,0.68)", fontSize: 11 };
 
   return (
     <div className="space-y-6">
-      {/* Stat cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard
-          title={t("admin.stats.revenue")}
-          hint={rangeLabel}
-          value={money(summary.revenue)}
-        />
-        <StatCard
-          title={t("admin.stats.refunds")}
-          hint={rangeLabel}
-          value={money(summary.refunds)}
-        />
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           title={t("admin.stats.net")}
-          hint={t("admin.stats.netHint")}
-          value={money(netRevenue)}
+          hint={rangeLabel}
+          value={money(summary.netRevenueCents / 100)}
+        />
+        <StatCard
+          title={t("admin.stats.onlineRevenue")}
+          hint={`${summary.onlineBookings} ${t("admin.stats.completedBookings")}`}
+          value={money(summary.onlineNetRevenueCents / 100)}
+          accent={CHART_COLORS.online}
+        />
+        <StatCard
+          title={t("admin.stats.walkInRevenue")}
+          hint={`${summary.walkInBookings} ${t("admin.stats.completedBookings")}`}
+          value={money(summary.walkInNetRevenueCents / 100)}
+          accent={CHART_COLORS.walkIn}
+        />
+        <StatCard
+          title={t("admin.stats.averageBooking")}
+          hint={t("admin.stats.averageBookingHint")}
+          value={money(summary.averageBookingValueCents / 100)}
+        />
+        <StatCard
+          title={t("admin.stats.paidBookings")}
+          hint={rangeLabel}
+          value={String(summary.paidBookings)}
         />
         <StatCard
           title={t("admin.stats.seatsSold")}
@@ -152,157 +189,206 @@ export default function AdminStatsClient({
         <StatCard
           title={t("admin.stats.utilization")}
           hint={t("admin.stats.utilizationHint")}
-          value={pct(summary.utilization)}
+          value={percent(summary.utilization)}
         />
         <StatCard
-          title={t("admin.stats.paidBookings")}
-          hint={rangeLabel}
-          value={String(summary.paidBookings)}
+          title={t("admin.stats.refundRate")}
+          hint={`${money(summary.refundsCents / 100)} ${t("admin.stats.refunded")}`}
+          value={percent(summary.refundRate)}
+          accent={CHART_COLORS.refunds}
         />
-        <StatCard
-          title={t("admin.stats.allBookings")}
-          hint={rangeLabel}
-          value={String(summary.bookings)}
-        />
-        <StatCard
-          title={t("admin.stats.conversion")}
-          hint={t("admin.stats.conversionHint")}
-          value={pct(summary.conversion)}
-        />
+      </section>
+
+      <ChartCard
+        title={t("admin.stats.charts.revenueBySource")}
+        subtitle={
+          bucketUnit === "month"
+            ? t("admin.stats.groupedMonthly")
+            : t("admin.stats.groupedDaily")
+        }
+      >
+        <ResponsiveContainer width="100%" height={310}>
+          <AreaChart data={revenueTrend} margin={{ top: 10, right: 12, left: 8, bottom: 0 }}>
+            <defs>
+              <linearGradient id="onlineRevenue" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor={CHART_COLORS.online} stopOpacity={0.5} />
+                <stop offset="95%" stopColor={CHART_COLORS.online} stopOpacity={0.04} />
+              </linearGradient>
+              <linearGradient id="walkInRevenue" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor={CHART_COLORS.walkIn} stopOpacity={0.5} />
+                <stop offset="95%" stopColor={CHART_COLORS.walkIn} stopOpacity={0.04} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid stroke="rgba(255,255,255,0.12)" strokeDasharray="3 6" />
+            <XAxis dataKey="label" tick={tick} minTickGap={26} />
+            <YAxis tick={tick} tickFormatter={(value) => money(Number(value))} width={72} />
+            <Tooltip
+              contentStyle={tooltipStyle}
+              formatter={(value, name) => [
+                money(Number(value)),
+                name === "online"
+                  ? t("admin.stats.sources.online")
+                  : name === "walkIn"
+                    ? t("admin.stats.sources.walkIn")
+                    : t("admin.stats.refunds"),
+              ]}
+            />
+            <Legend
+              formatter={(value) =>
+                value === "online"
+                  ? t("admin.stats.sources.online")
+                  : value === "walkIn"
+                    ? t("admin.stats.sources.walkIn")
+                    : t("admin.stats.refunds")
+              }
+            />
+            <Area
+              type="monotone"
+              dataKey="online"
+              stackId="revenue"
+              stroke={CHART_COLORS.online}
+              fill="url(#onlineRevenue)"
+              strokeWidth={2}
+            />
+            <Area
+              type="monotone"
+              dataKey="walkIn"
+              stackId="revenue"
+              stroke={CHART_COLORS.walkIn}
+              fill="url(#walkInRevenue)"
+              strokeWidth={2}
+            />
+            <Line
+              type="monotone"
+              dataKey="refunds"
+              stroke={CHART_COLORS.refunds}
+              strokeWidth={2}
+              dot={false}
+              strokeDasharray="5 5"
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </ChartCard>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <ChartCard title={t("admin.stats.charts.revenueMix")}>
+          <ResponsiveContainer width="100%" height={280}>
+            <PieChart>
+              <Pie
+                data={sourceData}
+                dataKey="value"
+                nameKey="name"
+                innerRadius={66}
+                outerRadius={96}
+                paddingAngle={3}
+              >
+                {sourceData.map((entry) => (
+                  <Cell key={entry.name} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip
+                contentStyle={tooltipStyle}
+                formatter={(value) => money(Number(value))}
+              />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title={t("admin.stats.charts.bookingStatus")}>
+          <ResponsiveContainer width="100%" height={280}>
+            <PieChart>
+              <Pie
+                data={statusData}
+                dataKey="value"
+                nameKey="name"
+                innerRadius={66}
+                outerRadius={96}
+                paddingAngle={3}
+              >
+                {statusData.map((entry) => (
+                  <Cell key={entry.name} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip contentStyle={tooltipStyle} />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </ChartCard>
       </div>
 
-      {/* Revenue by day */}
-      <ChartCard title={t("admin.stats.charts.revenueByDay")}>
-        <ResponsiveContainer width="100%" height={260}>
-          <LineChart
-            data={revenueData}
-            margin={{ top: 10, right: 10, bottom: 0, left: 0 }}
-          >
-            <CartesianGrid
-              stroke="rgba(255,255,255,0.16)"
-              strokeDasharray="3 6"
+      <ChartCard title={t("admin.stats.charts.bookingsAndGuests")}>
+        <ResponsiveContainer width="100%" height={290}>
+          <BarChart data={bookingTrend} margin={{ top: 10, right: 12, left: 4, bottom: 0 }}>
+            <CartesianGrid stroke="rgba(255,255,255,0.12)" strokeDasharray="3 6" />
+            <XAxis dataKey="label" tick={tick} minTickGap={26} />
+            <YAxis tick={tick} width={38} allowDecimals={false} />
+            <Tooltip contentStyle={tooltipStyle} />
+            <Legend
+              formatter={(value) =>
+                value === "bookings"
+                  ? t("admin.stats.allBookings")
+                  : t("admin.stats.labels.guests")
+              }
             />
-            <XAxis
-              dataKey="date"
-              tick={{ fill: "rgba(255,255,255,0.7)", fontSize: 12 }}
-            />
-            <YAxis
-              tick={{ fill: "rgba(255,255,255,0.7)", fontSize: 12 }}
-              tickFormatter={(v) => money(Number(v))}
-              width={64}
-            />
-            <Tooltip
-              cursor={{ stroke: "rgba(255,255,255,0.2)", strokeWidth: 1 }}
-              contentStyle={{
-                background: "rgba(20,20,30,0.9)",
-                border: "1px solid rgba(255,255,255,0.15)",
-                borderRadius: 12,
-                color: "white",
-              }}
-              formatter={(v: number) => [
-                money(v),
-                t("admin.stats.labels.revenue"),
-              ]}
-            />
-            <Line
-              type="monotone"
-              dataKey="revenue"
-              stroke="var(--accent-500)"
-              strokeWidth={2.4}
-              dot={false}
-              activeDot={{ r: 5, fill: "var(--accent-400)" }}
-            />
-          </LineChart>
+            <Bar dataKey="bookings" fill="var(--accent-500)" radius={[7, 7, 0, 0]} />
+            <Bar dataKey="guests" fill={CHART_COLORS.guests} radius={[7, 7, 0, 0]} />
+          </BarChart>
         </ResponsiveContainer>
       </ChartCard>
 
-      {/* Seats by day */}
-      <ChartCard title={t("admin.stats.charts.seatsByDay")}>
-        <ResponsiveContainer width="100%" height={260}>
-          <LineChart
-            data={seatsData}
-            margin={{ top: 10, right: 10, bottom: 0, left: 0 }}
-          >
-            <CartesianGrid
-              stroke="rgba(255,255,255,0.16)"
-              strokeDasharray="3 6"
-            />
-            <XAxis
-              dataKey="date"
-              tick={{ fill: "rgba(255,255,255,0.7)", fontSize: 12 }}
-            />
-            <YAxis
-              tick={{ fill: "rgba(255,255,255,0.7)", fontSize: 12 }}
-              width={36}
-            />
-            <Tooltip
-              cursor={{ stroke: "rgba(255,255,255,0.2)", strokeWidth: 1 }}
-              contentStyle={{
-                background: "rgba(20,20,30,0.9)",
-                border: "1px solid rgba(255,255,255,0.15)",
-                borderRadius: 12,
-                color: "white",
-              }}
-              formatter={(v: number) => [
-                v,
-                t("admin.stats.labels.seats"),
-              ]}
-            />
-            <Line
-              type="monotone"
-              dataKey="seats"
-              stroke="var(--accent-500)"
-              strokeWidth={2.4}
-              dot={false}
-              activeDot={{
-                r: 5,
-                fill: "color-mix(in_oklab,var(--accent-400),white_25%)",
-              }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </ChartCard>
-
-      {/* Top activities */}
       <ChartCard title={t("admin.stats.charts.topActivitiesByRevenue")}>
-        <ResponsiveContainer width="100%" height={280}>
-          <BarChart
-            data={topActivities}
-            margin={{ top: 10, right: 10, left: 10, bottom: 10 }}
-          >
-            <CartesianGrid
-              horizontal
-              stroke="rgba(255,255,255,0.16)"
-              strokeDasharray="3 6"
-            />
+        <ResponsiveContainer width="100%" height={320}>
+          <BarChart data={activityData} margin={{ top: 10, right: 12, left: 4, bottom: 18 }}>
+            <CartesianGrid stroke="rgba(255,255,255,0.12)" strokeDasharray="3 6" />
             <XAxis
               dataKey="name"
-              tick={{ fill: "rgba(255,255,255,0.7)", fontSize: 12 }}
+              tick={tick}
               interval={0}
-              height={50}
+              angle={-18}
+              textAnchor="end"
+              height={74}
             />
-            <YAxis
-              tick={{ fill: "rgba(255,255,255,0.7)", fontSize: 12 }}
-              tickFormatter={(v) => money(Number(v))}
-              width={64}
-            />
+            <YAxis tick={tick} tickFormatter={(value) => money(Number(value))} width={72} />
             <Tooltip
-              contentStyle={{
-                background: "rgba(20,20,30,0.9)",
-                border: "1px solid rgba(255,255,255,0.15)",
-                borderRadius: 12,
-                color: "white",
-              }}
-              formatter={(v: number) => [
-                money(v),
-                t("admin.stats.labels.revenue"),
+              contentStyle={tooltipStyle}
+              formatter={(value, name) => [
+                money(Number(value)),
+                name === "online"
+                  ? t("admin.stats.sources.online")
+                  : t("admin.stats.sources.walkIn"),
               ]}
             />
+            <Legend
+              formatter={(value) =>
+                value === "online"
+                  ? t("admin.stats.sources.online")
+                  : t("admin.stats.sources.walkIn")
+              }
+            />
+            <Bar dataKey="online" stackId="source" fill={CHART_COLORS.online} />
             <Bar
-              dataKey="revenue"
-              radius={[10, 10, 0, 0]}
+              dataKey="walkIn"
+              stackId="source"
+              fill={CHART_COLORS.walkIn}
+              radius={[7, 7, 0, 0]}
+            />
+          </BarChart>
+        </ResponsiveContainer>
+      </ChartCard>
+
+      <ChartCard title={t("admin.stats.charts.busiestWeekdays")}>
+        <ResponsiveContainer width="100%" height={270}>
+          <BarChart data={weekdays} margin={{ top: 10, right: 12, left: 4, bottom: 0 }}>
+            <CartesianGrid stroke="rgba(255,255,255,0.12)" strokeDasharray="3 6" />
+            <XAxis dataKey="label" tick={tick} />
+            <YAxis tick={tick} width={38} allowDecimals={false} />
+            <Tooltip contentStyle={tooltipStyle} />
+            <Bar
+              dataKey="bookings"
+              name={t("admin.stats.allBookings")}
               fill="var(--accent-500)"
-              stroke="color-mix(in_oklab,var(--accent-600),white_20%)"
+              radius={[8, 8, 0, 0]}
             />
           </BarChart>
         </ResponsiveContainer>
@@ -311,20 +397,21 @@ export default function AdminStatsClient({
   );
 }
 
-/* -------------------- Subcomponents -------------------- */
 function StatCard({
   title,
   value,
   hint,
+  accent,
 }: {
   title: string;
   value: string;
   hint?: string;
+  accent?: string;
 }) {
   return (
     <div
-      className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.04] via-white/[0.05] to-white/[0.03]
-                 p-4 shadow-[0_0_30px_-18px_color-mix(in_oklab,var(--accent-500),transparent_60%)]"
+      className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.04] via-white/[0.05] to-white/[0.03] p-4 shadow-[0_0_30px_-18px_color-mix(in_oklab,var(--accent-500),transparent_60%)]"
+      style={accent ? { borderColor: `${accent}55` } : undefined}
     >
       <div className="text-xs opacity-70">{title}</div>
       <div className="mt-1 text-xl font-semibold tracking-tight">{value}</div>
@@ -335,17 +422,19 @@ function StatCard({
 
 function ChartCard({
   title,
+  subtitle,
   children,
 }: {
   title: string;
+  subtitle?: string;
   children: React.ReactNode;
 }) {
   return (
-    <section
-      className="rounded-2xl border border-white/10 bg-[--color-card]/70 backdrop-blur-md p-4 sm:p-5
-                 shadow-[0_0_40px_-20px_color-mix(in_oklab,var(--accent-500),transparent_60%)]"
-    >
-      <div className="text-sm font-medium opacity-85 mb-3">{title}</div>
+    <section className="rounded-2xl border border-white/10 bg-[--color-card]/70 p-4 shadow-[0_0_40px_-20px_color-mix(in_oklab,var(--accent-500),transparent_60%)] backdrop-blur-md sm:p-5">
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div className="text-sm font-medium opacity-90">{title}</div>
+        {subtitle && <div className="text-xs opacity-55">{subtitle}</div>}
+      </div>
       {children}
     </section>
   );

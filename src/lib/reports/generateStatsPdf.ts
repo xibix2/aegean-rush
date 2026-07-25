@@ -18,6 +18,8 @@ export async function generateStatsPDF({
   rangeLabel: string;
   totals: {
     revenue: number;
+    onlineRevenue: number;
+    walkInRevenue: number;
     refunds: number;
     seats: number;
     paidBookings: number;
@@ -103,7 +105,7 @@ export async function generateStatsPDF({
     color: rgb(accent.r, accent.g, accent.b),
   });
 
-  text(`${clubName} — Analytics Report`, 20, marginX, y, {
+  text(`${clubName} - Analytics Report`, 20, marginX, y, {
     bold: true,
     color: rgb(accent.r, accent.g, accent.b),
   });
@@ -125,14 +127,14 @@ export async function generateStatsPDF({
   let rowTop = y - 6;
 
   const summaryRows: Array<[string, string]> = [
-    ["Revenue", `€${totals.revenue.toFixed(2)}`],
-    ["Refunds", `€${totals.refunds.toFixed(2)}`],
-    ["Net revenue", `€${(totals.revenue - totals.refunds).toFixed(2)}`],
+    ["Net revenue", `EUR ${(totals.revenue - totals.refunds).toFixed(2)}`],
+    ["Refunds", `EUR ${totals.refunds.toFixed(2)}`],
+    ["Online income", `EUR ${totals.onlineRevenue.toFixed(2)}`],
+    ["Walk-in income", `EUR ${totals.walkInRevenue.toFixed(2)}`],
     ["Paid bookings", `${totals.paidBookings}`],
     ["All bookings", `${totals.bookings}`],
     ["Seats sold", `${totals.seats}`],
     ["Utilization", `${(totals.utilization * 100).toFixed(1)}%`],
-    ["Conversion", `${(totals.conversion * 100).toFixed(1)}%`],
   ];
 
   for (let i = 0; i < summaryRows.length; i += 2) {
@@ -316,7 +318,7 @@ export async function generateStatsPDF({
       });
 
       // value label
-      text(`€${value.toFixed(2)}`, 9, barX + barWidth + 6, centerY + 2, {
+      text(`EUR ${value.toFixed(2)}`, 9, barX + barWidth + 6, centerY + 2, {
         color: rgb(0.25, 0.27, 0.38),
       });
     });
@@ -324,7 +326,7 @@ export async function generateStatsPDF({
 
   // ---------- Footer ----------
   const generatedAt = new Date();
-  const footer = `Generated on ${generatedAt.toISOString().slice(0, 10)} – Tennis Booking Analytics`;
+  const footer = `Generated on ${generatedAt.toISOString().slice(0, 10)} - Aegean Rush Analytics`;
   text(footer, 7.5, marginX, 24, {
     color: rgb(0.55, 0.57, 0.7),
   });
