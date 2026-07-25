@@ -26,7 +26,7 @@ export default async function ClubAdminPage({
   const todayIso = formatYMDInTz(new Date(), tz);
 
   return (
-    <main className="space-y-8">
+    <main className="admin-page max-w-7xl">
       <style
         dangerouslySetInnerHTML={{
           __html: `

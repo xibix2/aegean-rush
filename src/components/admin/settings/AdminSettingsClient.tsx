@@ -91,21 +91,14 @@ export default function AdminSettingsClient({
   };
 
   return (
-    <main className="max-w-3xl mx-auto p-6 space-y-8">
+    <main className="admin-page max-w-4xl">
       {/* HEADER */}
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl ml-3 font-semibold tracking-tight">
-            <span className="text-accent-gradient">{t("settings.title")}</span>
-          </h1>
-          <div
-            className="h-[3px] w-35 rounded-full accent-line mt-2"
-            style={{
-              animation: "adminGlowLine 3.2s ease-in-out infinite",
-            } as any}
-          />
-          <p className="mt-2 text-sm opacity-70">{t("settings.subtitle")}</p>
-          <p className="mt-1 text-xs opacity-60">
+      <header className="admin-page-header">
+        <div className="relative z-10">
+          <div className="admin-page-kicker">Workspace preferences</div>
+          <h1 className="admin-page-title">{t("settings.title")}</h1>
+          <p className="admin-page-subtitle">{t("settings.subtitle")}</p>
+          <p className="mt-2 text-xs opacity-55">
             Plan: <span className="font-medium">{planLabel}</span>
           </p>
         </div>
@@ -115,7 +108,7 @@ export default function AdminSettingsClient({
           <button
             type="submit"
             className={`
-              relative inline-flex items-center justify-center
+            relative z-10 inline-flex items-center justify-center
               rounded-[10px] h-10 px-5 text-sm font-medium text-white
               border border-[--color-border]
               bg-[linear-gradient(135deg,var(--accent-700),var(--accent-500))]
@@ -152,7 +145,7 @@ export default function AdminSettingsClient({
 
       <form
         action={action}
-        className="space-y-8 rounded-2xl u-border u-surface backdrop-blur-md p-6 shadow-[0_0_40px_-20px_color-mix(in_oklab,var(--accent-600),transparent_75%)]"
+        className="admin-panel admin-settings-form space-y-5 rounded-3xl p-5 backdrop-blur-md sm:p-6"
         style={{ ["--card" as any]: "rgba(20,20,30,.55)" }}
       >
         {/* App Settings */}

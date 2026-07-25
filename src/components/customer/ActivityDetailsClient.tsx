@@ -186,8 +186,8 @@ export default function ActivityDetailsClient({
   ].filter(Boolean) as { title: string; body: string }[];
 
   return (
-    <main className="mx-auto max-w-6xl px-3 pb-10 pt-4 sm:px-6 sm:pb-12 sm:pt-6">
-      <section className="overflow-hidden rounded-3xl border border-white/10 bg-[#070b16] shadow-[0_24px_80px_-45px_rgba(0,0,0,0.95)] sm:rounded-[1.75rem]">
+    <main className="customer-page mx-auto max-w-6xl px-3 pb-10 pt-4 sm:px-6 sm:pb-12 sm:pt-6">
+      <section className="customer-hero overflow-hidden rounded-3xl sm:rounded-[1.75rem]">
         <div className="grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr]">
           <div className="relative min-h-[230px] sm:min-h-[340px]">
             {activity.coverImageUrl ? (
@@ -227,7 +227,7 @@ export default function ActivityDetailsClient({
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(236,72,153,0.06),transparent_28%),radial-gradient(circle_at_bottom_left,rgba(56,189,248,0.06),transparent_30%)]" />
 
             <div className="relative z-10">
-              <h1 className="text-[1.65rem] font-semibold leading-tight tracking-tight text-white sm:text-3xl">
+              <h1 className="customer-title text-[1.65rem] sm:text-3xl">
                 {activity.name}
               </h1>
 
@@ -323,7 +323,7 @@ export default function ActivityDetailsClient({
 
                 <Link
                   href={bookingHref}
-                  className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-gradient-to-r from-pink-500 via-fuchsia-500 to-violet-500 px-5 text-sm font-medium text-white shadow-[0_18px_50px_-18px_rgba(236,72,153,0.7)] transition hover:scale-[1.02] sm:w-auto sm:rounded-full"
+                  className="customer-primary inline-flex h-11 w-full items-center justify-center rounded-xl px-5 text-sm font-medium transition sm:w-auto sm:rounded-full"
                 >
                   {t("activities.select")}
                 </Link>
@@ -338,7 +338,7 @@ export default function ActivityDetailsClient({
           {infoCards.map((card) => (
             <div
               key={card.title}
-              className="rounded-[1.25rem] border border-white/10 bg-[#070b16] p-4"
+              className="customer-panel rounded-[1.25rem] p-4"
             >
               <h2 className="text-sm font-semibold text-white">{card.title}</h2>
               <p className="mt-2 text-sm leading-relaxed text-white/64">

@@ -411,7 +411,7 @@ export default async function RootLayout({
                 <nav className="rounded-full border border-white/10 bg-white/6 p-1 shadow-[0_10px_30px_rgba(0,0,0,0.18)] backdrop-blur-md">
                   <Link
                     href={tHref("/contact")}
-                    className="rounded-full px-3 py-2 text-xs font-medium text-white/80 transition hover:bg-white/10 hover:text-white sm:px-4 sm:text-sm"
+                    className="inline-flex min-h-11 items-center rounded-xl px-4 py-2 text-xs font-medium text-white/80 transition hover:bg-white/10 hover:text-white sm:min-h-0 sm:rounded-full sm:text-sm"
                   >
                     Contact
                   </Link>
@@ -425,7 +425,7 @@ export default async function RootLayout({
 
             {/* PAGE CONTENT */}
             <main className="relative">
-              <div className="mx-auto w-full max-w-[1280px] px-1 pb-6 pt-2 sm:px-6 sm:pb-14 sm:pt-8 lg:px-8 lg:pb-20 lg:pt-10">
+              <div className="mx-auto w-full max-w-[1280px] px-2 pb-6 pt-2 sm:px-6 sm:pb-14 sm:pt-8 lg:px-8 lg:pb-20 lg:pt-10">
                 {children}
               </div>
             </main>

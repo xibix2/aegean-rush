@@ -805,17 +805,17 @@ export default async function AdminHomepagePage({ params }: PageProps) {
   });
 
   return (
-    <div className="space-y-5 sm:space-y-8">
-      <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-xl sm:rounded-[2rem] sm:p-6 md:p-8">
+    <div className="admin-page max-w-7xl">
+      <div className="admin-page-header sm:p-6 md:p-8">
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.22em] text-white/45">
+            <p className="admin-page-kicker">
               Homepage editor
             </p>
-            <h1 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+            <h1 className="admin-page-title text-white">
               Customize your club homepage
             </h1>
-            <p className="mt-3 max-w-2xl text-sm text-white/65 md:text-base">
+            <p className="admin-page-subtitle md:text-base">
               Edit the main landing page for this club, control which sections
               appear, and fine-tune the first impression guests see.
             </p>

@@ -6,25 +6,27 @@ export function AdminHeaderClient() {
   const t = useT();
 
   return (
-    <header className="relative flex flex-col items-center text-center">
+    <header className="admin-page-header">
+      <div className="relative z-10">
+        <div className="admin-page-kicker">Business overview</div>
       <h1
-        className="text-3xl md:text-[32px] font-semibold tracking-tight t-anim"
+        className="admin-page-title t-anim"
         style={{ animation: "adminTitlePulse 6s ease-in-out infinite" }}
       >
-        <span className="text-accent-gradient">
-          {t("admin.dashboard.title")}
-        </span>
+        {t("admin.dashboard.title")}
       </h1>
-
-      {/* animated accent underline */}
-      <div
-        className="mt-2 h-[3px] w-40 rounded-full accent-line"
-        style={{ animation: "adminGlowLine 4s ease-in-out infinite" }}
-      />
-
-      <p className="mt-3 text-sm opacity-75 max-w-md">
+      <p className="admin-page-subtitle">
         {t("admin.dashboard.subtitle")}
       </p>
+      </div>
+      <div className="relative z-10 hidden rounded-2xl border border-[color-mix(in_oklab,var(--accent-500),transparent_70%)] bg-[color-mix(in_oklab,var(--accent-500),transparent_90%)] px-4 py-3 text-right sm:block">
+        <div className="text-[10px] font-semibold uppercase tracking-[0.14em] opacity-50">
+          Workspace
+        </div>
+        <div className="mt-0.5 text-sm font-semibold text-[var(--accent-400)]">
+          Live operations
+        </div>
+      </div>
     </header>
   );
 }

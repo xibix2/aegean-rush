@@ -142,7 +142,7 @@ export default function TimetableClient({
     `${currency}${(Math.max(0, cents) / 100).toFixed(2)}`;
 
   return (
-    <main className="mx-auto max-w-3xl p-6 space-y-4">
+    <main className="customer-page mx-auto max-w-3xl space-y-4 px-3 py-4 sm:p-6">
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -152,7 +152,7 @@ export default function TimetableClient({
       />
 
       {/* Title */}
-      <header className="flex items-start justify-between gap-4">
+      <header className="customer-hero flex flex-col gap-4 rounded-3xl p-5 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="text-2xl font-semibold tracking-tight">
             <span className="bg-gradient-to-r from-white via-[color-mix(in_oklab,var(--accent-300),white_20%)] to-[color-mix(in_oklab,var(--accent-400),white_10%)] bg-clip-text text-transparent">
@@ -173,14 +173,14 @@ export default function TimetableClient({
         </div>
 
         {/* Party size control */}
-        <div className="rounded-xl border border-[--color-border] bg-[--color-card] p-2">
+        <div className="customer-panel w-full rounded-xl p-3 sm:w-auto">
           <label className="block text-xs opacity-80 mb-1">
             {t("timetable.players")}
           </label>
           <div className="flex items-center gap-2">
             <button
               type="button"
-              className="h-8 w-8 rounded-lg border border-[--color-border] bg-white/5 hover:bg-white/10"
+              className="h-11 w-11 rounded-lg border border-[--color-border] bg-white/5 hover:bg-white/10 sm:h-9 sm:w-9"
               onClick={() => setPartySize((n) => Math.max(1, n - 1))}
               aria-label={t("timetable.aria.decrease")}
             >
@@ -193,11 +193,11 @@ export default function TimetableClient({
               }
               type="number"
               min={1}
-              className="w-14 h-8 rounded-lg border border-[--color-border] bg-transparent text-center"
+              className="h-11 min-w-0 flex-1 rounded-lg border border-[--color-border] bg-transparent text-center sm:h-9 sm:w-14 sm:flex-none"
             />
             <button
               type="button"
-              className="h-8 w-8 rounded-lg border border-[--color-border] bg-white/5 hover:bg-white/10"
+              className="h-11 w-11 rounded-lg border border-[--color-border] bg-white/5 hover:bg-white/10 sm:h-9 sm:w-9"
               onClick={() => setPartySize((n) => Math.min(50, n + 1))}
               aria-label={t("timetable.aria.increase")}
             >
@@ -230,7 +230,7 @@ export default function TimetableClient({
 
       {/* Slots */}
       {!loading && !errorMsg && slots.length > 0 && (
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
           {slots.map((s) => {
             const timeLabel = new Date(s.startAt).toLocaleTimeString(undefined, {
               hour: "2-digit",
@@ -243,7 +243,7 @@ export default function TimetableClient({
               <div
                 key={s.id}
                 className={[
-                  "rounded-2xl border border-[--color-border] bg-[--color-card] p-3",
+                  "customer-card rounded-2xl p-4",
                   "transition hover:-translate-y-0.5",
                   disabled
                     ? "opacity-50"
@@ -264,7 +264,7 @@ export default function TimetableClient({
                   disabled={disabled}
                   onClick={() => goCheckout(s.id)}
                   className={[
-                    "mt-3 inline-flex h-10 w-full items-center justify-center rounded-[12px] px-3 text-sm font-medium",
+                    "customer-primary mt-3 inline-flex h-12 w-full items-center justify-center rounded-xl px-3 text-sm font-medium sm:h-10",
                     "text-[--color-brand-foreground]",
                     "bg-[linear-gradient(90deg,var(--accent-600),var(--accent-500),var(--accent-600))] bg-[length:200%_100%]",
                     "transition active:scale-[0.98]",

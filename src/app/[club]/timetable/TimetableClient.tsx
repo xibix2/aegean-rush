@@ -244,7 +244,7 @@ function modeLabel(mode: ActivityMode) {
 }
 
 function cardClass() {
-  return "rounded-2xl border border-white/10 bg-[#070b16] p-3 shadow-[0_24px_80px_-45px_rgba(0,0,0,0.95)] sm:rounded-[1.6rem] sm:p-5";
+  return "customer-panel rounded-2xl p-3 sm:rounded-[1.6rem] sm:p-5";
 }
 
 function fieldClass() {
@@ -776,8 +776,8 @@ export default function TimetableClient() {
           `,
         }}
       />
-      <main className="mx-auto max-w-5xl px-3 pb-10 pt-3 sm:px-6 sm:pb-12 sm:pt-6">
-        <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#070b16] px-4 py-5 sm:rounded-[2rem] sm:px-7 sm:py-6 md:px-8 md:py-8">
+      <main className="customer-page mx-auto max-w-5xl px-3 pb-10 pt-3 sm:px-6 sm:pb-12 sm:pt-6">
+        <section className="customer-hero rounded-2xl px-4 py-5 sm:rounded-[2rem] sm:px-7 sm:py-6 md:px-8 md:py-8">
           <div
             className="pointer-events-none absolute inset-0"
             aria-hidden
@@ -787,17 +787,17 @@ export default function TimetableClient() {
             }}
           />
           <div className="relative z-10">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-[11px] uppercase tracking-[0.22em] text-white/72 backdrop-blur-xl">
+            <div className="customer-kicker">
               <span className="h-2 w-2 rounded-full bg-sky-300 shadow-[0_0_14px_rgba(56,189,248,0.65)]" />
               Booking flow
             </div>
             <Link
               href={`/${tenantSlug}/activities`}
-              className="mt-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-gradient-to-r from-indigo-500/10 to-fuchsia-500/10 px-4 py-2 text-sm text-white/90 backdrop-blur-md transition hover:from-indigo-500/20 hover:to-fuchsia-500/20 sm:absolute sm:right-4 sm:top-4 sm:mt-0"
+              className="customer-secondary mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl px-4 py-2 text-sm transition sm:absolute sm:right-4 sm:top-4 sm:mt-0 sm:min-h-0 sm:rounded-full"
             >
               ← Back to Experiences
             </Link>
-            <h1 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:mt-4 sm:text-4xl">
+            <h1 className="customer-title mt-3 text-2xl sm:mt-4 sm:text-4xl">
               {t("timetable.title")}
             </h1>
 
@@ -856,7 +856,7 @@ export default function TimetableClient() {
                 type="button"
                 onClick={goPrevDay}
                 disabled={loading || isAtMin}
-                className="inline-flex h-11 w-full items-center justify-center rounded-full border border-white/12 bg-white/[0.05] px-4 text-sm text-white/90 transition hover:bg-white/[0.08] disabled:opacity-40 sm:h-10 sm:w-auto"
+                className="customer-secondary inline-flex h-12 w-full items-center justify-center rounded-xl px-4 text-sm transition disabled:opacity-40 sm:h-10 sm:w-auto sm:rounded-full"
               >
                 ‹ Previous day
               </button>
@@ -866,14 +866,14 @@ export default function TimetableClient() {
                 value={safeDate}
                 min={minBookable}
                 onChange={(e) => onDateInputChange(e.target.value)}
-                className="inline-flex h-11 w-full rounded-full border border-white/12 bg-white/[0.05] px-4 text-center text-sm text-white/90 outline-none focus:ring-2 focus:ring-fuchsia-400/25 sm:h-10 sm:w-auto"
+                className="customer-secondary inline-flex h-12 w-full rounded-xl px-4 text-center text-sm outline-none sm:h-10 sm:w-auto sm:rounded-full"
               />
 
               <button
                 type="button"
                 onClick={goNextDay}
                 disabled={loading}
-                className="inline-flex h-11 w-full items-center justify-center rounded-full border border-white/12 bg-white/[0.05] px-4 text-sm text-white/90 transition hover:bg-white/[0.08] disabled:opacity-40 sm:h-10 sm:w-auto"
+                className="customer-secondary inline-flex h-12 w-full items-center justify-center rounded-xl px-4 text-sm transition disabled:opacity-40 sm:h-10 sm:w-auto sm:rounded-full"
               >
                 Next day ›
               </button>
@@ -1200,10 +1200,10 @@ export default function TimetableClient() {
                             <button
                               disabled={disabled || loading}
                               onClick={() => handleChooseSlot(s.id)}
-                              className={`inline-flex h-11 w-full items-center justify-center rounded-full px-5 text-sm font-medium text-white transition sm:w-auto ${
+                              className={`inline-flex h-12 w-full items-center justify-center rounded-xl px-5 text-sm font-medium text-white transition sm:h-11 sm:w-auto sm:rounded-full ${
                                 disabled || loading
                                   ? "cursor-not-allowed border border-white/10 bg-white/10 opacity-40"
-                                  : "bg-gradient-to-r from-pink-500 via-fuchsia-500 to-violet-500 shadow-[0_18px_50px_-18px_rgba(236,72,153,0.75)] hover:scale-[1.02]"
+                                  : "customer-primary"
                               }`}
                             >
                               {disabled
@@ -1421,10 +1421,10 @@ export default function TimetableClient() {
                           <button
                             disabled={disabled || loading}
                             onClick={() => handleChooseSlot(s.id)}
-                            className={`inline-flex h-11 w-full items-center justify-center rounded-full px-6 text-sm font-medium text-white transition sm:min-w-[180px] sm:w-auto ${
+                            className={`inline-flex h-12 w-full items-center justify-center rounded-xl px-6 text-sm font-medium text-white transition sm:h-11 sm:min-w-[180px] sm:w-auto sm:rounded-full ${
                               disabled || loading
                                 ? "cursor-not-allowed border border-white/10 bg-white/10 opacity-40"
-                                : "bg-gradient-to-r from-pink-500 via-fuchsia-500 to-violet-500 shadow-[0_18px_50px_-18px_rgba(236,72,153,0.75)] hover:scale-[1.02]"
+                                : "customer-primary"
                             }`}
                           >
                             {disabled ? t("timetable.notEnough") : t("timetable.choose")}

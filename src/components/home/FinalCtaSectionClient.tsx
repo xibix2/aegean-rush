@@ -115,13 +115,13 @@ export function FinalCtaSectionClient({
   };
 
   const primaryButtonClass =
-    "cta-anim group relative inline-flex h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-r from-pink-500 via-fuchsia-500 to-violet-500 px-6 text-sm font-medium text-white shadow-[0_22px_65px_-22px_rgba(236,72,153,0.85)] transition hover:scale-[1.03] hover:shadow-[0_28px_80px_-22px_rgba(236,72,153,0.95)] sm:w-auto md:h-14 md:px-8 md:text-base";
+    "customer-primary cta-anim group relative inline-flex h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-xl px-6 text-sm font-medium transition sm:w-auto sm:rounded-2xl md:h-14 md:px-8 md:text-base";
 
   const secondaryButtonClass =
-    "inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-white/12 bg-white/[0.05] px-6 text-sm font-medium text-white/88 shadow-[0_16px_40px_-30px_rgba(56,189,248,0.55)] transition hover:-translate-y-0.5 hover:bg-white/[0.08] sm:w-auto md:h-14 md:px-8 md:text-base";
+    "customer-secondary inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl px-6 text-sm font-medium transition sm:w-auto sm:rounded-2xl md:h-14 md:px-8 md:text-base";
 
   return (
-    <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#070b16] px-4 py-10 backdrop-blur-xl sm:rounded-[2.35rem] sm:px-6 sm:py-14 md:px-8 md:py-20">
+    <section className="customer-hero rounded-3xl px-4 py-10 sm:rounded-[2.35rem] sm:px-6 sm:py-14 md:px-8 md:py-20">
       <style
         dangerouslySetInnerHTML={{
           __html: `

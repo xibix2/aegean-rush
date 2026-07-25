@@ -117,7 +117,7 @@ export default function ActivitiesClient({
   }, [lang]);
 
   return (
-    <main className="mx-auto max-w-7xl px-3 pb-12 pt-4 sm:px-6 sm:pb-16 sm:pt-8">
+    <main className="customer-page mx-auto max-w-7xl px-3 pb-12 pt-4 sm:px-6 sm:pb-16 sm:pt-8">
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -134,7 +134,7 @@ export default function ActivitiesClient({
         }}
       />
 
-      <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#070b16] px-4 py-6 sm:rounded-[2rem] sm:px-7 md:px-8 md:py-10">
+      <section className="customer-hero rounded-3xl px-4 py-6 sm:rounded-[2rem] sm:px-7 md:px-8 md:py-10">
         <div
           className="pointer-events-none absolute inset-0"
           aria-hidden
@@ -145,12 +145,12 @@ export default function ActivitiesClient({
         />
         <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-[11px] uppercase tracking-[0.22em] text-white/72 backdrop-blur-xl">
+            <div className="customer-kicker">
               <span className="h-2 w-2 rounded-full bg-sky-300 shadow-[0_0_14px_rgba(56,189,248,0.65)]" />
               Water experiences
             </div>
 
-            <h1 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:mt-4 sm:text-4xl md:text-5xl">
+            <h1 className="customer-title mt-3 sm:mt-4">
               {t("activities.title")}
             </h1>
 
@@ -162,7 +162,7 @@ export default function ActivitiesClient({
           <Link
             href={tenantHref("/")}
             title={t("activities.backTitle")}
-            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/12 bg-white/[0.05] px-5 text-sm font-medium text-white/90 backdrop-blur transition hover:bg-white/[0.08] sm:w-auto sm:rounded-2xl"
+            className="customer-secondary inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl px-5 text-sm font-medium transition sm:w-auto sm:rounded-2xl"
           >
             <span aria-hidden>←</span>
             {t("activities.back")}
@@ -254,7 +254,7 @@ export default function ActivitiesClient({
           return (
             <article
               key={a.id}
-              className="card-appear group relative overflow-hidden rounded-3xl border border-white/10 bg-[#070b16] transition duration-300 hover:-translate-y-0.5 hover:border-white/15 sm:rounded-[2rem]"
+              className="customer-card card-appear group relative overflow-hidden rounded-3xl sm:rounded-[2rem]"
               style={{
                 animationDelay: `${0.04 * idx}s`,
                 boxShadow:
@@ -341,14 +341,14 @@ export default function ActivitiesClient({
                     <div className="mt-5 grid gap-2 border-t border-white/10 pt-4 sm:mt-6 sm:flex sm:items-center sm:justify-end sm:pt-5">
                       <Link
                         href={detailsHref}
-                        className="inline-flex h-11 items-center justify-center rounded-xl border border-white/12 bg-white/[0.05] px-5 text-sm font-medium text-white/90 transition hover:bg-white/[0.08] sm:h-12 sm:rounded-2xl"
+                        className="customer-secondary inline-flex h-11 items-center justify-center rounded-xl px-5 text-sm font-medium transition sm:h-12 sm:rounded-2xl"
                       >
                         Learn more
                       </Link>
 
                       <Link
                         href={bookingHref}
-                        className="inline-flex h-11 items-center justify-center rounded-xl bg-gradient-to-r from-pink-500 via-fuchsia-500 to-violet-500 px-6 text-sm font-medium text-white shadow-[0_18px_50px_-18px_rgba(236,72,153,0.75)] transition hover:scale-[1.02] sm:h-12 sm:rounded-2xl"
+                        className="customer-primary inline-flex h-11 items-center justify-center rounded-xl px-6 text-sm font-medium transition sm:h-12 sm:rounded-2xl"
                       >
                         {t("activities.select")}
                       </Link>

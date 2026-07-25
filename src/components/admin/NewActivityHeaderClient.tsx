@@ -15,7 +15,7 @@ export function NewActivityHeaderClient() {
   const backHref = slug ? `/${slug}/admin/activities` : "/admin/activities";
 
   return (
-    <div className="flex items-center justify-between">
+    <header className="admin-page-header">
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -28,18 +28,22 @@ export function NewActivityHeaderClient() {
         }}
       />
 
-      <h1 className="text-3xl font-semibold tracking-tight animate-[softFadeUp_1s_ease-out]">
-        <span className="text-accent-gradient">
+      <div className="relative z-10">
+        <div className="admin-page-kicker">Catalogue setup</div>
+        <h1 className="admin-page-title animate-[softFadeUp_1s_ease-out]">
           {t("admin.activities.new.title")}
-        </span>
-      </h1>
+        </h1>
+        <p className="admin-page-subtitle">
+          Configure availability, capacity and pricing in one place.
+        </p>
+      </div>
 
       <Link
         href={backHref}
-        className="rounded-full u-border u-surface px-4 py-1.5 text-sm opacity-90 hover:opacity-100 transition"
+        className="relative z-10 rounded-xl u-border u-surface px-4 py-2 text-sm opacity-90 transition hover:opacity-100"
       >
         ← {t("admin.activities.back")}
       </Link>
-    </div>
+    </header>
   );
 }

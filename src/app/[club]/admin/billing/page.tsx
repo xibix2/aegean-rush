@@ -41,20 +41,19 @@ export default async function BillingPage({
   const isConnected = !!club.stripeConnectAccountId;
 
   return (
-    <main className="max-w-4xl mx-auto p-6 space-y-6">
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">
-            <span className="text-accent-gradient">Billing</span>
-          </h1>
-          <p className="mt-1 text-sm opacity-70">
+    <main className="admin-page max-w-5xl">
+      <header className="admin-page-header">
+        <div className="relative z-10">
+          <div className="admin-page-kicker">Plan and payments</div>
+          <h1 className="admin-page-title">Billing</h1>
+          <p className="admin-page-subtitle">
             Manage your subscription and payouts for <strong>{club.name}</strong>.
           </p>
         </div>
 
         <a
           href={`/${club.slug}/admin`}
-          className="inline-flex items-center rounded-full u-border u-surface px-3 py-1.5 text-sm hover:u-surface-2 transition"
+          className="relative z-10 inline-flex items-center rounded-xl u-border u-surface px-4 py-2 text-sm transition hover:u-surface-2"
         >
           ← Back to dashboard
         </a>
@@ -87,7 +86,7 @@ export default async function BillingPage({
         tenantSlug={club.slug}
       />
 
-      <section className="rounded-2xl u-border u-surface p-5 glow-soft space-y-3">
+      <section className="admin-panel rounded-3xl p-5 space-y-3">
         <div className="flex items-center justify-between gap-3">
           <div>
             <h2 className="text-sm font-semibold opacity-85">

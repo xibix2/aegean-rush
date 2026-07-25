@@ -66,10 +66,10 @@ export default async function ActivitiesPage() {
   ).length;
 
   return (
-    <div className="relative mx-auto max-w-6xl px-6 pb-28">
+    <div className="admin-page max-w-6xl pb-16">
       <ActivitiesHeaderClient />
 
-      <section className="glow-soft rounded-2xl u-border u-surface p-4 backdrop-blur-md sm:p-5">
+      <section className="admin-panel glow-soft rounded-3xl p-4 backdrop-blur-md sm:p-5">
         <ActivityCarousel activities={activities} basePrefix={basePrefix} />
       </section>
 

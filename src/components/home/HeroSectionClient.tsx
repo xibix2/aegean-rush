@@ -425,7 +425,7 @@ export function HeroSectionClient({
   }, [tenantSlug]);
 
   return (
-    <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#050816] text-white shadow-[0_30px_120px_-40px_rgba(0,0,0,0.8)] sm:rounded-[2rem] md:min-h-[calc(100svh-7rem)]">
+    <section className="customer-hero rounded-3xl text-white sm:rounded-[2rem] md:min-h-[calc(100svh-7rem)]">
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -493,7 +493,7 @@ export function HeroSectionClient({
             <div className="mt-4 grid gap-2.5 sm:flex md:mt-7 md:justify-start">
               <Link
                 href={activeSlide.primaryHref}
-                className="group relative inline-flex h-11 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-r from-pink-500 to-fuchsia-500 px-6 text-[13px] font-bold text-white shadow-[0_18px_55px_-18px_rgba(236,72,153,0.9)] transition hover:scale-[1.03] sm:h-12 sm:rounded-2xl sm:px-7 sm:text-sm"
+                className="customer-primary group relative inline-flex h-12 items-center justify-center overflow-hidden rounded-xl px-6 text-[13px] font-bold transition sm:rounded-2xl sm:px-7 sm:text-sm"
               >
                 <span
                   className="hero-anim absolute inset-0 opacity-40"
@@ -509,7 +509,7 @@ export function HeroSectionClient({
 
               <a
                 href={activeSlide.secondaryHref}
-                className="inline-flex h-11 items-center justify-center rounded-xl border border-white/12 bg-white/[0.08] px-6 text-[13px] font-bold text-white/88 transition hover:bg-white/12 sm:h-12 sm:rounded-2xl sm:px-7 sm:text-sm"
+                className="customer-secondary inline-flex h-12 items-center justify-center rounded-xl px-6 text-[13px] font-bold transition sm:rounded-2xl sm:px-7 sm:text-sm"
               >
                 <MapPin className="mr-2 size-4" />
                 {activeSlide.secondaryLabel}

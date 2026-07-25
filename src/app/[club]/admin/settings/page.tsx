@@ -184,7 +184,7 @@ export default async function AdminSettingsPage({
   // Settings contain billing and branding controls, so only admins can view them.
   if (session.role !== "ADMIN" && session.role !== "SUPERADMIN") {
     return (
-      <main className="max-w-3xl mx-auto px-6 py-24 text-center space-y-6">
+      <main className="admin-panel mx-auto max-w-3xl space-y-6 rounded-3xl px-6 py-16 text-center">
         <h1 className="text-3xl font-semibold tracking-tight">
           No access to settings
         </h1>
@@ -267,7 +267,7 @@ export default async function AdminSettingsPage({
       />
 
       {/* Billing shortcut card */}
-      <section className="mt-8 rounded-2xl u-border u-surface p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+      <section className="admin-panel mx-auto mt-6 flex max-w-4xl flex-col items-start justify-between gap-3 rounded-3xl p-5 sm:flex-row sm:items-center">
         <div>
           <h2 className="text-sm font-semibold opacity-85">
             Subscription &amp; billing

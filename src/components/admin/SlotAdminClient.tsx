@@ -145,7 +145,7 @@ export default function SlotAdminClient({
 
   if (!slot) {
     return (
-      <main className="max-w-4xl mx-auto p-6">
+      <main className="admin-page max-w-4xl">
         <h1 className="text-2xl font-semibold">{t("admin.slot.notFound")}</h1>
       </main>
     );
@@ -164,14 +164,11 @@ export default function SlotAdminClient({
   const firstDurationOption = slot.durationOptions[0];
 
   return (
-    <main className="max-w-5xl mx-auto p-6 space-y-6">
-      <header className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">
-            <span className="bg-gradient-to-r from-white via-pink-200 to-violet-200 bg-clip-text text-transparent">
-              {t("admin.slot.title")}
-            </span>
-          </h1>
+    <main className="admin-page max-w-6xl">
+      <header className="admin-page-header">
+        <div className="relative z-10">
+          <div className="admin-page-kicker">Booking operations</div>
+          <h1 className="admin-page-title">{t("admin.slot.title")}</h1>
 
           <div className="mt-2 text-sm opacity-85">
             <span className="opacity-75">{slot.activityName}</span>{" "}
@@ -205,15 +202,11 @@ export default function SlotAdminClient({
             />
           </div>
 
-          <div
-            className="mt-3 h-[3px] w-44 rounded-full bg-gradient-to-r from-transparent via-pink-500/85 to-transparent"
-            style={{ animation: "adminGlowLine 3.2s ease-in-out infinite" } as any}
-          />
         </div>
 
         <a
           href={`/admin?date=${format(start, "yyyy-MM-dd")}`}
-          className="rounded-xl border border-white/10 bg-white/[0.05] hover:bg-white/[0.08] px-4 py-2 text-sm transition"
+          className="relative z-10 rounded-xl border border-white/10 bg-white/[0.05] hover:bg-white/[0.08] px-4 py-2 text-sm transition"
         >
           {t("admin.slot.back")}
         </a>

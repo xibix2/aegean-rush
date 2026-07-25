@@ -215,7 +215,7 @@ export default function AdminNavClient({
   );
 
   return (
-    <div className="min-h-[100dvh] bg-[var(--background)]">
+    <div className="admin-workspace min-h-[100dvh] bg-[var(--background)]">
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-[260px] border-r border-[var(--border)] bg-[color-mix(in_oklab,var(--card),black_5%)] lg:block">
         {sidebar}
       </aside>

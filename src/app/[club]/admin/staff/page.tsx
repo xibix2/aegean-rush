@@ -166,13 +166,12 @@ export default async function StaffPage() {
   ]);
 
   return (
-    <main className="max-w-4xl mx-auto p-6 space-y-6">
-      <header className="flex items-center justify-between gap-3">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">
-            <span className="text-accent-gradient">Team & access</span>
-          </h1>
-          <p className="mt-1 text-sm opacity-70">
+    <main className="admin-page max-w-5xl">
+      <header className="admin-page-header">
+        <div className="relative z-10">
+          <div className="admin-page-kicker">People and permissions</div>
+          <h1 className="admin-page-title">Team & access</h1>
+          <p className="admin-page-subtitle">
             Manage who can log into the{" "}
             <span className="font-medium">{tenant.name}</span> dashboard.
           </p>
@@ -180,13 +179,13 @@ export default async function StaffPage() {
 
         <Link
           href={`/${tenant.slug}/admin`}
-          className="inline-flex items-center rounded-full u-border u-surface px-3 py-1.5 text-sm hover:u-surface-2 transition"
+          className="relative z-10 inline-flex items-center rounded-xl u-border u-surface px-4 py-2 text-sm transition hover:u-surface-2"
         >
           ← Back to dashboard
         </Link>
       </header>
 
-      <section className="rounded-2xl u-border u-surface px-4 py-3 text-sm flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
+      <section className="admin-panel flex flex-col gap-2 rounded-3xl px-5 py-4 text-sm sm:flex-row sm:items-center sm:justify-between">
         <p className="opacity-80">
           Admins can invite and remove team members. Roles control what each
           person can see and manage in the business dashboard.
@@ -196,7 +195,7 @@ export default async function StaffPage() {
         </span>
       </section>
 
-      <section className="rounded-2xl u-border u-surface p-4 space-y-3">
+      <section className="admin-panel rounded-3xl p-5 space-y-3">
         <div className="flex items-center justify-between gap-2">
           <h2 className="text-sm font-semibold tracking-wide uppercase opacity-80">
             Invite team member
@@ -242,7 +241,7 @@ export default async function StaffPage() {
         )}
       </section>
 
-      <section className="rounded-2xl u-border u-surface overflow-hidden">
+      <section className="admin-panel overflow-hidden rounded-3xl">
         {users.length === 0 ? (
           <div className="p-6 text-sm opacity-75">
             No team members yet. Your own admin account is created automatically
@@ -312,7 +311,7 @@ export default async function StaffPage() {
       </section>
 
       {invites.length > 0 && (
-        <section className="rounded-2xl u-border u-surface p-4 space-y-3">
+        <section className="admin-panel rounded-3xl p-5 space-y-3">
           <h2 className="text-sm font-semibold tracking-wide uppercase opacity-80">
             Pending invites
           </h2>

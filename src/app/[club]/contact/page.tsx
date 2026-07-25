@@ -71,18 +71,18 @@ export default async function BusinessContactPage({ params }: PageProps) {
     : "#";
 
   return (
-    <main className="mx-auto max-w-5xl space-y-8 px-4 pb-20">
-      <section className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-black/35 p-6 shadow-[0_28px_100px_-50px_rgba(0,0,0,0.9)] backdrop-blur-xl md:p-9">
+    <main className="customer-page mx-auto max-w-5xl space-y-5 px-3 pb-16 pt-3 sm:space-y-8 sm:px-4 sm:pb-20 sm:pt-6">
+      <section className="customer-hero rounded-3xl p-5 sm:rounded-[2rem] sm:p-6 md:p-9">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(236,72,153,0.20),transparent_30%),radial-gradient(circle_at_82%_20%,rgba(34,211,238,0.18),transparent_32%),linear-gradient(180deg,rgba(255,255,255,0.04),transparent)]" />
 
         <div className="relative z-10 grid gap-8 md:grid-cols-[1.1fr_0.9fr] md:items-center">
           <div>
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.16em] text-cyan-100">
+            <div className="customer-kicker mb-4">
               <MessageCircle className="size-3.5" />
               Guest support
             </div>
 
-            <h1 className="text-4xl font-black uppercase leading-[0.95] tracking-[-0.06em] text-white md:text-6xl">
+            <h1 className="customer-title">
               Contact
               <span className="block bg-gradient-to-r from-pink-400 via-fuchsia-300 to-cyan-200 bg-clip-text text-transparent">
                 {club.name}
@@ -99,7 +99,7 @@ export default async function BusinessContactPage({ params }: PageProps) {
               {canPhone && (
                 <a
                   href={phoneHref}
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl px-6 text-sm font-bold text-black shadow-[0_18px_55px_-18px_rgba(34,211,238,0.9)] transition hover:scale-[1.03]"
+                  className="customer-primary inline-flex h-12 items-center justify-center gap-2 rounded-xl px-6 text-sm font-bold transition sm:rounded-2xl"
                   style={{ background: accent }}
                 >
                   <Phone className="size-4" />
@@ -116,7 +116,7 @@ export default async function BusinessContactPage({ params }: PageProps) {
                   )}&body=${encodeURIComponent(
                     `Hi ${contactName},\n\nI’d like to ask about...\n\nBooking details:\n- Date:\n- Time:\n- Activity:\n- Number of guests:\n\nThanks,\n`
                   )}`}
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-white/12 bg-white/[0.08] px-6 text-sm font-bold text-white/90 transition hover:bg-white/12"
+                  className="customer-secondary inline-flex h-12 items-center justify-center gap-2 rounded-xl px-6 text-sm font-bold transition sm:rounded-2xl"
                 >
                   <Mail className="size-4" />
                   Email us
@@ -125,7 +125,7 @@ export default async function BusinessContactPage({ params }: PageProps) {
             </div>
           </div>
 
-          <div className="rounded-[1.7rem] border border-white/10 bg-white/[0.05] p-5 backdrop-blur-xl">
+          <div className="customer-panel rounded-[1.7rem] p-5">
             <div className="flex items-center gap-3">
               {club.logoKey && (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -212,7 +212,7 @@ export default async function BusinessContactPage({ params }: PageProps) {
       </section>
 
       {canPhone && (
-        <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 text-center backdrop-blur-xl">
+        <section className="customer-panel rounded-2xl p-5 text-center">
           <p className="text-sm text-white/65">
             Need fast help? Calling is usually the quickest option.
           </p>
@@ -251,7 +251,7 @@ function InfoCard({
   text: string;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
+    <div className="customer-card rounded-2xl p-5">
       <div className="mb-3 flex size-11 items-center justify-center rounded-2xl border border-white/10 bg-black/25">
         {icon}
       </div>

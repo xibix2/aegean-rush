@@ -261,7 +261,7 @@ export default function SlotGeneratorClient({
   }, [slots]);
 
   return (
-    <main className="mx-auto max-w-6xl p-6 space-y-6">
+    <main className="admin-page max-w-6xl">
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -271,14 +271,23 @@ export default function SlotGeneratorClient({
         }}
       />
 
-      <div className="space-y-2">
-        <h1 className="text-3xl md:text-[32px] font-semibold tracking-tight">
-          <span className="text-accent-gradient">{t("slots.generator.title")}</span>
-        </h1>
-        <p className="text-sm opacity-70">
-          Create availability and scan daily slot status quickly.
-        </p>
-      </div>
+      <header className="admin-page-header">
+        <div className="relative z-10">
+          <div className="admin-page-kicker">Availability control</div>
+          <h1 className="admin-page-title">
+            {t("slots.generator.title")}
+          </h1>
+          <p className="admin-page-subtitle">
+            Create availability and scan daily slot status quickly.
+          </p>
+        </div>
+        <a
+          href={pathname.replace(/\/slots$/, "/planner")}
+          className="relative z-10 rounded-xl border border-[color-mix(in_oklab,var(--accent-500),transparent_60%)] bg-[color-mix(in_oklab,var(--accent-500),transparent_88%)] px-4 py-2.5 text-sm font-medium text-[var(--accent-400)]"
+        >
+          View daily planner
+        </a>
+      </header>
 
       {typeof created === "number" && created > 0 && (
         <div
@@ -299,7 +308,7 @@ export default function SlotGeneratorClient({
         </div>
       )}
 
-      <section className="rounded-2xl u-border bg-[--color-card] p-5 md:p-6 glow-soft space-y-4">
+      <section className="admin-panel rounded-3xl p-5 md:p-6 space-y-4">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <h2 className="text-lg font-semibold text-white">Day operations</h2>
@@ -378,7 +387,7 @@ export default function SlotGeneratorClient({
             {groupedSlots.map((group) => (
               <div
                 key={group.activityId}
-                className="rounded-2xl u-border u-surface overflow-hidden"
+                className="admin-panel overflow-hidden rounded-2xl"
               >
                 <div className="border-b border-white/10 px-4 py-3 flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
@@ -472,7 +481,7 @@ export default function SlotGeneratorClient({
       <form
         action={action}
         lang="en-GB"
-        className="relative rounded-2xl u-border bg-[--color-card] p-5 md:p-6 glow-soft"
+        className="admin-panel relative rounded-3xl p-5 md:p-6"
       >
         <div
           aria-hidden
@@ -573,7 +582,7 @@ export default function SlotGeneratorClient({
           </div>
 
           {selectedActivity && (
-            <div className="rounded-2xl u-border u-surface p-4 space-y-3">
+            <div className="admin-panel rounded-2xl p-4 space-y-3">
               <div className="flex flex-wrap items-center gap-2">
                 <div className="text-sm font-medium">{selectedActivity.name}</div>
                 {selectedModeBadge && (

@@ -126,17 +126,20 @@ export default function AdminCalendarPage() {
   const daysInMonth = makeMonthDays(month);
 
   return (
-    <main className="max-w-6xl mx-auto p-6 space-y-8">
+    <main className="admin-page max-w-6xl">
       {/* Header */}
-      <header className="text-center">
-        <h1 className="text-3xl font-semibold tracking-tight">
-          <span className="text-accent-gradient">{t("calendar.title")}</span>
-        </h1>
-        <div className="mx-auto mt-2 h-[3px] w-40 rounded-full accent-line" />
+      <header className="admin-page-header">
+        <div className="relative z-10">
+          <div className="admin-page-kicker">Schedule overview</div>
+          <h1 className="admin-page-title">{t("calendar.title")}</h1>
+          <p className="admin-page-subtitle">
+            Review monthly availability and manage the selected day.
+          </p>
+        </div>
       </header>
 
       {/* Sport / Month Controls */}
-      <section className="rounded-2xl u-border u-surface backdrop-blur-md p-5 space-y-3 glow-soft">
+      <section className="admin-panel rounded-3xl p-5 space-y-3">
         <div className="flex flex-wrap items-center gap-3">
           {(["PADEL", "TENNIS", "PICKLEBALL"] as Sport[]).map((s) => (
             <button
@@ -168,7 +171,7 @@ export default function AdminCalendarPage() {
       </section>
 
       {/* Month grid */}
-      <section className="rounded-2xl u-border u-surface backdrop-blur-md p-5">
+      <section className="admin-panel rounded-3xl p-5">
         <h3 className="text-lg font-semibold mb-3">{t("calendar.monthOverview")}</h3>
         <div className="grid grid-cols-7 gap-2 text-sm">
           {daysInMonth.map((d) => {
@@ -199,7 +202,7 @@ export default function AdminCalendarPage() {
       </section>
 
       {/* Day list */}
-      <section className="rounded-2xl u-border u-surface backdrop-blur-md p-5 space-y-3">
+      <section className="admin-panel rounded-3xl p-5 space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">
             {t("calendar.slotsOn")}{" "}
@@ -254,7 +257,7 @@ export default function AdminCalendarPage() {
       </section>
 
       {/* Slot generator */}
-      <section className="rounded-2xl u-border u-surface backdrop-blur-md p-5 glow-soft">
+      <section className="admin-panel rounded-3xl p-5">
         <h3 className="text-lg font-semibold mb-4 text-accent-gradient">
           {t("calendar.generator.title")}
         </h3>

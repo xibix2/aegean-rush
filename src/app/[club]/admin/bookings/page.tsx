@@ -295,26 +295,24 @@ export default function AdminBookingsPage() {
   }, [filtered]);
 
   return (
-    <main className="max-w-7xl mx-auto p-6 space-y-6">
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-@keyframes adminGlowLine { 0%,100%{opacity:.55; transform:scaleX(.9)} 50%{opacity:.95; transform:scaleX(1)} }
-          `,
-        }}
-      />
-
-      <header className="text-center">
-        <h1 className="text-3xl font-semibold tracking-tight">
-          <span className="text-accent-gradient">{t("bookings.title")}</span>
-        </h1>
-        <div
-          className="mx-auto mt-2 h-[3px] w-66 ml-86 rounded-full accent-line"
-          style={{ animation: "adminGlowLine 3.2s ease-in-out infinite" }}
-        />
+    <main className="admin-page max-w-7xl">
+      <header className="admin-page-header">
+        <div className="relative z-10">
+          <div className="admin-page-kicker">Guest management</div>
+          <h1 className="admin-page-title">{t("bookings.title")}</h1>
+          <p className="admin-page-subtitle">
+            Search, review and manage every customer reservation.
+          </p>
+        </div>
+        <Link
+          href={`/${club}/admin/planner`}
+          className="relative z-10 rounded-xl border border-[color-mix(in_oklab,var(--accent-500),transparent_60%)] bg-[color-mix(in_oklab,var(--accent-500),transparent_88%)] px-4 py-2.5 text-sm font-medium text-[var(--accent-400)] transition hover:bg-[color-mix(in_oklab,var(--accent-500),transparent_82%)]"
+        >
+          Open daily planner
+        </Link>
       </header>
 
-      <section className="rounded-2xl u-border u-surface backdrop-blur-md p-4 sm:p-5 glow-soft">
+      <section className="admin-panel rounded-3xl p-4 backdrop-blur-md sm:p-5">
         <div className="flex flex-wrap items-center gap-3">
           <label className="text-sm opacity-85 flex items-center gap-2">
             <span className="whitespace-nowrap">{t("bookings.date")}:</span>
@@ -375,7 +373,7 @@ export default function AdminBookingsPage() {
         )}
       </section>
 
-      <section className="relative rounded-2xl u-border u-surface backdrop-blur-md px-6 py-5 flex flex-wrap items-center justify-between overflow-hidden glow-soft">
+      <section className="admin-panel relative flex flex-wrap items-center justify-between overflow-hidden rounded-3xl px-6 py-5">
         <div className="flex flex-wrap items-center gap-5 text-[0.95rem] font-medium">
           <div className="flex items-baseline gap-2">
             <span className="text-sm opacity-70">{t("bookings.summary.bookings")}</span>
@@ -413,7 +411,7 @@ export default function AdminBookingsPage() {
         </div>
       </section>
 
-      <section className="overflow-hidden rounded-2xl u-border u-surface backdrop-blur-md glow-soft">
+      <section className="admin-panel overflow-hidden rounded-3xl backdrop-blur-md">
         <div className="overflow-x-auto">
           <table className="w-full table-auto text-sm">
             <thead className="sticky top-0 z-10 sticky-head">

@@ -73,7 +73,7 @@ function CancelSubmitButton({ disabled }: { disabled?: boolean }) {
     <button
       type="submit"
       disabled={disabled || pending}
-      className="inline-flex h-11 items-center justify-center rounded-xl border border-red-400/20 bg-red-500/10 px-5 text-sm font-medium text-red-200 transition hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-60"
+      className="inline-flex h-12 w-full items-center justify-center rounded-xl border border-red-400/20 bg-red-500/10 px-5 text-sm font-medium text-red-200 transition hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
     >
       {pending ? "Processing..." : "Cancel / refund booking"}
     </button>
@@ -149,14 +149,14 @@ export default function BookingClient({
 
   if (!booking) {
     return (
-      <main className="relative mx-auto flex max-w-3xl flex-col items-center px-4 py-16 text-center sm:px-5 sm:py-24">
+      <main className="customer-page relative mx-auto flex max-w-3xl flex-col items-center px-3 py-10 text-center sm:px-5 sm:py-24">
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(248,113,113,0.16),transparent_65%)]" />
 
         <div className="mb-6 flex size-24 items-center justify-center rounded-full border border-red-300/20 bg-red-500/10 text-red-300 shadow-[0_0_60px_rgba(248,113,113,0.12)] sm:mb-8 sm:size-28">
           <HelpCircle className="size-12 sm:size-14" />
         </div>
 
-        <h1 className="text-3xl font-semibold text-white sm:text-4xl">Booking not found</h1>
+        <h1 className="customer-title text-3xl sm:text-4xl">Booking not found</h1>
 
         <p className="mt-4 max-w-xl text-base leading-relaxed text-white/68">
           We couldn’t find this booking. If you just completed payment or think
@@ -166,7 +166,7 @@ export default function BookingClient({
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <Link
             href={`/${tenantSlug}/contact`}
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-pink-500 via-fuchsia-500 to-violet-500 px-6 text-sm font-medium text-white shadow-[0_18px_50px_-18px_rgba(236,72,153,0.75)] transition hover:scale-[1.02]"
+            className="customer-primary inline-flex h-12 items-center justify-center gap-2 rounded-xl px-6 text-sm font-medium transition sm:rounded-2xl"
           >
             <Mail className="size-4" />
             Contact us
@@ -174,7 +174,7 @@ export default function BookingClient({
 
           <Link
             href={`/${tenantSlug}/activities`}
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-white/12 bg-white/[0.05] px-6 text-sm font-medium text-white/88 transition hover:bg-white/[0.08]"
+            className="customer-secondary inline-flex h-12 items-center justify-center gap-2 rounded-xl px-6 text-sm font-medium transition sm:rounded-2xl"
           >
             <Waves className="size-4 text-sky-300" />
             Back to activities
@@ -250,7 +250,7 @@ export default function BookingClient({
     : "border-amber-300/20 bg-amber-400/10 text-amber-300 shadow-[0_0_70px_rgba(251,191,36,0.12)]";
 
   return (
-    <main className="relative mx-auto flex max-w-4xl flex-col items-center px-3 py-14 text-center sm:px-6 sm:py-28">
+    <main className="customer-page relative mx-auto flex max-w-4xl flex-col items-center px-3 py-8 text-center sm:px-6 sm:py-20">
       <div
         className={`absolute inset-0 -z-10 ${
           isPaid
@@ -270,7 +270,7 @@ export default function BookingClient({
       </div>
 
       <div className="relative mb-2">
-        <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-5xl">
+        <h1 className="customer-title text-3xl sm:text-5xl">
           {title}
         </h1>
         <div
@@ -313,7 +313,7 @@ export default function BookingClient({
           <div className="mt-5 grid gap-2 sm:grid-cols-3">
             <Link
               href={`/${tenantSlug}/activities`}
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-pink-500 via-fuchsia-500 to-violet-500 px-4 text-sm font-medium text-white shadow-[0_18px_50px_-18px_rgba(236,72,153,0.75)] transition hover:scale-[1.02]"
+              className="customer-primary inline-flex h-12 items-center justify-center gap-2 rounded-xl px-4 text-sm font-medium transition sm:rounded-2xl"
             >
               <RefreshCcw className="size-4" />
               Book again
@@ -321,7 +321,7 @@ export default function BookingClient({
 
             <Link
               href={`/${tenantSlug}/contact`}
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-white/12 bg-white/[0.06] px-4 text-sm font-medium text-white/88 transition hover:bg-white/[0.1]"
+              className="customer-secondary inline-flex h-12 items-center justify-center gap-2 rounded-xl px-4 text-sm font-medium transition sm:rounded-2xl"
             >
               <Mail className="size-4 text-sky-300" />
               Contact us
@@ -329,7 +329,7 @@ export default function BookingClient({
 
             <Link
               href={`/${tenantSlug}`}
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-white/12 bg-white/[0.04] px-4 text-sm font-medium text-white/78 transition hover:bg-white/[0.08]"
+              className="customer-secondary inline-flex h-12 items-center justify-center gap-2 rounded-xl px-4 text-sm font-medium transition sm:rounded-2xl"
             >
               <Home className="size-4 text-white/70" />
               Home
@@ -362,12 +362,12 @@ export default function BookingClient({
 
       {isPaid ? (
         <>
-          <div className="mb-10 max-w-2xl rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white/65">
+          <div className="customer-panel mb-6 max-w-2xl rounded-xl px-4 py-3 text-sm text-white/65 sm:mb-10">
             You are viewing your confirmed booking details. Online cancellation
             is only available at least 48 hours before the booking start time.
           </div>
 
-          <Card className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-transparent p-4 text-left shadow-lg sm:p-8 [background:linear-gradient(var(--color-card),var(--color-card))_padding-box,linear-gradient(90deg,color-mix(in_oklab,var(--accent-300),transparent_65%),color-mix(in_oklab,var(--accent-400),transparent_70%),color-mix(in_oklab,var(--accent-300),transparent_65%))_border-box]">
+          <Card className="customer-panel relative w-full max-w-2xl overflow-hidden rounded-2xl p-4 text-left sm:p-8">
             <CardTitle className="text-xl sm:text-2xl">{t("booking.summary")}</CardTitle>
 
             <div className="mt-4 space-y-4">
@@ -409,7 +409,7 @@ export default function BookingClient({
           </Card>
         </>
       ) : (
-        <div className="w-full max-w-2xl rounded-2xl border border-white/10 bg-white/[0.035] p-5 text-left">
+        <div className="customer-panel w-full max-w-2xl rounded-2xl p-5 text-left">
           <h3 className="text-base font-semibold text-white">
             Attempt details
           </h3>
@@ -445,7 +445,7 @@ export default function BookingClient({
 
         <div className="mt-4 flex flex-col items-center justify-center gap-3 sm:flex-row">
           {booking.canCancel && isPaid ? (
-            <form action={cancelFormAction}>
+            <form action={cancelFormAction} className="w-full sm:w-auto">
               <input type="hidden" name="club" value={tenantSlug} />
               <input type="hidden" name="token" value={booking.publicToken} />
               <CancelSubmitButton />
@@ -453,11 +453,11 @@ export default function BookingClient({
           ) : null}
 
           {isPaid && (
-            <Link href={`/${tenantSlug}`}>
+            <Link href={`/${tenantSlug}`} className="w-full sm:w-auto">
               <Button
                 size="lg"
                 variant="primary"
-                className="relative inline-flex h-14 items-center rounded-[12px] px-8 text-lg font-medium text-[--color-brand-foreground] bg-[linear-gradient(90deg,var(--accent-600),var(--accent-500),var(--accent-600))] bg-[length:200%_100%] shadow-[0_18px_48px_-20px_color-mix(in_oklab,var(--accent-500),transparent_65%)] hover:scale-[1.02] transition"
+                className="customer-primary relative inline-flex h-12 w-full items-center justify-center rounded-xl px-8 text-base font-medium transition sm:h-14 sm:w-auto sm:text-lg"
                 style={
                   { animation: "shimmerAlt 5.5s ease-in-out infinite" } as any
                 }

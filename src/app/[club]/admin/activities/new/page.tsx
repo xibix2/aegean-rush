@@ -315,7 +315,7 @@ export default function NewActivityPage({
   params: { club: string };
 }) {
   return (
-    <main className="mx-auto max-w-5xl space-y-8 px-6 py-10">
+    <main className="admin-page max-w-5xl">
       <NewActivityHeaderClient />
       <NewActivityFormClient
         createAction={createActivityAction.bind(null, params.club)}

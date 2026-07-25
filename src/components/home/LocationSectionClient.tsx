@@ -90,7 +90,7 @@ export function LocationSectionClient({
   return (
     <section
       id="meeting-point"
-      className="relative scroll-mt-24 overflow-hidden rounded-3xl border border-white/10 bg-[#070b16] px-4 py-9 backdrop-blur-xl sm:rounded-[2.25rem] sm:px-6 sm:py-12 md:scroll-mt-36 md:px-8 md:py-16"
+      className="customer-hero scroll-mt-24 rounded-3xl px-4 py-9 sm:rounded-[2.25rem] sm:px-6 sm:py-12 md:scroll-mt-36 md:px-8 md:py-16"
     >
       <style
         dangerouslySetInnerHTML={{
@@ -186,7 +186,7 @@ export function LocationSectionClient({
 
       <div className="relative mx-auto grid max-w-6xl gap-4 sm:gap-6 lg:grid-cols-[1.05fr_1fr] lg:items-stretch">
         <div
-          className="loc-card rounded-3xl border border-white/10 bg-white/[0.05] p-4 shadow-[0_28px_90px_-55px_rgba(0,0,0,0.95)] sm:rounded-[1.9rem] sm:p-6"
+          className="customer-card loc-card rounded-3xl p-4 sm:rounded-[1.9rem] sm:p-6"
           style={{
             animation: "locCardIn 700ms cubic-bezier(0.22,1,0.36,1) both",
           }}
@@ -273,7 +273,7 @@ export function LocationSectionClient({
         </div>
 
         <div
-          className="loc-card relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.05] p-2.5 shadow-[0_28px_90px_-55px_rgba(0,0,0,0.95)] sm:rounded-[1.9rem] sm:p-3"
+          className="customer-card loc-card relative overflow-hidden rounded-3xl p-2.5 sm:rounded-[1.9rem] sm:p-3"
           style={{
             animation:
               "locCardIn 700ms cubic-bezier(0.22,1,0.36,1) 120ms both",

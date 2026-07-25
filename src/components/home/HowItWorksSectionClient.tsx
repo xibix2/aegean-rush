@@ -68,7 +68,7 @@ export function HowItWorksSectionClient({
         ];
 
   return (
-    <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#0b0d14] px-4 py-9 backdrop-blur-xl sm:rounded-[2.1rem] sm:px-6 sm:py-12 md:px-8 md:py-14">
+    <section className="customer-hero rounded-3xl px-4 py-9 sm:rounded-[2.1rem] sm:px-6 sm:py-12 md:px-8 md:py-14">
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -138,7 +138,7 @@ export function HowItWorksSectionClient({
             return (
               <div
                 key={item.id}
-                className="group relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] p-4 shadow-[0_24px_80px_-50px_rgba(0,0,0,0.95)] transition duration-300 hover:-translate-y-1 hover:border-white/20 sm:rounded-[1.75rem] sm:p-6"
+                className="customer-card group relative overflow-hidden rounded-3xl p-4 sm:rounded-[1.75rem] sm:p-6"
               >
                 <div
                   className="pointer-events-none absolute inset-x-0 top-0 h-20 opacity-50 blur-2xl sm:h-24 sm:opacity-60"

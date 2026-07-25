@@ -13,13 +13,13 @@ export default async function ManageBookingPage({
   const hasError = qp?.error === "missing-token";
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-16">
-      <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 backdrop-blur-xl md:p-8">
-        <p className="text-xs uppercase tracking-[0.22em] text-white/45">
+    <main className="customer-page mx-auto max-w-2xl px-3 py-8 sm:px-4 sm:py-16">
+      <section className="customer-hero rounded-3xl p-5 sm:rounded-[2rem] sm:p-8">
+        <p className="customer-kicker">
           Manage booking
         </p>
 
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white">
+        <h1 className="customer-title mt-4 text-3xl">
           View or cancel your booking
         </h1>
 
@@ -47,25 +47,25 @@ export default async function ManageBookingPage({
               type="text"
               name="token"
               placeholder="Paste your booking token"
-              className="h-12 w-full rounded-xl border border-white/10 bg-black/20 px-4 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-pink-400/40"
+              className="h-12 w-full rounded-xl border border-white/10 bg-black/20 px-4 text-base text-white placeholder:text-white/30 outline-none transition sm:text-sm"
               required
             />
           </label>
 
           <button
             type="submit"
-            className="inline-flex h-11 items-center justify-center rounded-xl bg-gradient-to-r from-pink-500 to-fuchsia-500 px-5 text-sm font-medium text-white shadow-[0_12px_40px_-16px_rgba(236,72,153,0.75)] transition hover:scale-[1.02]"
+            className="customer-primary inline-flex h-12 w-full items-center justify-center rounded-xl px-5 text-sm font-medium transition sm:w-auto"
           >
             Open booking
           </button>
         </form>
 
-        <div className="mt-6 rounded-xl border border-white/10 bg-black/20 px-4 py-4 text-sm text-white/58">
+        <div className="customer-panel mt-6 rounded-xl px-4 py-4 text-sm text-white/58">
           Your access token should come from your booking confirmation flow or
           booking email. Once opened, you’ll be able to review your booking and
           cancel it if it is still within the allowed cancellation window.
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }

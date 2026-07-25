@@ -62,7 +62,7 @@ export function FaqSectionClient({ title, subtitle, items }: FaqSectionClientPro
   const [openId, setOpenId] = useState<string | null>(resolvedItems[0]?.id ?? null);
 
   return (
-    <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#070b16] px-4 py-9 backdrop-blur-xl sm:rounded-[2.15rem] sm:px-6 sm:py-12 md:px-8 md:py-16">
+    <section className="customer-hero rounded-3xl px-4 py-9 sm:rounded-[2.15rem] sm:px-6 sm:py-12 md:px-8 md:py-16">
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -170,7 +170,7 @@ export function FaqSectionClient({ title, subtitle, items }: FaqSectionClientPro
             return (
               <div
                 key={item.id}
-                className="faq-card group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.045] shadow-[0_24px_90px_-54px_rgba(0,0,0,0.95)] transition duration-300 hover:-translate-y-1 hover:border-white/20 hover:bg-white/[0.06] sm:rounded-[1.65rem]"
+                className="customer-card faq-card group relative overflow-hidden rounded-2xl sm:rounded-[1.65rem]"
                 style={{
                   animation: `faqCardIn 700ms cubic-bezier(0.22,1,0.36,1) ${index * 90}ms both`,
                 }}

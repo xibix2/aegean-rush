@@ -399,7 +399,7 @@ export default async function ActivityDetailPage({
   };
 
   return (
-    <main key={a.id} className="space-y-8 px-6 py-10 max-w-4xl mx-auto">
+    <main key={a.id} className="admin-page max-w-5xl">
       <ActivityDetailHeaderClient key={a.id} name={a.name} />
       <ActivityFormClient
         key={a.id}

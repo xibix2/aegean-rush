@@ -24,7 +24,7 @@ export function SocialSectionClient({
   const displayName = clubName || "Aegean Rush";
 
   return (
-    <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#07111c] px-4 py-9 shadow-[0_30px_90px_-55px_rgba(34,211,238,0.55)] backdrop-blur-xl sm:rounded-[2.2rem] sm:px-6 sm:py-12 md:px-8 md:py-16">
+    <section className="customer-hero rounded-3xl px-4 py-9 sm:rounded-[2.2rem] sm:px-6 sm:py-12 md:px-8 md:py-16">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_10%,rgba(236,72,153,0.18),transparent_28%),radial-gradient(circle_at_88%_18%,rgba(34,211,238,0.16),transparent_30%),linear-gradient(135deg,rgba(255,255,255,0.06),transparent_44%,rgba(255,255,255,0.03))]" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/55 to-transparent" />
 
@@ -53,7 +53,7 @@ export function SocialSectionClient({
               href={INSTAGRAM_URL}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-pink-500 via-fuchsia-500 to-cyan-400 px-6 text-sm font-bold text-white shadow-[0_22px_60px_-25px_rgba(236,72,153,0.9)] transition hover:-translate-y-0.5 hover:shadow-[0_28px_70px_-25px_rgba(34,211,238,0.8)] sm:w-auto"
+              className="customer-primary inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl px-6 text-sm font-bold transition sm:w-auto sm:rounded-2xl"
             >
               <Instagram className="size-4" />
               Open Instagram
@@ -62,7 +62,7 @@ export function SocialSectionClient({
 
             <a
               href={`/${clubSlug}/contact`}
-              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-white/12 bg-white/[0.06] px-6 text-sm font-bold text-white/90 transition hover:-translate-y-0.5 hover:bg-white/[0.1] sm:w-auto"
+              className="customer-secondary inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl px-6 text-sm font-bold transition sm:w-auto sm:rounded-2xl"
             >
               <MessageCircle className="size-4 text-cyan-200" />
               Contact us

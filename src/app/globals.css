@@ -645,3 +645,295 @@ html[data-theme="dark"] .text-accent-gradient {
   0%, 100% { transform: scale(1); opacity: 0.85; }
   50% { transform: scale(1.05); opacity: 1; }
 }
+
+/* ======================================================================
+   Admin workspace
+====================================================================== */
+.admin-workspace {
+  background-image:
+    radial-gradient(circle at 92% -8%, rgb(var(--accent-glow) / 0.12), transparent 28rem),
+    radial-gradient(circle at 42% 115%, rgb(var(--accent-glow) / 0.055), transparent 36rem);
+  background-attachment: fixed;
+}
+
+.admin-page {
+  width: 100%;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.admin-page-header {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.4rem;
+  border: 1px solid var(--border);
+  border-radius: 1.5rem;
+  background:
+    linear-gradient(110deg, color-mix(in oklab, var(--accent-500), transparent 88%), transparent 45%),
+    color-mix(in oklab, var(--card), transparent 4%);
+  box-shadow:
+    0 20px 55px -38px rgb(var(--accent-glow) / 0.55),
+    inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+.admin-page-header::after {
+  content: "";
+  position: absolute;
+  width: 12rem;
+  height: 12rem;
+  top: -8rem;
+  right: 8%;
+  border-radius: 999px;
+  background: rgb(var(--accent-glow) / 0.12);
+  filter: blur(38px);
+  pointer-events: none;
+}
+
+.admin-page-kicker {
+  margin-bottom: 0.3rem;
+  color: var(--accent-400);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.admin-page-title {
+  font-size: clamp(1.55rem, 2.5vw, 2rem);
+  font-weight: 650;
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+}
+
+.admin-page-subtitle {
+  max-width: 42rem;
+  margin-top: 0.4rem;
+  font-size: 0.875rem;
+  opacity: 0.62;
+}
+
+.admin-panel,
+.admin-workspace .u-surface.glow-soft {
+  border: 1px solid var(--border);
+  background:
+    linear-gradient(145deg, rgba(255,255,255,0.025), transparent 42%),
+    color-mix(in oklab, var(--card), transparent 3%) !important;
+  box-shadow:
+    0 18px 48px -40px rgba(0,0,0,0.8),
+    inset 0 1px 0 rgba(255,255,255,0.025);
+}
+
+.admin-workspace .glow-soft:hover {
+  border-color: color-mix(in oklab, var(--accent-500), var(--border) 78%) !important;
+}
+
+.admin-workspace input:not([type="checkbox"]):not([type="radio"]),
+.admin-workspace select,
+.admin-workspace textarea {
+  transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+
+.admin-workspace input:not([type="checkbox"]):not([type="radio"]):focus,
+.admin-workspace select:focus,
+.admin-workspace textarea:focus {
+  border-color: color-mix(in oklab, var(--accent-500), transparent 40%) !important;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent-500), transparent 86%);
+}
+
+.admin-workspace table thead {
+  background: color-mix(in oklab, var(--card), var(--foreground) 3%);
+}
+
+.admin-workspace table tbody tr {
+  transition: background-color 150ms ease;
+}
+
+.admin-workspace table tbody tr:hover {
+  background: color-mix(in oklab, var(--accent-500), transparent 95%) !important;
+}
+
+.admin-settings-form > section {
+  padding: 1.1rem;
+  border: 1px solid color-mix(in oklab, var(--border), transparent 12%);
+  border-radius: 1.1rem;
+  background: color-mix(in oklab, var(--surface-2), transparent 18%);
+}
+
+.admin-settings-form > section > h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-weight: 650;
+}
+
+.admin-settings-form > section > h2::before {
+  content: "";
+  width: 0.45rem;
+  height: 0.45rem;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: var(--accent-500);
+  box-shadow: 0 0 12px rgb(var(--accent-glow) / 0.45);
+}
+
+@media (max-width: 639px) {
+  .admin-page-header {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 1.1rem;
+  }
+}
+
+/* ======================================================================
+   Customer workspace
+====================================================================== */
+.customer-page {
+  position: relative;
+  width: 100%;
+  margin-inline: auto;
+}
+
+.customer-hero {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid color-mix(in oklab, var(--accent-500), transparent 76%) !important;
+  background:
+    radial-gradient(circle at 88% 12%, rgb(var(--accent-glow) / 0.14), transparent 23rem),
+    linear-gradient(135deg, color-mix(in oklab, var(--accent-500), transparent 92%), transparent 46%),
+    #070b16 !important;
+  box-shadow:
+    0 30px 90px -52px rgb(var(--accent-glow) / 0.65),
+    inset 0 1px 0 rgba(255,255,255,0.045) !important;
+}
+
+.customer-panel,
+.customer-card {
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  background:
+    linear-gradient(145deg, rgba(255,255,255,0.035), transparent 44%),
+    rgba(7,11,22,0.82) !important;
+  box-shadow:
+    0 24px 70px -52px rgba(0,0,0,0.96),
+    inset 0 1px 0 rgba(255,255,255,0.035);
+  backdrop-filter: blur(18px);
+}
+
+.customer-card {
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.customer-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in oklab, var(--accent-500), transparent 70%) !important;
+  box-shadow: 0 28px 80px -48px rgb(var(--accent-glow) / 0.4);
+}
+
+.customer-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: fit-content;
+  padding: 0.42rem 0.72rem;
+  border: 1px solid color-mix(in oklab, var(--accent-500), transparent 72%);
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--accent-500), transparent 89%);
+  color: color-mix(in oklab, var(--accent-400), white 18%);
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.customer-title {
+  font-size: clamp(1.85rem, 5vw, 3.6rem);
+  font-weight: 720;
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+  color: white;
+}
+
+.customer-primary {
+  background: linear-gradient(
+    120deg,
+    color-mix(in oklab, var(--accent-700), white 5%),
+    var(--accent-500),
+    color-mix(in oklab, var(--accent-400), white 10%)
+  ) !important;
+  color: white !important;
+  box-shadow: 0 18px 52px -20px rgb(var(--accent-glow) / 0.78) !important;
+}
+
+.customer-primary:hover {
+  transform: translateY(-1px) scale(1.015);
+  filter: saturate(1.08) brightness(1.05);
+}
+
+.customer-secondary {
+  border: 1px solid rgba(255,255,255,0.12) !important;
+  background: rgba(255,255,255,0.055) !important;
+  color: rgba(255,255,255,0.9) !important;
+  backdrop-filter: blur(14px);
+}
+
+.customer-secondary:hover {
+  background: rgba(255,255,255,0.09) !important;
+}
+
+.customer-page input:not([type="checkbox"]):not([type="radio"]),
+.customer-page select,
+.customer-page textarea {
+  transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+
+.customer-page input:not([type="checkbox"]):not([type="radio"]):focus,
+.customer-page select:focus,
+.customer-page textarea:focus {
+  border-color: color-mix(in oklab, var(--accent-500), transparent 35%) !important;
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent-500), transparent 84%);
+}
+
+.customer-page button,
+.customer-page a {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 639px) {
+  .customer-page {
+    min-width: 0;
+    padding-bottom: max(2rem, env(safe-area-inset-bottom));
+  }
+
+  .customer-hero {
+    border-radius: 1.4rem !important;
+  }
+
+  .customer-card {
+    border-radius: 1.2rem !important;
+  }
+
+  .customer-card:hover {
+    transform: none;
+  }
+
+  .customer-primary,
+  .customer-secondary {
+    min-height: 3rem;
+  }
+
+  .customer-page input:not([type="checkbox"]):not([type="radio"]),
+  .customer-page select,
+  .customer-page textarea {
+    min-height: 3rem;
+    font-size: 16px;
+  }
+}

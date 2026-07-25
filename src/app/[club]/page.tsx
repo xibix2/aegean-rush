@@ -128,7 +128,7 @@ export default async function ClubHome({
 
   if (!hasHomepageSections) {
     return (
-      <div className="space-y-10 sm:space-y-14 md:space-y-20">
+      <div className="customer-page space-y-8 sm:space-y-14 md:space-y-20">
         <HeroSectionClient tenantSlug={slug} />
 
         <section id="courts" className="relative scroll-mt-24 space-y-5 text-center sm:space-y-8 md:scroll-mt-36">
@@ -146,7 +146,7 @@ export default async function ClubHome({
   }
 
   return (
-    <div className="space-y-10 sm:space-y-14 md:space-y-20">
+    <div className="customer-page space-y-8 sm:space-y-14 md:space-y-20">
       {homepageSections.map((section) => {
         switch (section.type) {
           case "HERO": {

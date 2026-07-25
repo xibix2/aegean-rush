@@ -41,7 +41,7 @@ export default function AdminStatsClient({
       : t("stats.range.lastNDays").replace("{n}", range);
 
   return (
-    <main className="mx-auto max-w-6xl p-6 space-y-6">
+    <main className="admin-page max-w-6xl">
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -54,19 +54,17 @@ export default function AdminStatsClient({
       />
 
       {/* Header */}
-      <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            <span className="text-accent-gradient">{t("stats.title")}</span>
-          </h1>
-          <div
-            className="mt-2 h-[3px] w-30 rounded-full accent-line"
-            style={{ animation: "adminGlowLine 3.2s ease-in-out infinite" }}
-          />
+      <header className="admin-page-header">
+        <div className="relative z-10">
+          <div className="admin-page-kicker">Performance insights</div>
+          <h1 className="admin-page-title">{t("stats.title")}</h1>
+          <p className="admin-page-subtitle">
+            Understand bookings, income and demand across your activities.
+          </p>
         </div>
 
         {/* Range toggles */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="relative z-10 flex flex-wrap items-center gap-2">
           {rangeTabs.map((key) => {
             const active = range === key;
             const qs = new URLSearchParams({ range: key }).toString();
