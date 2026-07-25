@@ -17,6 +17,14 @@ export default async function ClubAdminLayout({
 
   const basePrefix = `/${club}/admin`;
 
-  return <AdminNavClient basePrefix={basePrefix}>{children}</AdminNavClient>;
+  return (
+    <AdminNavClient
+      basePrefix={basePrefix}
+      tenantName={tenant.name}
+      tenantSlug={tenant.slug}
+    >
+      {children}
+    </AdminNavClient>
+  );
 }
 

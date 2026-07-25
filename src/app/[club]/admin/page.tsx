@@ -11,9 +11,10 @@ export const dynamic = "force-dynamic";
 export default async function ClubAdminPage({
   params,
 }: {
-  params: { club: string };
+  params: Promise<{ club: string }>;
 }) {
-  const tenant = await requireTenant(params.club);
+  const { club } = await params;
+  const tenant = await requireTenant(club);
 
   const setting = await prisma.appSetting.findUnique({
     where: { clubId: tenant.id },
@@ -25,7 +26,7 @@ export default async function ClubAdminPage({
   const todayIso = formatYMDInTz(new Date(), tz);
 
   return (
-    <main className="p-6 space-y-8 text-center">
+    <main className="space-y-8">
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -36,7 +37,7 @@ export default async function ClubAdminPage({
         }}
       />
       <AdminHeaderClient />
-      <AdminDashboardClient initialDate={todayIso} />
+      <AdminDashboardClient initialDate={todayIso} tenantSlug={tenant.slug} />
     </main>
   );
 }

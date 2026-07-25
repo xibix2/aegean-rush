@@ -227,6 +227,7 @@ export async function createAdminBooking(
       durationOptionId,
       units,
       guests,
+      skipBookingNotice: true,
     });
 
     if (!quote.isValid) {

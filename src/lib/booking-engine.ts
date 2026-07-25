@@ -70,6 +70,7 @@ export type BookingEngineInput = {
   guests?: number | null;
 
   now?: Date;
+  skipBookingNotice?: boolean;
 };
 
 export type BookingEngineResult = {
@@ -410,7 +411,9 @@ export function getBookingQuoteAndAvailability(
     const bookingEndAt =
       slot.endAt ?? new Date(slot.startAt.getTime() + 90 * 60 * 1000);
     
-    validateBookingNotice(bookingStartAt, now, errors);
+    if (!input.skipBookingNotice) {
+      validateBookingNotice(bookingStartAt, now, errors);
+    }
 
     return {
       isValid: errors.length === 0,
@@ -452,7 +455,9 @@ export function getBookingQuoteAndAvailability(
   if (start && bookingEndAt) {
     validateInsideWindow(start, bookingEndAt, slot, errors);
     validateInterval(activity, start, slot, errors);
-    validateBookingNotice(start, now, errors);
+    if (!input.skipBookingNotice) {
+      validateBookingNotice(start, now, errors);
+    }
   }
 
   const requestedUnits = normalizePositiveInt(input.units, 1);

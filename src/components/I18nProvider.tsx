@@ -32,12 +32,16 @@ const DICTS = {
 
     "nav.aria": "Admin navigation",
     "nav.dashboard": "Dashboard",
+    "nav.planner": "Daily planner",
     "nav.activities": "Activities",
     "nav.slots": "Time Slots",
     "nav.bookings": "Bookings",
     "nav.stats": "Analytics",
     "nav.exportCsv": "Export CSV",
     "nav.settings": "Settings",
+    "nav.homepage": "Website editor",
+    "nav.staff": "Team access",
+    "nav.billing": "Billing",
 
     "home.hero.title": "Book unforgettable activities in seconds.",
     "home.hero.subtitle":
@@ -441,12 +445,16 @@ const DICTS = {
 
     "nav.aria": "Πλοήγηση διαχειριστή",
     "nav.dashboard": "Πίνακας",
+    "nav.planner": "Ημερήσιο πλάνο",
     "nav.activities": "Δραστηριότητες",
     "nav.slots": "Χρονοθυρίδες",
     "nav.bookings": "Κρατήσεις",
     "nav.stats": "Στατιστικά",
     "nav.exportCsv": "Εξαγωγή CSV",
     "nav.settings": "Ρυθμίσεις",
+    "nav.homepage": "Επεξεργασία ιστοσελίδας",
+    "nav.staff": "Πρόσβαση ομάδας",
+    "nav.billing": "Χρεώσεις",
 
     "home.hero.title": "Κλείστε αξέχαστες δραστηριότητες σε δευτερόλεπτα.",
     "home.hero.subtitle":
