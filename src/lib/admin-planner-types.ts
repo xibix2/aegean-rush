@@ -25,6 +25,15 @@ export type PlannerBooking = {
   source: "online" | "walkIn";
 };
 
+export type PlannerAvailabilityBlock = {
+  id: string;
+  slotId: string;
+  startAt: string;
+  endAt: string;
+  units: number;
+  reason: string | null;
+};
+
 export type PlannerSlot = {
   id: string;
   status: "open" | "closed";
@@ -33,6 +42,7 @@ export type PlannerSlot = {
   capacity: number;
   priceCents: number;
   bookings: PlannerBooking[];
+  availabilityBlocks: PlannerAvailabilityBlock[];
 };
 
 export type PlannerActivity = {

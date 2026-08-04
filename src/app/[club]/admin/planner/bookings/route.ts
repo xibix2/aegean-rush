@@ -90,6 +90,14 @@ export async function POST(
             createdAt: true,
           },
         },
+        availabilityBlocks: {
+          select: {
+            id: true,
+            startAt: true,
+            endAt: true,
+            units: true,
+          },
+        },
       },
     });
 
@@ -125,6 +133,7 @@ export async function POST(
         priceCents: slot.priceCents,
       },
       existingBookings: slot.bookings,
+      existingAvailabilityBlocks: slot.availabilityBlocks,
       partySize: optionalNumber(body.partySize),
       startTime:
         slot.activity.mode === "FIXED_SEAT_EVENT"

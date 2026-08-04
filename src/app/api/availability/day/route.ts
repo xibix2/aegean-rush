@@ -171,6 +171,14 @@ export async function GET(req: NextRequest) {
             bookingEndAt: true,
           },
         },
+        availabilityBlocks: {
+          select: {
+            id: true,
+            startAt: true,
+            endAt: true,
+            units: true,
+          },
+        },
       },
     });
 
@@ -233,6 +241,7 @@ export async function GET(req: NextRequest) {
             priceCents: slot.priceCents,
           },
           existingBookings: slot.bookings,
+          existingAvailabilityBlocks: slot.availabilityBlocks,
           partySize,
           ticketSelections,
         });
@@ -268,6 +277,14 @@ export async function GET(req: NextRequest) {
           };
         })
         .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+      const blockedRanges = slot.availabilityBlocks
+        .map((block) => ({
+          id: block.id,
+          start: block.startAt.toISOString(),
+          end: block.endAt.toISOString(),
+          usedUnits: Math.max(1, block.units),
+        }))
+        .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
       
       const minAllowedTime = new Date(
         now.getTime() + MIN_BOOKING_NOTICE_MINUTES * 60 * 1000
@@ -293,6 +310,7 @@ export async function GET(req: NextRequest) {
           availableWindowStart: effectiveWindowStart.toISOString(),
           availableWindowEnd: slot.endAt?.toISOString() ?? null,
           bookedRanges,
+          blockedRanges,
           canFit: false,
           errors: ["Booking closed (less than 30 minutes remaining)"],
         };
@@ -315,6 +333,7 @@ export async function GET(req: NextRequest) {
           availableWindowStart: effectiveWindowStart.toISOString(),
           availableWindowEnd: slot.endAt ? slot.endAt.toISOString() : null,
           bookedRanges,
+          blockedRanges,
           durationOptions: activity.durationOptions.map((d) => ({
             id: d.id,
             label: d.label,
@@ -337,6 +356,7 @@ export async function GET(req: NextRequest) {
           priceCents: slot.priceCents,
         },
         existingBookings: slot.bookings,
+        existingAvailabilityBlocks: slot.availabilityBlocks,
         partySize,
         startTime,
         durationOptionId,
@@ -356,6 +376,7 @@ export async function GET(req: NextRequest) {
         availableWindowStart: effectiveWindowStart.toISOString(),
         availableWindowEnd: slot.endAt ? slot.endAt.toISOString() : null,
         bookedRanges,
+        blockedRanges,
         bookingStartAt: quote.bookingStartAt.toISOString(),
         bookingEndAt: quote.bookingEndAt.toISOString(),
         remainingUnits: quote.remainingUnitsForRange ?? 0,

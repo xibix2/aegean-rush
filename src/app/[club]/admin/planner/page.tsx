@@ -76,6 +76,9 @@ export default async function PlannerPage({
           payment: true,
         },
       },
+      availabilityBlocks: {
+        orderBy: [{ startAt: "asc" }, { createdAt: "asc" }],
+      },
     },
   });
 
@@ -113,6 +116,14 @@ export default async function PlannerPage({
       endAt: slotEnd.toISOString(),
       capacity: slot.capacity,
       priceCents: slot.priceCents,
+      availabilityBlocks: slot.availabilityBlocks.map((block) => ({
+        id: block.id,
+        slotId: slot.id,
+        startAt: block.startAt.toISOString(),
+        endAt: block.endAt.toISOString(),
+        units: Math.max(1, block.units),
+        reason: block.reason,
+      })),
       bookings: slot.bookings.map((booking) => ({
         id: booking.id,
         slotId: slot.id,

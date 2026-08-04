@@ -153,6 +153,14 @@ export async function createAdminBooking(
             createdAt: true,
           },
         },
+        availabilityBlocks: {
+          select: {
+            id: true,
+            startAt: true,
+            endAt: true,
+            units: true,
+          },
+        },
       },
     });
 
@@ -222,6 +230,7 @@ export async function createAdminBooking(
         priceCents: slot.priceCents,
       },
       existingBookings: slot.bookings,
+      existingAvailabilityBlocks: slot.availabilityBlocks,
       partySize,
       startTime: parsedStartTime,
       durationOptionId,

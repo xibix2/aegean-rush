@@ -11,6 +11,13 @@ type ExistingBookingLike = {
   bookingEndAt: Date | null;
 };
 
+type ExistingAvailabilityBlockLike = {
+  id: string;
+  startAt: Date;
+  endAt: Date;
+  units: number;
+};
+
 type DurationOptionLike = {
   id: string;
   label: string | null;
@@ -55,6 +62,7 @@ export type BookingEngineInput = {
   activity: ActivityLike;
   slot: TimeSlotLike;
   existingBookings: ExistingBookingLike[];
+  existingAvailabilityBlocks?: ExistingAvailabilityBlockLike[];
 
   partySize?: number | null;
 
@@ -279,8 +287,24 @@ function validateBookingNotice(
   }
 }
 
-function usedSeatsForFixedEvent(activeBookings: ExistingBookingLike[]) {
-  return activeBookings.reduce((sum, b) => sum + (b.partySize ?? 0), 0);
+function usedSeatsForFixedEvent(
+  activeBookings: ExistingBookingLike[],
+  availabilityBlocks: ExistingAvailabilityBlockLike[],
+  slot: TimeSlotLike,
+) {
+  const slotEnd =
+    slot.endAt ?? new Date(slot.startAt.getTime() + 90 * 60 * 1000);
+  const blockedSeats = availabilityBlocks.reduce(
+    (sum, block) =>
+      overlaps(block.startAt, block.endAt, slot.startAt, slotEnd)
+        ? sum + Math.max(1, block.units)
+        : sum,
+    0,
+  );
+  return (
+    activeBookings.reduce((sum, b) => sum + (b.partySize ?? 0), 0) +
+    blockedSeats
+  );
 }
 
 function usedUnitsForRange(
@@ -304,6 +328,20 @@ function usedUnitsForRange(
   }
 
   return used;
+}
+
+function blockedUnitsForRange(
+  availabilityBlocks: ExistingAvailabilityBlockLike[],
+  rangeStart: Date,
+  rangeEnd: Date,
+) {
+  return availabilityBlocks.reduce(
+    (sum, block) =>
+      overlaps(block.startAt, block.endAt, rangeStart, rangeEnd)
+        ? sum + Math.max(1, block.units)
+        : sum,
+    0,
+  );
 }
 
 function resolveTicketBreakdown(
@@ -366,6 +404,7 @@ export function getBookingQuoteAndAvailability(
 ): BookingEngineResult {
   const now = input.now ?? new Date();
   const { activity, slot, existingBookings } = input;
+  const availabilityBlocks = input.existingAvailabilityBlocks ?? [];
   const activeBookings = getActiveBookings(existingBookings, now);
   const errors: string[] = [];
 
@@ -395,7 +434,11 @@ export function getBookingQuoteAndAvailability(
   }
 
   if (mode === ActivityMode.FIXED_SEAT_EVENT) {
-    const used = usedSeatsForFixedEvent(activeBookings);
+    const used = usedSeatsForFixedEvent(
+      activeBookings,
+      availabilityBlocks,
+      slot,
+    );
     const remaining = Math.max(0, slot.capacity - used);
     const unitPrice = getFixedEventPrice(slot, activity);
     const totalPrice =
@@ -476,7 +519,9 @@ export function getBookingQuoteAndAvailability(
     let remainingUnitsForRange: number | null = null;
 
     if (start && bookingEndAt) {
-      const used = usedUnitsForRange(activeBookings, start, bookingEndAt, slot);
+      const used =
+        usedUnitsForRange(activeBookings, start, bookingEndAt, slot) +
+        blockedUnitsForRange(availabilityBlocks, start, bookingEndAt);
       remainingUnitsForRange = Math.max(0, slot.capacity - used);
 
       if (remainingUnitsForRange < requestedUnits) {
@@ -528,7 +573,9 @@ export function getBookingQuoteAndAvailability(
   let remainingUnitsForRange: number | null = null;
 
   if (start && bookingEndAt) {
-    const used = usedUnitsForRange(activeBookings, start, bookingEndAt, slot);
+    const used =
+      usedUnitsForRange(activeBookings, start, bookingEndAt, slot) +
+      blockedUnitsForRange(availabilityBlocks, start, bookingEndAt);
     remainingUnitsForRange = Math.max(0, slot.capacity - used);
 
     if (remainingUnitsForRange < requestedUnits) {

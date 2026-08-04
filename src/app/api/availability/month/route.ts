@@ -124,6 +124,16 @@ export async function GET(req: Request) {
       },
     });
 
+    const availabilityBlocks = await prisma.availabilityBlock.findMany({
+      where: { timeSlotId: { in: slotIds } },
+      select: {
+        timeSlotId: true,
+        startAt: true,
+        endAt: true,
+        units: true,
+      },
+    });
+
     const validBookings = bookings.filter((b) => {
       return (
         b.status === "paid" ||
@@ -132,11 +142,18 @@ export async function GET(req: Request) {
     });
 
     const bookingsBySlot = new Map<string, typeof validBookings>();
+    const blocksBySlot = new Map<string, typeof availabilityBlocks>();
 
     for (const b of validBookings) {
       const list = bookingsBySlot.get(b.timeSlotId) ?? [];
       list.push(b);
       bookingsBySlot.set(b.timeSlotId, list);
+    }
+
+    for (const block of availabilityBlocks) {
+      const list = blocksBySlot.get(block.timeSlotId) ?? [];
+      list.push(block);
+      blocksBySlot.set(block.timeSlotId, list);
     }
 
     for (const slot of slots) {
@@ -153,16 +170,24 @@ export async function GET(req: Request) {
 
       const slotCapacity = Math.max(0, slot.capacity ?? 0);
       const slotBookings = bookingsBySlot.get(slot.id) ?? [];
+      const slotBlocks = blocksBySlot.get(slot.id) ?? [];
 
       if (activity.mode === ActivityMode.FIXED_SEAT_EVENT) {
         const paidSeats = slotBookings.reduce(
           (sum, b) => sum + Math.max(0, b.partySize ?? 0),
           0
         );
+        const blockedSeats = slotBlocks.reduce(
+          (sum, block) => sum + Math.max(1, block.units),
+          0,
+        );
 
         days[iso].capacity += slotCapacity;
-        days[iso].paid += paidSeats;
-        days[iso].remaining += Math.max(0, slotCapacity - paidSeats);
+        days[iso].paid += paidSeats + blockedSeats;
+        days[iso].remaining += Math.max(
+          0,
+          slotCapacity - paidSeats - blockedSeats,
+        );
         continue;
       }
 
@@ -197,6 +222,13 @@ export async function GET(req: Request) {
 
           if (overlaps(current, bookingEnd, bStart, bEnd)) {
             usedUnits += Math.max(1, booking.reservedUnits ?? 1);
+          }
+        }
+
+
+        for (const block of slotBlocks) {
+          if (overlaps(current, bookingEnd, block.startAt, block.endAt)) {
+            usedUnits += Math.max(1, block.units);
           }
         }
 

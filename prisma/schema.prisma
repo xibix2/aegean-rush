@@ -207,6 +207,7 @@ model Activity {
   club                Club                     @relation(fields: [clubId], references: [id])
   durationOptions     ActivityDurationOption[]
   bookings            Booking[]
+  availabilityBlocks  AvailabilityBlock[]
   timeSlots           TimeSlot[]
   ticketTypes         ActivityTicketType[]
 
@@ -230,18 +231,37 @@ model ActivityDurationOption {
 }
 
 model TimeSlot {
-  id         String     @id @default(cuid())
-  activityId String
-  startAt    DateTime
-  capacity   Int
-  endAt      DateTime?
-  priceCents Int
-  status     SlotStatus @default(open)
-  bookings   Booking[]
-  activity   Activity   @relation(fields: [activityId], references: [id])
+  id                 String              @id @default(cuid())
+  activityId         String
+  startAt            DateTime
+  capacity           Int
+  endAt              DateTime?
+  priceCents         Int
+  status             SlotStatus          @default(open)
+  bookings           Booking[]
+  availabilityBlocks AvailabilityBlock[]
+  activity           Activity            @relation(fields: [activityId], references: [id])
 
   @@unique([activityId, startAt])
   @@index([activityId, startAt])
+}
+
+model AvailabilityBlock {
+  id         String   @id @default(cuid())
+  activityId String
+  timeSlotId String
+  startAt    DateTime
+  endAt      DateTime
+  units      Int
+  reason     String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  activity Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  timeSlot TimeSlot @relation(fields: [timeSlotId], references: [id], onDelete: Cascade)
+
+  @@index([timeSlotId, startAt, endAt])
+  @@index([activityId, startAt, endAt])
 }
 
 model Booking {

@@ -279,6 +279,7 @@ async function sendBookingEmails(bookingId: string, fallbackEmail?: string) {
       },
       customer: true,
       tickets: true,
+      payment: true,
     },
   });
 
@@ -387,8 +388,12 @@ async function sendBookingEmails(bookingId: string, fallbackEmail?: string) {
     }
   }
 
-  try {
-    await sendInternalBookingNotification({
+  const isOnlineStripeBooking =
+    b.payment?.providerIntentId?.startsWith("pi_") === true;
+
+  if (isOnlineStripeBooking) {
+    try {
+      await sendInternalBookingNotification({
       from,
       replyTo: customerEmail || replyTo,
       recipients: internalNotificationEmails,
@@ -408,12 +413,13 @@ async function sendBookingEmails(bookingId: string, fallbackEmail?: string) {
       bookingToken: b.publicToken,
       arrivalText,
       tickets: ticketLines,
-    });
-  } catch (e) {
-    console.error(
-      "Failed to send internal booking email:",
-      (e as any)?.message || e,
-    );
+      });
+    } catch (e) {
+      console.error(
+        "Failed to send internal booking email:",
+        (e as any)?.message || e,
+      );
+    }
   }
 }
 

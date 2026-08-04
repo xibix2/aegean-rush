@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   CalendarDays,
+  Ban,
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
@@ -18,11 +19,13 @@ import {
 } from "lucide-react";
 import type {
   PlannerActivity,
+  PlannerAvailabilityBlock,
   PlannerBooking,
   PlannerSlot,
 } from "@/lib/admin-planner-types";
 
 type Selection = {
+  intent: "booking" | "block";
   activity: PlannerActivity;
   slot: PlannerSlot;
   lane: number;
@@ -30,9 +33,18 @@ type Selection = {
 };
 
 type LaneBooking = PlannerBooking & {
+  kind: "booking";
   lane: number;
   conflicted: boolean;
 };
+
+type LaneBlock = PlannerAvailabilityBlock & {
+  kind: "block";
+  lane: number;
+  conflicted: boolean;
+};
+
+type LaneItem = LaneBooking | LaneBlock;
 
 const LABEL_WIDTH = 176;
 const TRACK_WIDTH = 1120;
@@ -93,18 +105,52 @@ function activeBookings(activity: PlannerActivity) {
     );
 }
 
-function allocateUnitBookings(activity: PlannerActivity, laneCount: number) {
-  const laneEnds = Array.from({ length: laneCount }, () => -Infinity);
-  const placed: LaneBooking[] = [];
+function activeBlocks(activity: PlannerActivity) {
+  return activity.slots
+    .flatMap((slot) => slot.availabilityBlocks)
+    .sort(
+      (a, b) =>
+        new Date(a.startAt).getTime() - new Date(b.startAt).getTime() ||
+        a.id.localeCompare(b.id),
+    );
+}
 
-  for (const booking of activeBookings(activity)) {
-    const start = new Date(booking.startAt).getTime();
-    const end = new Date(booking.endAt).getTime();
-    const slot = activity.slots.find((candidate) => candidate.id === booking.slotId);
+function allocateUnitItems(activity: PlannerActivity, laneCount: number) {
+  const laneEnds = Array.from({ length: laneCount }, () => -Infinity);
+  const placed: LaneItem[] = [];
+  const items = [
+    ...activeBookings(activity).map((booking) => ({
+      kind: "booking" as const,
+      item: booking,
+      startAt: booking.startAt,
+      endAt: booking.endAt,
+      units: booking.reservedUnits,
+      slotId: booking.slotId,
+    })),
+    ...activeBlocks(activity).map((block) => ({
+      kind: "block" as const,
+      item: block,
+      startAt: block.startAt,
+      endAt: block.endAt,
+      units: block.units,
+      slotId: block.slotId,
+    })),
+  ].sort(
+    (a, b) =>
+      new Date(a.startAt).getTime() - new Date(b.startAt).getTime() ||
+      (a.kind === b.kind ? a.item.id.localeCompare(b.item.id) : a.kind.localeCompare(b.kind)),
+  );
+
+  for (const timelineItem of items) {
+    const start = new Date(timelineItem.startAt).getTime();
+    const end = new Date(timelineItem.endAt).getTime();
+    const slot = activity.slots.find(
+      (candidate) => candidate.id === timelineItem.slotId,
+    );
     const usableLanes = Math.min(laneCount, slot?.capacity ?? laneCount);
     const required = Math.min(
       usableLanes,
-      Math.max(1, booking.reservedUnits || 1)
+      Math.max(1, timelineItem.units || 1),
     );
     const free = laneEnds
       .map((laneEnd, lane) => ({ laneEnd, lane }))
@@ -121,7 +167,12 @@ function allocateUnitBookings(activity: PlannerActivity, laneCount: number) {
 
     for (const { lane } of chosen) {
       laneEnds[lane] = Math.max(laneEnds[lane], end);
-      placed.push({ ...booking, lane, conflicted });
+      placed.push({
+        ...timelineItem.item,
+        kind: timelineItem.kind,
+        lane,
+        conflicted,
+      } as LaneItem);
     }
   }
   return placed;
@@ -218,7 +269,24 @@ export default function PlannerBoard({
       startMs = Math.max(slotStart, Math.min(slotEnd - step, startMs));
     }
 
-    setSelection({ activity, slot, lane, startMs });
+    setSelection({ intent: "booking", activity, slot, lane, startMs });
+  }
+
+  function openBlock(activity: PlannerActivity) {
+    const slot = activity.slots.find((candidate) => candidate.status === "open");
+    if (!slot) return;
+
+    const slotStart = new Date(slot.startAt).getTime();
+    const slotEnd = new Date(slot.endAt).getTime();
+    const now = Date.now();
+    const step = Math.max(5, activity.slotIntervalMin ?? 15) * 60_000;
+    const roundedNow = Math.ceil(now / step) * step;
+    const startMs =
+      date === today
+        ? Math.max(slotStart, Math.min(slotEnd - step, roundedNow))
+        : slotStart;
+
+    setSelection({ intent: "block", activity, slot, lane: 0, startMs });
   }
 
   return (
@@ -326,6 +394,7 @@ export default function PlannerBoard({
         <LegendDot className="bg-sky-400" label="Online booking" />
         <LegendDot className="bg-violet-400" label="Walk-in booking" />
         <LegendDot className="bg-amber-400" label="Pending" />
+        <LegendDot className="bg-rose-500" label="Availability block" />
         <span className="inline-flex items-center gap-1.5">
           <MousePointerClick className="h-3.5 w-3.5" />
           Click an empty availability lane to book
@@ -360,6 +429,8 @@ export default function PlannerBoard({
               hourTicks={hourTicks}
               position={position}
               onOpen={openFromSlot}
+              onBlock={openBlock}
+              onBlockRemoved={() => router.refresh()}
             />
           ))}
         </div>
@@ -392,6 +463,8 @@ function ActivityTimeline({
   hourTicks,
   position,
   onOpen,
+  onBlock,
+  onBlockRemoved,
 }: {
   activity: PlannerActivity;
   tenantSlug: string;
@@ -407,12 +480,14 @@ function ActivityTimeline({
     slot: PlannerSlot,
     lane: number
   ) => void;
+  onBlock: (activity: PlannerActivity) => void;
+  onBlockRemoved: () => void;
 }) {
   const unitMode = isUnitMode(activity);
   const laneCount = unitMode
     ? Math.max(1, ...activity.slots.map((slot) => slot.capacity))
     : 1;
-  const placed = unitMode ? allocateUnitBookings(activity, laneCount) : [];
+  const placed = unitMode ? allocateUnitItems(activity, laneCount) : [];
   const totalBookings = activeBookings(activity);
   const paid = totalBookings.filter((booking) => booking.status === "paid");
   const bookedUnits = paid.reduce(
@@ -435,12 +510,24 @@ function ActivityTimeline({
             {unitMode ? "units reserved" : "confirmed guests"}
           </div>
         </div>
-        <Link
-          href={`/${tenantSlug}/admin/slots?activityId=${activity.id}`}
-          className="text-xs font-medium text-[var(--accent-400)] hover:underline"
-        >
-          Manage schedule
-        </Link>
+        <div className="flex items-center gap-2">
+          {unitMode && (
+            <button
+              type="button"
+              onClick={() => onBlock(activity)}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-rose-400/25 bg-rose-400/8 px-3 py-2 text-xs font-semibold text-rose-200 hover:bg-rose-400/14"
+            >
+              <Ban className="h-3.5 w-3.5" />
+              Block availability
+            </button>
+          )}
+          <Link
+            href={`/${tenantSlug}/admin/slots?activityId=${activity.id}`}
+            className="text-xs font-medium text-[var(--accent-400)] hover:underline"
+          >
+            Manage schedule
+          </Link>
+        </div>
       </div>
 
       <div className="overflow-x-auto">
@@ -565,11 +652,46 @@ function ActivityTimeline({
 
                 {unitMode &&
                   placed
-                    .filter((booking) => booking.lane === lane)
-                    .map((booking) => {
-                      const left = position(booking.startAt);
-                      const right = position(booking.endAt);
+                    .filter((item) => item.lane === lane)
+                    .map((item) => {
+                      const left = position(item.startAt);
+                      const right = position(item.endAt);
                       const width = Math.max(1.2, right - left);
+                      if (item.kind === "block") {
+                        return (
+                          <button
+                            key={`${item.id}-${lane}`}
+                            type="button"
+                            onClick={async () => {
+                              if (!window.confirm("Remove this availability block?")) return;
+                              const response = await fetch(
+                                `/${tenantSlug}/admin/planner/blocks`,
+                                {
+                                  method: "DELETE",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ blockId: item.id }),
+                                },
+                              );
+                              if (response.ok) onBlockRemoved();
+                            }}
+                            className={`absolute inset-y-2 z-10 overflow-hidden rounded-lg border border-rose-200/45 bg-rose-600/90 px-2 py-1 text-left text-white shadow-lg transition hover:z-20 hover:bg-rose-500 ${
+                              item.conflicted ? "ring-2 ring-amber-300" : ""
+                            }`}
+                            style={{ left: `${left}%`, width: `${width}%` }}
+                            title={`${item.reason || "Unavailable"} - click to remove`}
+                          >
+                            <span className="block truncate text-[10px] font-bold">
+                              Unavailable
+                            </span>
+                            <span className="block truncate text-[9px] opacity-85">
+                              {formatTime(item.startAt, timeZone)}-
+                              {formatTime(item.endAt, timeZone)}
+                            </span>
+                          </button>
+                        );
+                      }
+
+                      const booking = item;
                       const color =
                         booking.status === "pending"
                           ? "border-amber-300/55 bg-amber-400/80 text-black"
@@ -626,12 +748,25 @@ function QuickBookingModal({
 }) {
   const { activity, slot, lane, startMs } = selection;
   const unitMode = isUnitMode(activity);
+  const [intent, setIntent] = useState<"booking" | "block">(selection.intent);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [startLocal, setStartLocal] = useState(
     toLocalInput(startMs, timeZone)
   );
+  const [endLocal, setEndLocal] = useState(
+    toLocalInput(
+      Math.min(
+        new Date(slot.endAt).getTime(),
+        startMs + 60 * 60_000,
+      ),
+      timeZone,
+    ),
+  );
+  const [blockAllAvailable, setBlockAllAvailable] = useState(true);
+  const [blockUnits, setBlockUnits] = useState(1);
+  const [blockReason, setBlockReason] = useState("");
   const [durationOptionId, setDurationOptionId] = useState(
     activity.durationOptions[0]?.id ?? ""
   );
@@ -662,33 +797,53 @@ function QuickBookingModal({
 
     try {
       const response = await fetch(
-        `/${tenantSlug}/admin/planner/bookings`,
+        `/${tenantSlug}/admin/planner/${intent === "block" ? "blocks" : "bookings"}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            slotId: slot.id,
-            name,
-            phone,
-            email,
-            markPaid,
-            startLocal: unitMode ? startLocal : undefined,
-            durationOptionId: unitMode ? durationOptionId : undefined,
-            partySize: unitMode ? undefined : partySize,
-            units: unitMode ? units : undefined,
-            guests:
-              activity.mode === "HYBRID_UNIT_BOOKING" ? guests : undefined,
-          }),
+          body: JSON.stringify(
+            intent === "block"
+              ? {
+                  slotId: slot.id,
+                  startLocal,
+                  endLocal,
+                  blockAllAvailable,
+                  units: blockAllAvailable ? undefined : blockUnits,
+                  reason: blockReason,
+                }
+              : {
+                  slotId: slot.id,
+                  name,
+                  phone,
+                  email,
+                  markPaid,
+                  startLocal: unitMode ? startLocal : undefined,
+                  durationOptionId: unitMode ? durationOptionId : undefined,
+                  partySize: unitMode ? undefined : partySize,
+                  units: unitMode ? units : undefined,
+                  guests:
+                    activity.mode === "HYBRID_UNIT_BOOKING" ? guests : undefined,
+                },
+          ),
         }
       );
       const result = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error(result?.error || "Could not create booking.");
+        throw new Error(
+          result?.error ||
+            (intent === "block"
+              ? "Could not block availability."
+              : "Could not create booking."),
+        );
       }
       onCreated();
     } catch (caught) {
       setError(
-        caught instanceof Error ? caught.message : "Could not create booking."
+        caught instanceof Error
+          ? caught.message
+          : intent === "block"
+            ? "Could not block availability."
+            : "Could not create booking.",
       );
     } finally {
       setSaving(false);
@@ -710,7 +865,7 @@ function QuickBookingModal({
         <div className="sticky top-0 z-10 flex items-start justify-between border-b border-white/10 bg-[#101218]/95 px-5 py-4 backdrop-blur">
           <div>
             <div className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--accent-400)]">
-              Quick walk-in booking
+              {intent === "block" ? "Availability control" : "Quick walk-in booking"}
             </div>
             <h2 className="mt-1 text-xl font-semibold">{activity.name}</h2>
             <p className="mt-1 text-xs text-white/50">
@@ -728,6 +883,101 @@ function QuickBookingModal({
         </div>
 
         <div className="grid gap-4 p-5 sm:grid-cols-2">
+          <div className="sm:col-span-2 grid grid-cols-2 gap-2 rounded-2xl bg-white/[0.035] p-1">
+            <button
+              type="button"
+              onClick={() => setIntent("booking")}
+              className={`rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
+                intent === "booking"
+                  ? "bg-[var(--accent-500)] text-black"
+                  : "text-white/55 hover:bg-white/5"
+              }`}
+            >
+              Walk-in booking
+            </button>
+            <button
+              type="button"
+              onClick={() => setIntent("block")}
+              className={`rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
+                intent === "block"
+                  ? "bg-rose-500 text-white"
+                  : "text-white/55 hover:bg-white/5"
+              }`}
+            >
+              Block availability
+            </button>
+          </div>
+
+          {intent === "block" ? (
+            <>
+              <div className="sm:col-span-2 rounded-2xl border border-rose-400/20 bg-rose-400/8 px-4 py-3 text-sm text-rose-100/85">
+                Reduce online availability without creating a booking, payment,
+                customer, or email.
+              </div>
+              <Field label="Unavailable from">
+                <input
+                  type="datetime-local"
+                  value={startLocal}
+                  min={toLocalInput(new Date(slot.startAt).getTime(), timeZone)}
+                  max={toLocalInput(new Date(slot.endAt).getTime(), timeZone)}
+                  onChange={(event) => setStartLocal(event.target.value)}
+                  className="planner-input"
+                  required
+                />
+              </Field>
+              <Field label="Unavailable until">
+                <input
+                  type="datetime-local"
+                  value={endLocal}
+                  min={startLocal}
+                  max={toLocalInput(new Date(slot.endAt).getTime(), timeZone)}
+                  onChange={(event) => setEndLocal(event.target.value)}
+                  className="planner-input"
+                  required
+                />
+              </Field>
+              <label className="sm:col-span-2 flex cursor-pointer items-center justify-between rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-3">
+                <span>
+                  <span className="block text-sm font-medium">
+                    Block all remaining units
+                  </span>
+                  <span className="block text-xs text-white/45">
+                    Makes this whole time range unavailable online.
+                  </span>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={blockAllAvailable}
+                  onChange={(event) => setBlockAllAvailable(event.target.checked)}
+                  className="h-5 w-5 accent-rose-500"
+                />
+              </label>
+              {!blockAllAvailable && (
+                <Field label="Units to block" className="sm:col-span-2">
+                  <input
+                    type="number"
+                    min={1}
+                    max={slot.capacity}
+                    value={blockUnits}
+                    onChange={(event) =>
+                      setBlockUnits(Math.max(1, Number(event.target.value) || 1))
+                    }
+                    className="planner-input"
+                  />
+                </Field>
+              )}
+              <Field label="Reason (optional)" className="sm:col-span-2">
+                <input
+                  value={blockReason}
+                  maxLength={160}
+                  onChange={(event) => setBlockReason(event.target.value)}
+                  placeholder="Counter reservations, maintenance, private use..."
+                  className="planner-input"
+                />
+              </Field>
+            </>
+          ) : (
+            <>
           <Field label="Guest name" className="sm:col-span-2">
             <input
               value={name}
@@ -845,6 +1095,8 @@ function QuickBookingModal({
               className="h-5 w-5 accent-[var(--accent-500)]"
             />
           </label>
+            </>
+          )}
 
           {error && (
             <div className="sm:col-span-2 rounded-xl border border-rose-400/25 bg-rose-400/10 px-3 py-2 text-sm text-rose-200">
@@ -856,23 +1108,35 @@ function QuickBookingModal({
         <div className="flex items-center justify-between gap-3 border-t border-white/10 px-5 py-4">
           <div>
             <div className="text-[10px] uppercase tracking-[0.12em] text-white/40">
-              Estimated total
+              {intent === "block" ? "Effect" : "Estimated total"}
             </div>
-            <div className="font-semibold">{money}</div>
+            <div className="font-semibold">
+              {intent === "block"
+                ? blockAllAvailable
+                  ? "All remaining units"
+                  : `${blockUnits} unit${blockUnits === 1 ? "" : "s"}`
+                : money}
+            </div>
           </div>
           <div className="flex gap-2">
-            <Link
-              href={`/${tenantSlug}/admin/slots/${slot.id}`}
-              className="rounded-xl border border-white/10 px-4 py-2.5 text-sm text-white/65 hover:bg-white/5"
-            >
-              Full form
-            </Link>
+            {intent === "booking" && (
+              <Link
+                href={`/${tenantSlug}/admin/slots/${slot.id}`}
+                className="rounded-xl border border-white/10 px-4 py-2.5 text-sm text-white/65 hover:bg-white/5"
+              >
+                Full form
+              </Link>
+            )}
             <button
               type="submit"
               disabled={saving}
               className="btn-accent min-w-32 px-4 py-2.5 text-sm font-semibold disabled:opacity-50"
             >
-              {saving ? "Saving..." : "Create booking"}
+              {saving
+                ? "Saving..."
+                : intent === "block"
+                  ? "Block availability"
+                  : "Create booking"}
             </button>
           </div>
         </div>

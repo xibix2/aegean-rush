@@ -308,6 +308,14 @@ async function createSessionAndMaybeRedirect(
           bookingEndAt: true,
         },
       },
+      availabilityBlocks: {
+        select: {
+          id: true,
+          startAt: true,
+          endAt: true,
+          units: true,
+        },
+      },
     },
   });
 
@@ -323,6 +331,7 @@ async function createSessionAndMaybeRedirect(
       priceCents: slot.priceCents,
     },
     existingBookings: slot.bookings,
+    existingAvailabilityBlocks: slot.availabilityBlocks,
     partySize,
     ticketSelections,
     startTime,
